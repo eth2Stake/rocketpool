@@ -119,6 +119,9 @@ export async function createMinipool(txOptions, salt = null) {
         amount: BigInt(16000000000), // gwei
         signature: getValidatorSignature(),
     };
+    if (depositType == 3){
+        depositData.amount =  BigInt(8000000000);
+    }
 
     let depositDataRoot = getDepositDataRoot(depositData);
 
@@ -145,7 +148,6 @@ export async function stakeMinipool(minipool, txOptions) {
 
     // Get minipool withdrawal credentials
     let withdrawalCredentials = await rocketMinipoolManager.getMinipoolWithdrawalCredentials.call(minipool.address);
-
     // Get validator deposit data
     let depositData = {
         pubkey: Buffer.from(validatorPubkey.substr(2), 'hex'),

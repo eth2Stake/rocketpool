@@ -21,6 +21,7 @@ contract RocketMinipoolQueue is RocketBase, RocketMinipoolQueueInterface {
     // Constants
     bytes32 private constant queueKeyFull = keccak256("minipools.available.full");
     bytes32 private constant queueKeyHalf = keccak256("minipools.available.half");
+    bytes32 private constant queueKeyQuarter = keccak256("minipools.available.quarter");
     bytes32 private constant queueKeyEmpty = keccak256("minipools.available.empty");
 
     // Events
@@ -40,6 +41,8 @@ contract RocketMinipoolQueue is RocketBase, RocketMinipoolQueueInterface {
         ).add(
             getLength(queueKeyHalf)
         ).add(
+            getLength(queueKeyQuarter)
+        ).add(
             getLength(queueKeyEmpty)
         );
     }
@@ -49,6 +52,7 @@ contract RocketMinipoolQueue is RocketBase, RocketMinipoolQueueInterface {
     function getLength(MinipoolDeposit _depositType) override external view returns (uint256) {
         if (_depositType == MinipoolDeposit.Full) { return getLength(queueKeyFull); }
         if (_depositType == MinipoolDeposit.Half) { return getLength(queueKeyHalf); }
+        if (_depositType == MinipoolDeposit.Quarter) { return getLength(queueKeyQuarter); }
         if (_depositType == MinipoolDeposit.Empty) { return getLength(queueKeyEmpty); }
         return 0;
     }
@@ -65,6 +69,8 @@ contract RocketMinipoolQueue is RocketBase, RocketMinipoolQueueInterface {
         ).add(
             getLength(queueKeyHalf).mul(rocketDAOProtocolSettingsMinipool.getHalfDepositUserAmount())
         ).add(
+            getLength(queueKeyQuarter).mul(rocketDAOProtocolSettingsMinipool.getQuarterDepositUserAmount())
+        ).add(
             getLength(queueKeyEmpty).mul(rocketDAOProtocolSettingsMinipool.getEmptyDepositUserAmount())
         );
     }
@@ -76,6 +82,8 @@ contract RocketMinipoolQueue is RocketBase, RocketMinipoolQueueInterface {
             getLength(queueKeyFull).mul(rocketDAOProtocolSettingsMinipool.getFullDepositUserAmount())
         ).add(
             getLength(queueKeyHalf).mul(rocketDAOProtocolSettingsMinipool.getHalfDepositUserAmount())
+        ).add(
+            getLength(queueKeyQuarter).mul(rocketDAOProtocolSettingsMinipool.getQuarterDepositUserAmount())
         );
     }
 
@@ -85,6 +93,7 @@ contract RocketMinipoolQueue is RocketBase, RocketMinipoolQueueInterface {
         RocketDAOProtocolSettingsMinipoolInterface rocketDAOProtocolSettingsMinipool = RocketDAOProtocolSettingsMinipoolInterface(getContractAddress("rocketDAOProtocolSettingsMinipool"));
         if (getLength(queueKeyHalf) > 0) { return rocketDAOProtocolSettingsMinipool.getHalfDepositUserAmount(); }
         if (getLength(queueKeyFull) > 0) { return rocketDAOProtocolSettingsMinipool.getFullDepositUserAmount(); }
+        if (getLength(queueKeyQuarter) > 0) { return rocketDAOProtocolSettingsMinipool.getQuarterDepositUserAmount(); }
         if (getLength(queueKeyEmpty) > 0) { return rocketDAOProtocolSettingsMinipool.getEmptyDepositUserAmount(); }
         return 0;
     }
@@ -96,6 +105,8 @@ contract RocketMinipoolQueue is RocketBase, RocketMinipoolQueueInterface {
         if (length > 0) { return (MinipoolDeposit.Half, length); }
         length = getLength(queueKeyFull);
         if (length > 0) { return (MinipoolDeposit.Full, length); }
+        length = getLength(queueKeyQuarter);
+        if (length > 0) { return (MinipoolDeposit.Quarter, length); }
         length = getLength(queueKeyEmpty);
         if (length > 0) { return (MinipoolDeposit.Empty, length); }
         return (MinipoolDeposit.None, 0);
@@ -104,6 +115,7 @@ contract RocketMinipoolQueue is RocketBase, RocketMinipoolQueueInterface {
     // Add a minipool to the end of the appropriate queue
     // Only accepts calls from the RocketMinipoolManager contract
     function enqueueMinipool(MinipoolDeposit _depositType, address _minipool) override external onlyLatestContract("rocketMinipoolQueue", address(this)) onlyLatestContract("rocketMinipoolManager", msg.sender) {
+        if (_depositType == MinipoolDeposit.Quarter) { return enqueueMinipool(queueKeyQuarter, _minipool); }
         if (_depositType == MinipoolDeposit.Half) { return enqueueMinipool(queueKeyHalf, _minipool); }
         if (_depositType == MinipoolDeposit.Full) { return enqueueMinipool(queueKeyFull, _minipool); }
         if (_depositType == MinipoolDeposit.Empty) { return enqueueMinipool(queueKeyEmpty, _minipool); }
@@ -120,12 +132,14 @@ contract RocketMinipoolQueue is RocketBase, RocketMinipoolQueueInterface {
     // Remove the first available minipool from the highest priority queue and return its address
     // Only accepts calls from the RocketDepositPool contract
     function dequeueMinipool() override external onlyLatestContract("rocketMinipoolQueue", address(this)) onlyLatestContract("rocketDepositPool", msg.sender) returns (address minipoolAddress) {
+        if (getLength(queueKeyQuarter) > 0) {return dequeueMinipool(queueKeyQuarter);}
         if (getLength(queueKeyHalf) > 0) { return dequeueMinipool(queueKeyHalf); }
         if (getLength(queueKeyFull) > 0) { return dequeueMinipool(queueKeyFull); }
         if (getLength(queueKeyEmpty) > 0) { return dequeueMinipool(queueKeyEmpty); }
         require(false, "No minipools are available");
     }
     function dequeueMinipoolByDeposit(MinipoolDeposit _depositType) override external onlyLatestContract("rocketMinipoolQueue", address(this)) onlyLatestContract("rocketDepositPool", msg.sender) returns (address minipoolAddress) {
+        if (_depositType == MinipoolDeposit.Quarter) { return dequeueMinipool(queueKeyQuarter); }
         if (_depositType == MinipoolDeposit.Half) { return dequeueMinipool(queueKeyHalf); }
         if (_depositType == MinipoolDeposit.Full) { return dequeueMinipool(queueKeyFull); }
         if (_depositType == MinipoolDeposit.Empty) { return dequeueMinipool(queueKeyEmpty); }
@@ -145,6 +159,7 @@ contract RocketMinipoolQueue is RocketBase, RocketMinipoolQueueInterface {
     // Only accepts calls from registered minipools
     function removeMinipool(MinipoolDeposit _depositType) override external onlyLatestContract("rocketMinipoolQueue", address(this)) onlyRegisteredMinipool(msg.sender) {
         // Remove minipool from queue
+        if (_depositType == MinipoolDeposit.Quarter) { return removeMinipool(queueKeyQuarter, msg.sender); }
         if (_depositType == MinipoolDeposit.Half) { return removeMinipool(queueKeyHalf, msg.sender); }
         if (_depositType == MinipoolDeposit.Full) { return removeMinipool(queueKeyFull, msg.sender); }
         if (_depositType == MinipoolDeposit.Empty) { return removeMinipool(queueKeyEmpty, msg.sender); }

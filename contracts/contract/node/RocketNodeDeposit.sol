@@ -73,6 +73,7 @@ contract RocketNodeDeposit is RocketBase, RocketNodeDepositInterface {
         // Get deposit type by node deposit amount
         if (_amount == rocketDAOProtocolSettingsMinipool.getFullDepositNodeAmount()) { return MinipoolDeposit.Full; }
         else if (_amount == rocketDAOProtocolSettingsMinipool.getHalfDepositNodeAmount()) { return MinipoolDeposit.Half; }
+        else if (_amount == rocketDAOProtocolSettingsMinipool.getQuarterDepositNodeAmount() ) { return MinipoolDeposit.Quarter; }
         // Invalid deposit amount
         return MinipoolDeposit.None;
     }

@@ -52,6 +52,7 @@ contract RocketDAOProtocolSettingsMinipool is RocketDAOProtocolSettings, RocketD
     function getDepositNodeAmount(MinipoolDeposit _depositType) override external pure returns (uint256) {
         if (_depositType == MinipoolDeposit.Full) { return getFullDepositNodeAmount(); }
         if (_depositType == MinipoolDeposit.Half) { return getHalfDepositNodeAmount(); }
+        if (_depositType == MinipoolDeposit.Quarter) { return getQuarterDepositNodeAmount(); }
         if (_depositType == MinipoolDeposit.Empty) { return getEmptyDepositNodeAmount(); }
         return 0;
     }
@@ -61,6 +62,9 @@ contract RocketDAOProtocolSettingsMinipool is RocketDAOProtocolSettings, RocketD
     function getHalfDepositNodeAmount() override public pure returns (uint256) {
         return getLaunchBalance().div(2);
     }
+    function getQuarterDepositNodeAmount() override public pure returns (uint256) {
+        return getLaunchBalance().div(4);
+    }
     function getEmptyDepositNodeAmount() override public pure returns (uint256) {
         return 0 ether;
     }
@@ -69,6 +73,7 @@ contract RocketDAOProtocolSettingsMinipool is RocketDAOProtocolSettings, RocketD
     function getDepositUserAmount(MinipoolDeposit _depositType) override external pure returns (uint256) {
         if (_depositType == MinipoolDeposit.Full) { return getFullDepositUserAmount(); }
         if (_depositType == MinipoolDeposit.Half) { return getHalfDepositUserAmount(); }
+        if (_depositType == MinipoolDeposit.Quarter) { return getQuarterDepositUserAmount(); }
         if (_depositType == MinipoolDeposit.Empty) { return getEmptyDepositUserAmount(); }
         return 0;
     }
@@ -77,6 +82,9 @@ contract RocketDAOProtocolSettingsMinipool is RocketDAOProtocolSettings, RocketD
     }
     function getHalfDepositUserAmount() override public pure returns (uint256) {
         return getLaunchBalance().div(2);
+    }
+    function getQuarterDepositUserAmount() override public pure returns (uint256) {
+        return getLaunchBalance() - getQuarterDepositNodeAmount();
     }
     function getEmptyDepositUserAmount() override public pure returns (uint256) {
         return getLaunchBalance();

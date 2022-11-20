@@ -11,3 +11,4 @@ coverageEnv/
 @openzeppelin
 1.0
 .idea
+package-lock.json
