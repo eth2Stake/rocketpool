@@ -55,6 +55,7 @@ export default function() {
         let withdrawalDelay = 20;
         let scrubPeriod = (60 * 60 * 24); // 24 hours
         let initialisedMinipool;
+        let initialised8Minipool;
         let prelaunchMinipool;
         let prelaunchMinipool2;
         let stakingMinipool;
@@ -82,7 +83,7 @@ export default function() {
 
             // Stake RPL to cover minipools
             let minipoolRplStake = await getMinipoolMinimumRPLStake();
-            let rplStake = minipoolRplStake.mul(web3.utils.toBN(7));
+            let rplStake = minipoolRplStake.mul(web3.utils.toBN(10));
             await mintRPL(owner, node, rplStake);
             await nodeStakeRPL(rplStake, {from: node});
 
@@ -101,6 +102,7 @@ export default function() {
             stakingMinipool = await createMinipool({from: node, value: web3.utils.toWei('32', 'ether')});
             withdrawableMinipool = await createMinipool({from: node, value: web3.utils.toWei('32', 'ether')});
             initialisedMinipool = await createMinipool({from: node, value: web3.utils.toWei('16', 'ether')});
+            initialised8Minipool = await createMinipool({from: node, value: web3.utils.toWei('8', 'ether')});
 
             // Wait required scrub period
             await increaseTime(web3, scrubPeriod + 1);
@@ -112,12 +114,14 @@ export default function() {
 
             // Check minipool statuses
             let initialisedStatus = await initialisedMinipool.getStatus.call();
+            let initialised8Status = await initialised8Minipool.getStatus.call();
             let prelaunchStatus = await prelaunchMinipool.getStatus.call();
             let prelaunch2Status = await prelaunchMinipool2.getStatus.call();
             let stakingStatus = await stakingMinipool.getStatus.call();
             let withdrawableStatus = await withdrawableMinipool.getStatus.call();
             let dissolvedStatus = await dissolvedMinipool.getStatus.call();
             assert(initialisedStatus.eq(web3.utils.toBN(0)), 'Incorrect initialised minipool status');
+            assert(initialised8Status.eq(web3.utils.toBN(0)), 'Incorrect initialised minipool status');
             assert(prelaunchStatus.eq(web3.utils.toBN(1)), 'Incorrect prelaunch minipool status');
             assert(prelaunch2Status.eq(web3.utils.toBN(1)), 'Incorrect prelaunch minipool status');
             assert(stakingStatus.eq(web3.utils.toBN(2)), 'Incorrect staking minipool status');
@@ -132,17 +136,19 @@ export default function() {
 
             // Check minipool queues
             const rocketMinipoolQueue = await RocketMinipoolQueue.deployed()
-            const [totalLength, fullLength, halfLength, emptyLength] = await Promise.all([
+            const [totalLength, fullLength, halfLength,quaterLength, emptyLength] = await Promise.all([
               rocketMinipoolQueue.getTotalLength(),   // Total
               rocketMinipoolQueue.getLength(1),       // Full
               rocketMinipoolQueue.getLength(2),       // Half
-              rocketMinipoolQueue.getLength(3),       // Empty
+              rocketMinipoolQueue.getLength(3),
+              rocketMinipoolQueue.getLength(4),       // Empty
             ])
 
             // Total should match sum
-            assert(totalLength.eq(fullLength.add(halfLength).add(emptyLength)));
+            assert(totalLength.eq(fullLength.add(halfLength).add(quaterLength).add(emptyLength)));
             assert(fullLength.toNumber() === 2, 'Incorrect number of minipools in full queue')
             assert(halfLength.toNumber() === 1, 'Incorrect number of minipools in half queue')
+            assert(quaterLength.toNumber() === 1, 'Incorrect number of minipools in quater queue')
             assert(emptyLength.toNumber() === 0, 'Incorrect number of minipools in empty queue')
         });
 

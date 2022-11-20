@@ -22,6 +22,8 @@ abstract contract RocketMinipoolStorageLayout {
         Initialised
     }
 
+    uint256 internal prelaunchAmount;                  // The amount of ETH initially deposited when minipool is created
+
 	// Main Rocket Pool storage contract
     RocketStorageInterface internal rocketStorage = RocketStorageInterface(0);
 

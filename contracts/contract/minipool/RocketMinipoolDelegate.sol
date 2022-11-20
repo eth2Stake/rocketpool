@@ -30,7 +30,6 @@ contract RocketMinipoolDelegate is RocketMinipoolStorageLayout, RocketMinipoolIn
     // Constants
     uint8 public constant version = 2;                            // Used to identify which delegate contract each minipool is using
     uint256 constant calcBase = 1 ether;
-    uint256 constant prelaunchAmount = 16 ether;                  // The amount of ETH initially deposited when minipool is created
     uint256 constant distributionCooldown = 100;                  // Number of blocks that must pass between calls to distributeBalance
 
     // Libs
@@ -122,6 +121,12 @@ contract RocketMinipoolDelegate is RocketMinipoolStorageLayout, RocketMinipoolIn
         rocketTokenRETH = getContractAddress("rocketTokenRETH");
         // Set local copy of penalty contract
         rocketMinipoolPenalty = getContractAddress("rocketMinipoolPenalty");
+        // set prelaunchAmount
+        if (_depositType == MinipoolDeposit.Quarter){
+            prelaunchAmount = 8 ether;
+        }else{
+            prelaunchAmount = 16 ether;
+        }
         // Intialise storage state
         storageState = StorageState.Initialised;
     }
@@ -296,7 +301,11 @@ contract RocketMinipoolDelegate is RocketMinipoolStorageLayout, RocketMinipoolIn
             // And the pool is in staking status
             if (status == MinipoolStatus.Staking) {
                 // Then balance must be greater than 16 ETH
-                require(totalBalance >= 16 ether, "Balance must be greater than 16 ETH");
+                if(depositType == MinipoolDeposit.Quarter){
+                    require(totalBalance >= 8 ether, "Balance must be greater than 8 ETH");
+                }else{
+                    require(totalBalance >= 16 ether, "Balance must be greater than 16 ETH");
+                }
             } else {
                 // Then enough time must have elapsed
                 require(block.timestamp > statusTime.add(14 days), "Non-owner must wait 14 days after withdrawal to distribute balance");
