@@ -162,6 +162,31 @@ export async function stakeMinipool(minipool, txOptions) {
 
 }
 
+// Progress a minipool to staking
+export async function stake8Minipool(minipool, txOptions) {
+
+    // Get contracts
+    const rocketMinipoolManager = await RocketMinipoolManager.deployed()
+
+    // Get minipool validator pubkey
+    const validatorPubkey = await rocketMinipoolManager.getMinipoolPubkey(minipool.address);
+
+    // Get minipool withdrawal credentials
+    let withdrawalCredentials = await rocketMinipoolManager.getMinipoolWithdrawalCredentials.call(minipool.address);
+    // Get validator deposit data
+    let depositData = {
+        pubkey: Buffer.from(validatorPubkey.substr(2), 'hex'),
+        withdrawalCredentials: Buffer.from(withdrawalCredentials.substr(2), 'hex'),
+        amount: BigInt(24000000000), // gwei
+        signature: getValidatorSignature(),
+    };
+    let depositDataRoot = getDepositDataRoot(depositData);
+
+    // Stake
+    await minipool.stake(depositData.signature, depositDataRoot, txOptions);
+
+}
+
 
 // Submit a minipool withdrawable event
 export async function submitMinipoolWithdrawable(minipoolAddress, txOptions) {
