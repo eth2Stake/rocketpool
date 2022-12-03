@@ -115,9 +115,9 @@ contract RocketMinipoolQueue is RocketBase, RocketMinipoolQueueInterface {
     // Add a minipool to the end of the appropriate queue
     // Only accepts calls from the RocketMinipoolManager contract
     function enqueueMinipool(MinipoolDeposit _depositType, address _minipool) override external onlyLatestContract("rocketMinipoolQueue", address(this)) onlyLatestContract("rocketMinipoolManager", msg.sender) {
-        if (_depositType == MinipoolDeposit.Quarter) { return enqueueMinipool(queueKeyQuarter, _minipool); }
         if (_depositType == MinipoolDeposit.Half) { return enqueueMinipool(queueKeyHalf, _minipool); }
         if (_depositType == MinipoolDeposit.Full) { return enqueueMinipool(queueKeyFull, _minipool); }
+        if (_depositType == MinipoolDeposit.Quarter) { return enqueueMinipool(queueKeyQuarter, _minipool); }
         if (_depositType == MinipoolDeposit.Empty) { return enqueueMinipool(queueKeyEmpty, _minipool); }
         require(false, "Invalid minipool deposit type");
     }
@@ -132,16 +132,16 @@ contract RocketMinipoolQueue is RocketBase, RocketMinipoolQueueInterface {
     // Remove the first available minipool from the highest priority queue and return its address
     // Only accepts calls from the RocketDepositPool contract
     function dequeueMinipool() override external onlyLatestContract("rocketMinipoolQueue", address(this)) onlyLatestContract("rocketDepositPool", msg.sender) returns (address minipoolAddress) {
-        if (getLength(queueKeyQuarter) > 0) {return dequeueMinipool(queueKeyQuarter);}
         if (getLength(queueKeyHalf) > 0) { return dequeueMinipool(queueKeyHalf); }
         if (getLength(queueKeyFull) > 0) { return dequeueMinipool(queueKeyFull); }
+        if (getLength(queueKeyQuarter) > 0) {return dequeueMinipool(queueKeyQuarter);}
         if (getLength(queueKeyEmpty) > 0) { return dequeueMinipool(queueKeyEmpty); }
         require(false, "No minipools are available");
     }
     function dequeueMinipoolByDeposit(MinipoolDeposit _depositType) override external onlyLatestContract("rocketMinipoolQueue", address(this)) onlyLatestContract("rocketDepositPool", msg.sender) returns (address minipoolAddress) {
-        if (_depositType == MinipoolDeposit.Quarter) { return dequeueMinipool(queueKeyQuarter); }
         if (_depositType == MinipoolDeposit.Half) { return dequeueMinipool(queueKeyHalf); }
         if (_depositType == MinipoolDeposit.Full) { return dequeueMinipool(queueKeyFull); }
+        if (_depositType == MinipoolDeposit.Quarter) { return dequeueMinipool(queueKeyQuarter); }
         if (_depositType == MinipoolDeposit.Empty) { return dequeueMinipool(queueKeyEmpty); }
         require(false, "No minipools are available");
     }
@@ -159,9 +159,9 @@ contract RocketMinipoolQueue is RocketBase, RocketMinipoolQueueInterface {
     // Only accepts calls from registered minipools
     function removeMinipool(MinipoolDeposit _depositType) override external onlyLatestContract("rocketMinipoolQueue", address(this)) onlyRegisteredMinipool(msg.sender) {
         // Remove minipool from queue
-        if (_depositType == MinipoolDeposit.Quarter) { return removeMinipool(queueKeyQuarter, msg.sender); }
         if (_depositType == MinipoolDeposit.Half) { return removeMinipool(queueKeyHalf, msg.sender); }
         if (_depositType == MinipoolDeposit.Full) { return removeMinipool(queueKeyFull, msg.sender); }
+        if (_depositType == MinipoolDeposit.Quarter) { return removeMinipool(queueKeyQuarter, msg.sender); }
         if (_depositType == MinipoolDeposit.Empty) { return removeMinipool(queueKeyEmpty, msg.sender); }
         require(false, "Invalid minipool deposit type");
     }
