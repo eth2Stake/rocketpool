@@ -29,7 +29,7 @@ The library must be initialized with a web3 instance and a `Truffle <https://git
     import RocketPool from 'rocketpool';
     import RocketStorage from './contracts/RocketStorage.json';
 
-    const web3 = new Web3('http://localhost:8123');
+    const web3 = new Web3('http://localhost:8585');
 
     const rp = new RocketPool(web3, RocketStorage);
 
