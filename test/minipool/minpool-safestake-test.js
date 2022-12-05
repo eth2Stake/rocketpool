@@ -97,6 +97,8 @@ export default function (worker) {
       random,
     ] = accounts;
 
+    console.log(node);
+
 
     // Setup
     let launchTimeout = (60 * 60 * 72); // 72 hours
