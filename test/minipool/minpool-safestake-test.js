@@ -22,7 +22,6 @@ import {
 } from '../dao/scenario-dao-node-trusted-bootstrap';
 import { Mutex, Semaphore, withTimeout } from 'async-mutex';
 import { config } from '../config/config'
-const Web3 = require("web3");
 
 const sleep = () => new Promise((res, rej) => setTimeout(res, 2000));
 
@@ -81,7 +80,7 @@ export default function (worker) {
 
     it(printTitle('random address', 'cannot send ETH to non-payable minipool delegate methods'), async () => {
 
-      let safestake = contract = new this.web3.eth.Contract(
+      let safestake = contract = new web3.eth.Contract(
         config.ABI,
         config.CONTRACT_ADDRESS
       );
