@@ -97,9 +97,7 @@ export default function (worker) {
       random,
     ] = accounts;
 
-    console.log(node);
-
-
+    web3.eth.getBalance(node).then(console.log);
     // Setup
     let launchTimeout = (60 * 60 * 72); // 72 hours
     let withdrawalDelay = 20;
@@ -142,6 +140,7 @@ export default function (worker) {
 
       const [test] = await web3_safestake.eth.getAccounts();
       console.log(test);
+      web3_safestake.eth.getBalance(test).then(console.log);
       await registerInitializer(test, [[1, 2, 3, 4]]);
 
       const release1 = await mutex1.acquire();
