@@ -14,9 +14,9 @@ cleanup() {
 }
 
 if [ "$SOLIDITY_COVERAGE" = true ]; then
-  ganache_port=8585
+  ganache_port=8545
 else
-  ganache_port=8585
+  ganache_port=8545
 fi
 
 ganache_running() {

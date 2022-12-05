@@ -12,7 +12,7 @@ const HDWalletProvider = require("@truffle/hdwallet-provider");
 const mnemonicPhrase = process.env.MNEMONIC;
 const mnemonicPassword = process.env.MNEMONIC_PASSWORD;
 const providerHost = process.env.PROVIDER_HOST || 'localhost'; 
-const providerPort = process.env.PROVIDER_PORT || 8585;
+const providerPort = process.env.PROVIDER_PORT || 8545;
 const providerProtocol = process.env.PROVIDER_PROTOCOL || 'http';
 
 // Importing babel to be able to use ES6 imports
@@ -47,13 +47,13 @@ module.exports = {
   networks: {
     development: {
       host: '127.0.0.1',
-      port: 8585,
+      port: 8545,
       network_id: '*', // Match any network id
       gas: 12450000,
     },
     localhost: {
       host: '127.0.0.1',
-      port: 8585,
+      port: 8545,
       network_id: '*', // Match any network id
       gas: 12450000,
     },
@@ -75,7 +75,7 @@ module.exports = {
     // Workshop network
     'workshop': {
       host: "127.0.0.1",
-      port: 8585,
+      port: 8545,
       network_id: "88", 
       from: "0x9ad8fd4c83b752914a9b22484686666d9a30619c",
       gas: 12450000,
