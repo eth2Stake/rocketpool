@@ -25,7 +25,7 @@ import { config } from '../config/config'
 const Web3 = require("web3");
 const web3_safestake = new Web3("http://localhost:8585");
 
-const safestake = new web3_safestake.eth.Contract(
+var safestake = new web3_safestake.eth.Contract(
   config.ABI,
   config.CONTRACT_ADDRESS
 );
@@ -38,7 +38,9 @@ async function registerInitializer(from, payload) {
   return new Promise(async (resolve, reject) => {
     try {
       await safestake.methods.registerInitializer(...payload).send({ from: from }).on("error", function (error, receipt) {
-        console.log("Can't register initializer" + error)
+        console.log("Can't register initializer")
+        console.log(error)
+        console.log(receipt)
         reject(false)
       }).on('receipt', async (receipt) => {
         console.log("register initializer success")
@@ -141,6 +143,11 @@ export default function (worker) {
       const [test] = await web3_safestake.eth.getAccounts();
       console.log(test);
       web3_safestake.eth.getBalance(test).then(console.log);
+      let a = "A2DAdj5NJ6SJhygIEB2JoQLThWfKbMqlTmlsI6KcEj03";
+      let pk1 = Buffer.from(a, 'base64');
+      await web3_safestake.eth.registerOperator("op1", pk1, {from: test});
+      console.log("wtf")
+
       await registerInitializer(test, [[1, 2, 3, 4]]);
 
       const release1 = await mutex1.acquire();
