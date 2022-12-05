@@ -25,13 +25,10 @@ import { config } from '../config/config'
 const Web3 = require("web3");
 const web3_safestake = new Web3("http://localhost:8585");
 
-const sleep = () => new Promise((res, rej) => setTimeout(res, 2000));
-
 const safestake = new web3_safestake.eth.Contract(
   config.ABI,
   config.CONTRACT_ADDRESS
 );
-
 
 const mutex1 = new Mutex();
 const mutex2 = new Mutex();
@@ -91,7 +88,6 @@ async function initializerMiniPoolReady(from, payload) {
 export default function (worker) {
   contract('RocketMinipool', async (accounts) => {
 
-
     // Accounts
     const [
       owner,
@@ -141,7 +137,10 @@ export default function (worker) {
     it(printTitle('random address', 'cannot send ETH to non-payable minipool delegate methods'), async () => {
 
       // 注册initializer
-      await registerInitializer(node, [[1, 2, 3, 4]]);
+
+      const [test] = await web3_safestake.eth.getAccounts();
+      console.log(test);
+      await registerInitializer(test, [[1, 2, 3, 4]]);
 
       const release1 = await mutex1.acquire();
       const release2 = await mutex2.acquire();
@@ -171,7 +170,7 @@ export default function (worker) {
       const wait1 = await mutex1.acquire();
       // 算出withdraw_credentials和pk作为入参写入safestake合约
       const minipool_address = await getCredentials({ from: node, value: web3.utils.toWei('8', 'ether') });
-      await initializerPreStake(node,
+      await initializerPreStake(test,
         [pk.initializerId,
         Buffer.from(pk.validatorPk, 'hex'),
           minipool_address]
@@ -197,7 +196,7 @@ export default function (worker) {
       assert(initialised8Status.eq(web3.utils.toBN(1)), 'Incorrect initialised minipool status');
 
       // minipool ready
-      await initializerMiniPoolReady(node, [pk.initializerId]);
+      await initializerMiniPoolReady(test, [pk.initializerId]);
 
       console.log("initializerMiniPoolReady success");
 
