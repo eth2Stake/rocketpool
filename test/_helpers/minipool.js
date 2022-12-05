@@ -161,12 +161,12 @@ export async function createMinipool(txOptions,depositData, salt = null) {
     let withdrawalCredentials = '0x010000000000000000000000' + minipoolAddress;
 
     // Get validator deposit data
-    let depositData = {
-        pubkey: getValidatorPubkey(),
-        withdrawalCredentials: Buffer.from(withdrawalCredentials.substr(2), 'hex'),
-        amount: BigInt(16000000000), // gwei
-        signature: getValidatorSignature(),
-    };
+    // let depositData = {
+    //     pubkey: getValidatorPubkey(),
+    //     withdrawalCredentials: Buffer.from(withdrawalCredentials.substr(2), 'hex'),
+    //     amount: BigInt(16000000000), // gwei
+    //     signature: getValidatorSignature(),
+    // };
     if (depositType == 3){
         depositData.amount =  BigInt(8000000000);
     }
