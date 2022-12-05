@@ -63,7 +63,7 @@ To configure Rocket Pool to use external Eth 1.0 and/or Eth 2.0 clients:
 
 #. Ensure your Eth 1.0 and/or Eth 2.0 clients are listening on the address ``0.0.0.0``:
 
-    * Geth: ``--http --http.addr 0.0.0.0 --http.port 8545 --http.vhosts *``
+    * Geth: ``--http --http.addr 0.0.0.0 --http.port 8123 --http.vhosts *``
     * Lighthouse: ``--http --http-address 0.0.0.0 --http-port 5052``
     * Nimbus: ``--rpc --rpc-address 0.0.0.0 --rpc-port 5052``
     * Prysm: ``--rpc-host 0.0.0.0 --rpc-port 5052``
@@ -81,7 +81,7 @@ To configure Rocket Pool to use external Eth 1.0 and/or Eth 2.0 clients:
 
 #. Open ``~/.rocketpool/config.yml``, and make the following changes:
 
-    * To use your own Geth instance, update ``chains.eth1.provider`` to ``http://XXX.XXX.XXX.XXX:8545``, where ``XXX.XXX.XXX.XXX`` is your machine's local IP address
+    * To use your own Geth instance, update ``chains.eth1.provider`` to ``http://XXX.XXX.XXX.XXX:8123``, where ``XXX.XXX.XXX.XXX`` is your machine's local IP address
     * To use your own Lighthouse, Nimbus, Prysm or Teku instance, update ``chains.eth2.provider`` to ``XXX.XXX.XXX.XXX:5052``, where ``XXX.XXX.XXX.XXX`` is your machine's local IP address
 
 #. Configure the Rocket Pool service, selecting Geth for your Eth 1.0 client, and the appropriate Eth 2.0 client::

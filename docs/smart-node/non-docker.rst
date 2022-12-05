@@ -54,7 +54,7 @@ To run the Rocket Pool service on your host OS, follow these steps:
     * Update ``smartnode.passwordPath`` to e.g. ``/home/[USERNAME]/.rocketpool/data/password``
     * Update ``smartnode.walletPath`` to e.g. ``/home/[USERNAME]/.rocketpool/data/wallet``
     * Update ``smartnode.validatorKeychainPath`` to e.g. ``/home/[USERNAME]/.rocketpool/data/validators``
-    * Update ``chains.eth1.provider`` to e.g. ``http://127.0.0.1:8545``
+    * Update ``chains.eth1.provider`` to e.g. ``http://127.0.0.1:8123``
     * Update ``chains.eth2.provider`` to e.g. ``127.0.0.1:5052`` (if using Prysm, use the port for gRPC)
 
 #. Configure the Rocket Pool service, selecting Geth for your Eth 1.0 client, and the appropriate Eth 2.0 client::
@@ -92,7 +92,7 @@ Geth::
     Type=simple
     Restart=always
     RestartSec=5
-    ExecStart=/path/to/geth --goerli --http --http.addr 127.0.0.1 --http.port 8545 --http.api eth,net,personal,web3 --http.vhosts *
+    ExecStart=/path/to/geth --goerli --http --http.addr 127.0.0.1 --http.port 8123 --http.api eth,net,personal,web3 --http.vhosts *
 
     [Install]
     WantedBy=multi-user.target
@@ -107,7 +107,7 @@ Lighthouse - Beacon Chain::
     Type=simple
     Restart=always
     RestartSec=5
-    ExecStart=/path/to/lighthouse beacon --testnet medalla --eth1 --eth1-endpoint http://127.0.0.1:8545 --http --http-address 127.0.0.1 --http-port 5052
+    ExecStart=/path/to/lighthouse beacon --testnet medalla --eth1 --eth1-endpoint http://127.0.0.1:8123 --http --http-address 127.0.0.1 --http-port 5052
 
     [Install]
     WantedBy=multi-user.target
@@ -137,7 +137,7 @@ Prysm - Beacon Chain::
     Type=simple
     Restart=always
     RestartSec=5
-    ExecStart=/path/to/prysm/beacon-chain --accept-terms-of-use --medalla --http-web3provider http://127.0.0.1:8545 --rpc-host 127.0.0.1 --rpc-port 5052
+    ExecStart=/path/to/prysm/beacon-chain --accept-terms-of-use --medalla --http-web3provider http://127.0.0.1:8123 --rpc-host 127.0.0.1 --rpc-port 5052
 
     [Install]
     WantedBy=multi-user.target

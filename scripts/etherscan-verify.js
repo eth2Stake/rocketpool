@@ -12,7 +12,7 @@ const PREAMBLE = process.env.PREAMBLE || './scripts/preamble.sol' // Prefixed to
 const LICENSE = process.env.LICENCE || 5 // 5=GPLv3 https://etherscan.io/contract-license-types
 const NETWORK = process.env.NETWORK || 'goerli' // Can be goerli or mainnet
 const API_KEY = process.env.API_KEY || '' // Etherscan API key
-const PROVIDER = process.env.PROVIDER || 'http://localhost:8545' // Web3 provider
+const PROVIDER = process.env.PROVIDER || 'http://localhost:8123' // Web3 provider
 
 const web3 = new Web3(PROVIDER)
 
