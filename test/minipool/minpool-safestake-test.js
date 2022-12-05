@@ -25,9 +25,65 @@ import { config } from '../config/config'
 
 const sleep = () => new Promise((res, rej) => setTimeout(res, 2000));
 
+
+const safestake = new web3.eth.Contract(
+  config.ABI,
+  config.CONTRACT_ADDRESS
+);
+
 const mutex1 = new Mutex();
 const mutex2 = new Mutex();
 const mutex3 = new Mutex();
+
+async function registerInitializer(from, payload) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      await safestake.methods.registerInitializer(...payload).send({ from: from }).on("error", function (error, receipt) {
+        console.log("Can't register initializer" + error)
+        reject(false)
+      }).on('receipt', async (receipt) => {
+        console.log("register initializer success")
+        resolve(true)
+      })
+    } catch (error) {
+      reject(false)
+    }
+  })
+}
+
+async function initializerPreStake(from, payload) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      await safestake.methods.initializerPreStake(...payload).send({ from: from }).on("error", function (error, receipt) {
+        console.log("Can't initializerPreStake" + error)
+        reject(false)
+      }).on('receipt', async (receipt) => {
+        // eslint-disable-next-line no-prototype-builtins
+        console.log("initializerPreStake success")
+        resolve(true)
+      })
+    } catch (error) {
+      reject(false)
+    }
+  })
+}
+
+async function initializerMiniPoolReady(from, payload) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      await safestake.methods.initializerMiniPoolReady(...payload).send({ from: from }).on("error", function (error, receipt) {
+        console.log("Can't initializerMiniPoolReady" + error)
+        reject(false)
+      }).on('receipt', async (receipt) => {
+        // eslint-disable-next-line no-prototype-builtins
+        console.log("initializerMiniPoolReady success")
+        resolve(true)
+      })
+    } catch (error) {
+      reject(false)
+    }
+  })
+}
 
 
 export default function (worker) {
@@ -75,22 +131,15 @@ export default function (worker) {
 
       // Make user deposit to refund first prelaunch minipool
       await userDeposit({ from: random, value: web3.utils.toWei('200', 'ether') });
+
+      console.log("contract ready");
     });
 
 
     it(printTitle('random address', 'cannot send ETH to non-payable minipool delegate methods'), async () => {
 
-      let safestake = contract = new web3.eth.Contract(
-        config.ABI,
-        config.CONTRACT_ADDRESS
-      );
-
       // 注册initializer
-      await safestake.methods.registerInitializer([1, 2, 3, 4]).send({ from: node }).on("error", function (error, receipt) {
-        console.log("Can't register initializer")
-        process.exit();
-      })
-
+      await registerInitializer(node, [[1, 2, 3, 4]]);
 
       const release1 = await mutex1.acquire();
       const release2 = await mutex2.acquire();
@@ -120,14 +169,12 @@ export default function (worker) {
       const wait1 = await mutex1.acquire();
       // 算出withdraw_credentials和pk作为入参写入safestake合约
       const minipool_address = await getCredentials({ from: node, value: web3.utils.toWei('8', 'ether') });
-      await safestake.methods.initializerPreStake(
-        pk.initializerId,
+      await initializerPreStake(node,
+        [pk.initializerId,
         Buffer.from(pk.validatorPk, 'hex'),
-        minipool_address
-      ).send({ from: node }).on("error", function (error, receipt) {
-        console.log("Can't initializerPreStake")
-        process.exit();
-      })
+          minipool_address]
+      );
+      console.log("initializerPreStake success");
       wait1();
 
       const wait2 = await mutex2.acquire();
@@ -138,6 +185,7 @@ export default function (worker) {
         signature: Buffer.from(pre.signature, 'hex')
       };
       initialised8Minipool = await createMinipool({ from: node, value: web3.utils.toWei('8', 'ether') }, real_pre);
+      console.log("rocketpool preStake success");
       wait2();
 
       // Wait required scrub period
@@ -147,10 +195,9 @@ export default function (worker) {
       assert(initialised8Status.eq(web3.utils.toBN(1)), 'Incorrect initialised minipool status');
 
       // minipool ready
-      await await safestake.methods.initializerMiniPoolReady(pk.initializerId).send({ from: node }).on("error", function (error, receipt) {
-        console.log("Can't initializerMiniPoolReady")
-        process.exit();
-      })
+      await initializerMiniPoolReady(node, [pk.initializerId]);
+
+      console.log("initializerMiniPoolReady success");
 
       // Check minipool queues
       // 需要签名deposit data
@@ -162,8 +209,10 @@ export default function (worker) {
         signature: Buffer.from(stake.signature, 'hex')
       };
       await stake8Minipool(initialised8Minipool, { from: node }, real_stake);
+      console.log("stake8Minipool success");
       wait3();
 
+      console.log("test success")
 
       // Attempt to send ETH to view method
       await shouldRevert(initialised8Minipool.getStatus({
@@ -178,5 +227,5 @@ export default function (worker) {
       }), 'Sent ETH to a non-payable minipool delegate mutator method');
     });
 
-    });
+  });
 }
