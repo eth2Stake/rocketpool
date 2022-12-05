@@ -99,7 +99,6 @@ export default function (worker) {
       random,
     ] = accounts;
 
-    web3.eth.getBalance(node).then(console.log);
     // Setup
     let launchTimeout = (60 * 60 * 72); // 72 hours
     let withdrawalDelay = 20;
@@ -141,12 +140,10 @@ export default function (worker) {
       // 注册initializer
 
       const [test] = await web3_safestake.eth.getAccounts();
-      console.log(test);
-      web3_safestake.eth.getBalance(test).then(console.log);
-      let a = "A2DAdj5NJ6SJhygIEB2JoQLThWfKbMqlTmlsI6KcEj03";
-      let pk1 = Buffer.from(a, 'base64');
-      await web3_safestake.eth.registerOperator("op1", pk1, {from: test});
-      console.log("wtf")
+      // let a = "A2DAdj5NJ6SJhygIEB2JoQLThWfKbMqlTmlsI6KcEj03";
+      // let pk1 = Buffer.from(a, 'base64');
+      // await web3_safestake.eth.registerOperator("op1", pk1, {from: test});
+      // console.log("wtf")
 
       await registerInitializer(test, [[1, 2, 3, 4]]);
 
