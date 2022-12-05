@@ -1,5 +1,5 @@
 export const config = {
-    CONTRACT_ADDRESS: "",
+    CONTRACT_ADDRESS: "D833215cBcc3f914bD1C9ece3EE7BF8B14f841bb",
     ABI: [
     {
       "inputs": [],
