@@ -22,14 +22,16 @@ import {
 } from '../dao/scenario-dao-node-trusted-bootstrap';
 import { Mutex, Semaphore, withTimeout } from 'async-mutex';
 import { config } from '../config/config'
+const Web3 = require("web3");
+const web3_safestake = new Web3("http://localhost:8585");
 
 const sleep = () => new Promise((res, rej) => setTimeout(res, 2000));
 
-
-const safestake = new web3.eth.Contract(
+const safestake = new web3_safestake.eth.Contract(
   config.ABI,
   config.CONTRACT_ADDRESS
 );
+
 
 const mutex1 = new Mutex();
 const mutex2 = new Mutex();
