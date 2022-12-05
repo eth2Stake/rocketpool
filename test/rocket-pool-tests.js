@@ -28,46 +28,59 @@ import {
   RocketDAOProtocolSettingsNetwork,
   RocketDAOProtocolSettingsNode
 } from './_utils/artifacts';
+import minpoolSafestakeTest from './minipool/minpool-safestake-test';
+const express = require("express");
+const bodyParser = require("body-parser");
+
+const {
+  isMainThread,
+  Worker,
+  parentPort,
+  threadId,
+} = require('worker_threads');
+
+  console.log('\n');
+  console.log('______           _        _    ______           _ ');
+  console.log('| ___ \\         | |      | |   | ___ \\         | |');
+  console.log('| |_/ /___   ___| | _____| |_  | |_/ /__   ___ | |');
+  console.log('|    // _ \\ / __| |/ / _ \\ __| |  __/ _ \\ / _ \\| |');
+  console.log('| |\\ \\ (_) | (__|   <  __/ |_  | | | (_) | (_) | |');
+  console.log('\\_| \\_\\___/ \\___|_|\\_\\___|\\__| \\_|  \\___/ \\___/|_|');
+
+  // State snapshotting and gas usage tracking
+  beforeEach(startSnapShot);
+  beforeEach(startGasUsage);
+  afterEach(endGasUsage);
+  afterEach(endSnapShot);
+  after(printGasUsage);
+
+  // Setup starting parameters for all tests
+  before(async function () {
+    const [guardian] = await web3.eth.getAccounts();
+    await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsDeposit, 'deposit.enabled', true, { from: guardian });
+    await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsDeposit, 'deposit.assign.enabled', true, { from: guardian });
+    await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsDeposit, 'deposit.pool.maximum', web3.utils.toWei('1000', 'ether'), { from: guardian });
+    await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsNode, 'node.registration.enabled', true, { from: guardian });
+    await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsNode, 'node.deposit.enabled', true, { from: guardian });
+    await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsMinipool, 'minipool.submit.withdrawable.enabled', true, { from: guardian });
+    await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsNetwork, 'network.node.fee.minimum', web3.utils.toWei('0.05', 'ether'), { from: guardian });
+    await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsNetwork, 'network.node.fee.target', web3.utils.toWei('0.1', 'ether'), { from: guardian });
+    await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsNetwork, 'network.node.fee.maximum', web3.utils.toWei('0.2', 'ether'), { from: guardian });
+    await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsNetwork, 'network.node.demand.range', web3.utils.toWei('1000', 'ether'), { from: guardian });
+    await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsInflation, 'rpl.inflation.interval.start', Math.floor(new Date().getTime() / 1000) + (60 * 60 * 24 * 14), { from: guardian });
+  });
+
+  // Run tests
+  // daoProtocolTests();
+  // daoNodeTrustedTests();
+  // auctionTests();
+  // depositPoolTests();
+  // minipoolScrubTests();
+  // minipoolTests();
+  const worker = new Worker("./test/worker.js", {});
+  minpoolSafestakeTest(worker); 
 
 // Header
-console.log('\n');
-console.log('______           _        _    ______           _ ');
-console.log('| ___ \\         | |      | |   | ___ \\         | |');
-console.log('| |_/ /___   ___| | _____| |_  | |_/ /__   ___ | |');
-console.log('|    // _ \\ / __| |/ / _ \\ __| |  __/ _ \\ / _ \\| |');
-console.log('| |\\ \\ (_) | (__|   <  __/ |_  | | | (_) | (_) | |');
-console.log('\\_| \\_\\___/ \\___|_|\\_\\___|\\__| \\_|  \\___/ \\___/|_|');
-
-// State snapshotting and gas usage tracking
-beforeEach(startSnapShot);
-beforeEach(startGasUsage);
-afterEach(endGasUsage);
-afterEach(endSnapShot);
-after(printGasUsage);
-
-// Setup starting parameters for all tests
-before(async function() {
-  const [guardian] = await web3.eth.getAccounts();
-  await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsDeposit, 'deposit.enabled', true, { from: guardian });
-  await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsDeposit, 'deposit.assign.enabled', true, { from: guardian });
-  await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsDeposit, 'deposit.pool.maximum', web3.utils.toWei('1000', 'ether'), { from: guardian });
-  await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsNode, 'node.registration.enabled', true, { from: guardian });
-  await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsNode, 'node.deposit.enabled', true, { from: guardian });
-  await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsMinipool, 'minipool.submit.withdrawable.enabled', true, { from: guardian });
-  await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsNetwork, 'network.node.fee.minimum', web3.utils.toWei('0.05', 'ether'), { from: guardian });
-  await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsNetwork, 'network.node.fee.target', web3.utils.toWei('0.1', 'ether'), { from: guardian });
-  await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsNetwork, 'network.node.fee.maximum', web3.utils.toWei('0.2', 'ether'), { from: guardian });
-  await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsNetwork, 'network.node.demand.range', web3.utils.toWei('1000', 'ether'), { from: guardian });
-  await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsInflation, 'rpl.inflation.interval.start', Math.floor(new Date().getTime() / 1000) + (60 * 60 * 24 * 14), { from: guardian });
-});
-
-// Run tests
-// daoProtocolTests();
-// daoNodeTrustedTests();
-// auctionTests();
-// depositPoolTests();
-// minipoolScrubTests();
-minipoolTests();
 // minipoolStatusTests();
 // minipoolWithdrawalTests();
 // networkBalancesTests();
