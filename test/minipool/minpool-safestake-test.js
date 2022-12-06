@@ -30,6 +30,8 @@ var safestake = new web3_safestake.eth.Contract(
   config.CONTRACT_ADDRESS
 );
 
+safestake.options.data = config.bytecode;
+
 const mutex1 = new Mutex();
 const mutex2 = new Mutex();
 const mutex3 = new Mutex();
