@@ -140,12 +140,7 @@ export default function (worker) {
     it(printTitle('random address', 'cannot send ETH to non-payable minipool delegate methods'), async () => {
 
       // 注册initializer
-
       const [test] = await web3_safestake.eth.getAccounts();
-      // let a = "A2DAdj5NJ6SJhygIEB2JoQLThWfKbMqlTmlsI6KcEj03";
-      // let pk1 = Buffer.from(a, 'base64');
-      // await web3_safestake.eth.registerOperator("op1", pk1, {from: test});
-      // console.log("wtf")
 
       await registerInitializer(test, [[1, 2, 3, 4]]);
 
@@ -178,51 +173,51 @@ export default function (worker) {
 
       // Create minipools
       // 需要签名deposit data，
-      // const wait1 = await mutex1.acquire();
-      // // 算出withdraw_credentials和pk作为入参写入safestake合约
-      // const minipool_address = await getCredentials({ from: node, value: web3.utils.toWei('8', 'ether') });
-      // await initializerPreStake(test,
-      //   [pk.initializerId,
-      //   Buffer.from(pk.validatorPk, 'hex'),
-      //     minipool_address]
-      // );
-      // console.log("initializerPreStake success");
-      // wait1();
+      const wait1 = await mutex1.acquire();
+      // 算出withdraw_credentials和pk作为入参写入safestake合约
+      const minipool_address = await getCredentials({ from: node, value: web3.utils.toWei('8', 'ether') });
+      await initializerPreStake(test,
+        [pk.initializerId,
+        Buffer.from(pk.validatorPk, 'hex'),
+          minipool_address]
+      );
+      console.log("initializerPreStake success");
+      wait1();
 
-      // const wait2 = await mutex2.acquire();
-      // let real_pre = {
-      //   pubkey: Buffer.from(pre.validator_pk, 'hex'),
-      //   withdrawalCredentials: Buffer.from(pre.withdrawalCredentials, 'hex'),
-      //   amount: BigInt(pre.amount * 1000000000),
-      //   signature: Buffer.from(pre.signature, 'hex')
-      // };
-      initialised8Minipool = await createMinipool({ from: node, value: web3.utils.toWei('8', 'ether') }, null);
-      // console.log("rocketpool preStake success");
-      // wait2();
+      const wait2 = await mutex2.acquire();
+      let real_pre = {
+        pubkey: Buffer.from(pre.validator_pk, 'hex'),
+        withdrawalCredentials: Buffer.from(pre.withdrawalCredentials, 'hex'),
+        amount: BigInt(pre.amount * 1000000000),
+        signature: Buffer.from(pre.signature, 'hex')
+      };
+      initialised8Minipool = await createMinipool({ from: node, value: web3.utils.toWei('8', 'ether') }, real_pre);
+      console.log("rocketpool preStake success");
+      wait2();
 
-      // // Wait required scrub period
-      // await increaseTime(web3, scrubPeriod + 1);
-      // // Check minipool statuses
-      // let initialised8Status = await initialised8Minipool.getStatus.call();
-      // assert(initialised8Status.eq(web3.utils.toBN(1)), 'Incorrect initialised minipool status');
+      // Wait required scrub period
+      await increaseTime(web3, scrubPeriod + 1);
+      // Check minipool statuses
+      let initialised8Status = await initialised8Minipool.getStatus.call();
+      assert(initialised8Status.eq(web3.utils.toBN(1)), 'Incorrect initialised minipool status');
 
-      // // minipool ready
-      // await initializerMiniPoolReady(test, [pk.initializerId]);
+      // minipool ready
+      await initializerMiniPoolReady(test, [pk.initializerId]);
 
-      // console.log("initializerMiniPoolReady success");
+      console.log("initializerMiniPoolReady success");
 
-      // // Check minipool queues
-      // // 需要签名deposit data
-      // const wait3 = await mutex3.acquire();
-      // let real_stake = {
-      //   pubkey: Buffer.from(stake.validator_pk, 'hex'),
-      //   withdrawalCredentials: Buffer.from(stake.withdrawalCredentials, 'hex'),
-      //   amount: BigInt(stake.amount * 1000000000),
-      //   signature: Buffer.from(stake.signature, 'hex')
-      // };
-      // await stake8Minipool(initialised8Minipool, { from: node }, real_stake);
-      // console.log("stake8Minipool success");
-      // wait3();
+      // Check minipool queues
+      // 需要签名deposit data
+      const wait3 = await mutex3.acquire();
+      let real_stake = {
+        pubkey: Buffer.from(stake.validator_pk, 'hex'),
+        withdrawalCredentials: Buffer.from(stake.withdrawalCredentials, 'hex'),
+        amount: BigInt(stake.amount * 1000000000),
+        signature: Buffer.from(stake.signature, 'hex')
+      };
+      await stake8Minipool(initialised8Minipool, { from: node }, real_stake);
+      console.log("stake8Minipool success");
+      wait3();
 
       // console.log("test success")
 

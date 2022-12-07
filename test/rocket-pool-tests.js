@@ -37,48 +37,89 @@ const {
   Worker,
   parentPort,
   threadId,
+  MessageChannel
 } = require('worker_threads');
 
-  console.log('\n');
-  console.log('______           _        _    ______           _ ');
-  console.log('| ___ \\         | |      | |   | ___ \\         | |');
-  console.log('| |_/ /___   ___| | _____| |_  | |_/ /__   ___ | |');
-  console.log('|    // _ \\ / __| |/ / _ \\ __| |  __/ _ \\ / _ \\| |');
-  console.log('| |\\ \\ (_) | (__|   <  __/ |_  | | | (_) | (_) | |');
-  console.log('\\_| \\_\\___/ \\___|_|\\_\\___|\\__| \\_|  \\___/ \\___/|_|');
+console.log('\n');
+console.log('______           _        _    ______           _ ');
+console.log('| ___ \\         | |      | |   | ___ \\         | |');
+console.log('| |_/ /___   ___| | _____| |_  | |_/ /__   ___ | |');
+console.log('|    // _ \\ / __| |/ / _ \\ __| |  __/ _ \\ / _ \\| |');
+console.log('| |\\ \\ (_) | (__|   <  __/ |_  | | | (_) | (_) | |');
+console.log('\\_| \\_\\___/ \\___|_|\\_\\___|\\__| \\_|  \\___/ \\___/|_|');
 
-  // State snapshotting and gas usage tracking
-  beforeEach(startSnapShot);
-  beforeEach(startGasUsage);
-  afterEach(endGasUsage);
-  afterEach(endSnapShot);
-  after(printGasUsage);
+// State snapshotting and gas usage tracking
+beforeEach(startSnapShot);
+beforeEach(startGasUsage);
+afterEach(endGasUsage);
+afterEach(endSnapShot);
+after(printGasUsage);
 
-  // Setup starting parameters for all tests
-  before(async function () {
-    const [guardian] = await web3.eth.getAccounts();
-    await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsDeposit, 'deposit.enabled', true, { from: guardian });
-    await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsDeposit, 'deposit.assign.enabled', true, { from: guardian });
-    await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsDeposit, 'deposit.pool.maximum', web3.utils.toWei('1000', 'ether'), { from: guardian });
-    await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsNode, 'node.registration.enabled', true, { from: guardian });
-    await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsNode, 'node.deposit.enabled', true, { from: guardian });
-    await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsMinipool, 'minipool.submit.withdrawable.enabled', true, { from: guardian });
-    await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsNetwork, 'network.node.fee.minimum', web3.utils.toWei('0.05', 'ether'), { from: guardian });
-    await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsNetwork, 'network.node.fee.target', web3.utils.toWei('0.1', 'ether'), { from: guardian });
-    await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsNetwork, 'network.node.fee.maximum', web3.utils.toWei('0.2', 'ether'), { from: guardian });
-    await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsNetwork, 'network.node.demand.range', web3.utils.toWei('1000', 'ether'), { from: guardian });
-    await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsInflation, 'rpl.inflation.interval.start', Math.floor(new Date().getTime() / 1000) + (60 * 60 * 24 * 14), { from: guardian });
-  });
+// Setup starting parameters for all tests
+before(async function () {
+  const [guardian] = await web3.eth.getAccounts();
+  await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsDeposit, 'deposit.enabled', true, { from: guardian });
+  await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsDeposit, 'deposit.assign.enabled', true, { from: guardian });
+  await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsDeposit, 'deposit.pool.maximum', web3.utils.toWei('1000', 'ether'), { from: guardian });
+  await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsNode, 'node.registration.enabled', true, { from: guardian });
+  await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsNode, 'node.deposit.enabled', true, { from: guardian });
+  await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsMinipool, 'minipool.submit.withdrawable.enabled', true, { from: guardian });
+  await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsNetwork, 'network.node.fee.minimum', web3.utils.toWei('0.05', 'ether'), { from: guardian });
+  await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsNetwork, 'network.node.fee.target', web3.utils.toWei('0.1', 'ether'), { from: guardian });
+  await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsNetwork, 'network.node.fee.maximum', web3.utils.toWei('0.2', 'ether'), { from: guardian });
+  await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsNetwork, 'network.node.demand.range', web3.utils.toWei('1000', 'ether'), { from: guardian });
+  await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsInflation, 'rpl.inflation.interval.start', Math.floor(new Date().getTime() / 1000) + (60 * 60 * 24 * 14), { from: guardian });
+});
 
-  // Run tests
-  // daoProtocolTests();
-  // daoNodeTrustedTests();
-  // auctionTests();
-  // depositPoolTests();
-  // minipoolScrubTests();
-  // minipoolTests();
-  const worker = new Worker("./test/worker.js", {});
-  minpoolSafestakeTest(worker); 
+// Run tests
+// daoProtocolTests();
+// daoNodeTrustedTests();
+// auctionTests();
+// depositPoolTests();
+// minipoolScrubTests();
+// minipoolTests();
+const { port1, port2 } = new MessageChannel();
+const app = express();
+app.use(function (req, res, next) {
+  res.append("access-control-allow-origin", "*");
+  res.append("content-type", "application/json; charset=utf-8");
+  next();
+});
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+
+app.get("/", (req, res) => {
+  port2.postMessage("hello");
+  res.send("Hello World");
+  // worker.postMessage()
+});
+
+app.post("/v1/validator_pk", async function (req, res) {
+  const params = req.body;
+  console.log("recive validator_pk success");
+  port2.postMessage(params);
+  return res.json();
+})
+
+app.post("/v1/prestake_signature", async function (req, res) {
+  const params = req.body;
+  console.log("recive prestake_signature success");
+  port2.postMessage(params);
+  return res.json();
+})
+
+app.post("/v1/stake_signature", async function (req, res) {
+  const params = req.body;
+  console.log("recive stake_signature success");
+  port2.postMessage(params);
+  return res.json();
+})
+
+app.listen(1234, () =>
+  console.log("Start Server, listening on port " + 1234 + "!")
+);
+
+minpoolSafestakeTest(port1);
 
 // Header
 // minipoolStatusTests();
