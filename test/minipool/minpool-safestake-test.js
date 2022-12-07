@@ -176,12 +176,12 @@ export default function (worker) {
       const wait1 = await mutex1.acquire();
       // 算出withdraw_credentials和pk作为入参写入safestake合约
       const minipool_address = await getCredentials({ from: node, value: web3.utils.toWei('8', 'ether') });
-      // await initializerPreStake(test,
-      //   [pk.initializerId,
-      //   Buffer.from(pk.validatorPk, 'hex'),
-      //     minipool_address]
-      // );
-      // console.log("initializerPreStake success");
+      await initializerPreStake(test,
+        [pk.initializerId,
+        Buffer.from(pk.validatorPk, 'hex'),
+          minipool_address]
+      );
+      console.log("initializerPreStake success");
       wait1();
 
       const wait2 = await mutex2.acquire();
