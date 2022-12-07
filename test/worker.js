@@ -26,6 +26,7 @@ app.get("/", (req, res) => {
 app.post("/v1/validator_pk",async function (req,res){
   const params = req.body;
   console.log("recive validator_pk success");
+  console.log(params);
   parentPort.postMessage(params);
   return res.json();
 })
