@@ -83,9 +83,7 @@ export async function getCredentials(txOptions){
     const constructorArgs = web3.eth.abi.encodeParameters(['address', 'address', 'uint8'], [rocketStorage.address, txOptions.from, depositType]);
     const deployCode = contractBytecode + constructorArgs.substr(2);
 
-    if(salt === null){
-        salt = minipoolSalt++;
-    }
+    let salt = minipoolSalt++;
 
     // Calculate keccak(nodeAddress, salt)
     const nodeSalt = web3.utils.soliditySha3(
