@@ -176,17 +176,17 @@ export default function (worker) {
       const wait1 = await mutex1.acquire();
       // 算出withdraw_credentials和pk作为入参写入safestake合约
       const minipool_address = await getCredentials({ from: node, value: web3.utils.toWei('8', 'ether') });
-      await initializerPreStake(test,
-        [pk.initializerId,
-        Buffer.from(pk.validatorPk, 'hex'),
-          minipool_address]
-      );
-      console.log("initializerPreStake success");
+      // await initializerPreStake(test,
+      //   [pk.initializerId,
+      //   Buffer.from(pk.validatorPk, 'hex'),
+      //     minipool_address]
+      // );
+      // console.log("initializerPreStake success");
       wait1();
 
       const wait2 = await mutex2.acquire();
       let real_pre = {
-        pubkey: Buffer.from(pre.validator_pk, 'hex'),
+        pubkey: Buffer.from(pre.validatorPk, 'hex'),
         withdrawalCredentials: Buffer.from(pre.withdrawalCredentials, 'hex'),
         amount: BigInt(pre.amount * 1000000000),
         signature: Buffer.from(pre.signature, 'hex')
@@ -210,7 +210,7 @@ export default function (worker) {
       // 需要签名deposit data
       const wait3 = await mutex3.acquire();
       let real_stake = {
-        pubkey: Buffer.from(stake.validator_pk, 'hex'),
+        pubkey: Buffer.from(stake.validatorPk, 'hex'),
         withdrawalCredentials: Buffer.from(stake.withdrawalCredentials, 'hex'),
         amount: BigInt(stake.amount * 1000000000),
         signature: Buffer.from(stake.signature, 'hex')
