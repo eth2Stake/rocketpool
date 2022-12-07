@@ -159,14 +159,17 @@ export default function (worker) {
       worker.on("message", (message) => {
         if (x == 0) {
           pk = message;
+          console.log("worker recive validator_pk success");
           release1();
         }
-        if (x = 1) {
+        else if (x == 1) {
           pre = message;
+          console.log("worker recive prestake_signature success");
           release2();
         }
-        if (x = 2) {
+        else if (x == 2) {
           stake = message;
+          console.log("worker recive stake_signature success");
           release3();
         }
         x += 1;
