@@ -162,7 +162,7 @@ export async function createMinipool(txOptions,depositData = null, salt = null) 
 
     // Get validator deposit data
     if (depositData == null){
-        let depositData = {
+        depositData = {
             pubkey: getValidatorPubkey(),
             withdrawalCredentials: Buffer.from(withdrawalCredentials.substr(2), 'hex'),
             amount: BigInt(16000000000), // gwei
