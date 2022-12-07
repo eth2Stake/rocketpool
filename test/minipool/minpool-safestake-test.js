@@ -157,6 +157,7 @@ export default function (worker) {
       let pre = {};
       let stake = {};
       worker.on("message", (message) => {
+        console.log(message);
         if (x == 0) {
           pk = message;
           console.log("worker recive validator_pk success");
