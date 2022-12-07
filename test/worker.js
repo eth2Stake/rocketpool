@@ -25,18 +25,21 @@ app.get("/", (req, res) => {
 
 app.post("/v1/validator_pk",async function (req,res){
   const params = req.body;
+  console.log("recive validator_pk success");
   parentPort.postMessage(params);
   return res.json();
 })
 
 app.post("/v1/prestake_signature",async function (req,res){
   const params = req.body;
+  console.log("recive prestake_signature success");
   parentPort.postMessage(params);
   return res.json();
 })
 
 app.post("/v1/stake_signature",async function (req,res){
   const params = req.body;
+  console.log("recive stake_signature success");
   parentPort.postMessage(params);
   return res.json();
 })
