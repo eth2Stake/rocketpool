@@ -302,7 +302,7 @@ contract RocketMinipoolDelegate is RocketMinipoolStorageLayout, RocketMinipoolIn
             if (status == MinipoolStatus.Staking) {
                 // Then balance must be greater than 16 ETH
                 if(depositType == MinipoolDeposit.Quarter){
-                    require(totalBalance >= 8 ether, "Balance must be greater than 8 ETH");
+                    require(totalBalance >= 24 ether, "Balance must be greater than 24 ETH");
                 }else{
                     require(totalBalance >= 16 ether, "Balance must be greater than 16 ETH");
                 }
@@ -397,12 +397,16 @@ contract RocketMinipoolDelegate is RocketMinipoolStorageLayout, RocketMinipoolIn
             uint256 totalRewards = _balance.sub(stakingDepositTotal);
             // Calculate node share of rewards for the user
             uint256 halfRewards = totalRewards.div(2);
+            uint256 QuarterRewards = totalRewards.div(4);
+
             uint256 nodeCommissionFee = halfRewards.mul(nodeFee).div(1 ether);
             // Check for un-bonded minipool
             if (depositType == MinipoolDeposit.Empty) {
                 // Add the total rewards minus the commission to the user's total
                 userAmount = userAmount.add(totalRewards.sub(nodeCommissionFee));
-            } else {
+            }else if (depositType == MinipoolDeposit.Quarter){
+                userAmount = userAmount.add(totalRewards.sub(QuarterRewards).sub(nodeCommissionFee));
+            }else {
                 // Add half the rewards minus the commission fee to the user's total
                 userAmount = userAmount.add(halfRewards.sub(nodeCommissionFee));
             }

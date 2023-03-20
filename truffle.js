@@ -7,6 +7,8 @@
 
 const Web3 = require('web3');
 const FS = require('fs');
+require('dotenv').config();
+const { INFURA_API_KEY, MNEMONIC } = process.env;
 const Contract = require('truffle-contract');
 const HDWalletProvider = require("@truffle/hdwallet-provider");
 const mnemonicPhrase = process.env.MNEMONIC;
@@ -84,17 +86,7 @@ module.exports = {
     // Remove accounts[0] lookup in migrations script when deploying
     'goerli': {
         provider: () =>
-        new HDWalletProvider({
-            mnemonic: {
-                phrase: mnemonicPhrase,
-                password: mnemonicPassword
-            },
-            providerOrUrl: `${providerProtocol}://${providerHost}:${providerPort}`,
-            numberOfAddresses: 1, 
-            shareNonce: true,
-        }),
-        host: providerHost,
-        port: providerPort,
+        new HDWalletProvider(MNEMONIC, INFURA_API_KEY),
         network_id: "5", 
         gas: 8000000,
         hasProvider: true

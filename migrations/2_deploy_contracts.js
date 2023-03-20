@@ -117,16 +117,8 @@ module.exports = async (deployer, network) => {
   let $web3 = new config.web3(provider);
   console.log('\n');
 
-  // Accounts
-  let accounts = await $web3.eth.getAccounts(function(error, result) {
-    if(error != null) {
-      console.log(error);
-      console.log("Error retrieving accounts.'");
-    }
-    return result;
-  });
+  // // Accounts
 
-  console.log(accounts);
 
   // Live deployment
   if ( network == 'live' ) {
@@ -158,6 +150,15 @@ module.exports = async (deployer, network) => {
 
   // Test network deployment
   else {
+    let accounts = await $web3.eth.getAccounts(function (error, result) {
+      if (error != null) {
+        console.log(error);
+        console.log("Error retrieving accounts.'");
+      }
+      return result;
+    });
+
+    console.log(accounts);
 
     // Precompiled - Casper Deposit Contract
     const casperDepositABI = loadABI('./contracts/contract/casper/compiled/Deposit.abi');
@@ -190,9 +191,20 @@ module.exports = async (deployer, network) => {
 
 
   // Deploy rocketStorage first - has to be done in this order so that the following contracts already know the storage address
-  const rs = await deployer.deploy(rocketStorage);
-  const rsTx = await web3.eth.getTransactionReceipt(rs.transactionHash);
-  const deployBlock = rsTx.blockNumber;
+
+  let deployBlockFunc = new Promise(async (s,r)=>{
+    await deployer.deploy(rocketStorage).then(async(instance)=> {
+        console.log(instance.transactionHash);
+        const rsTx = await web3.eth.getTransactionReceipt(instance.transactionHash);
+        s(rsTx.blockNumber);
+    });
+  })
+  let deployBlock = await deployBlockFunc;
+  if (!deployBlock){
+    console.log("wtf");
+  }
+  console.log(deployBlock);
+
   // Update the storage with the new addresses
   let rocketStorageInstance = await rocketStorage.deployed();
   // Deploy other contracts - have to be inside an async loop
