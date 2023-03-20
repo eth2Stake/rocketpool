@@ -1,10 +1,10 @@
 import {
-    RocketDAOProtocolSettingsNetwork,
-    RocketDepositPool,
-    RocketMinipoolManager,
-    RocketMinipoolPenalty,
-    RocketNodeManager,
-    RocketTokenRETH
+    SafeStakeDAOProtocolSettingsNetwork,
+    SafeStakeDepositPool,
+    SafeStakeMinipoolManager,
+    SafeStakeMinipoolPenalty,
+    SafeStakeNodeManager,
+    SafeStakeTokenRETH
 } from '../_utils/artifacts'
 
 
@@ -14,18 +14,18 @@ export async function withdrawValidatorBalance(minipool, withdrawalBalance, from
 
     // Load contracts
     const [
-        rocketDepositPool,
-        rocketTokenRETH,
-        rocketNodeManager
+        safeStakeDepositPool,
+        safeStakeTokenRETH,
+        safeStakeNodeManager
     ] = await Promise.all([
-        RocketDepositPool.deployed(),
-        RocketTokenRETH.deployed(),
-        RocketNodeManager.deployed(),
+        SafeStakeDepositPool.deployed(),
+        SafeStakeTokenRETH.deployed(),
+        SafeStakeNodeManager.deployed(),
     ]);
 
     // Get node parameters
     let nodeAddress = await minipool.getNodeAddress.call();
-    let nodeWithdrawalAddress = await rocketNodeManager.getNodeWithdrawalAddress.call(nodeAddress);
+    let nodeWithdrawalAddress = await safeStakeNodeManager.getNodeWithdrawalAddress.call(nodeAddress);
 
     // Get parameters
     let [
@@ -37,8 +37,8 @@ export async function withdrawValidatorBalance(minipool, withdrawalBalance, from
     // Get balances
     function getBalances() {
         return Promise.all([
-            web3.eth.getBalance(rocketTokenRETH.address).then(value => web3.utils.toBN(value)),
-            rocketDepositPool.getBalance.call(),
+            web3.eth.getBalance(safeStakeTokenRETH.address).then(value => web3.utils.toBN(value)),
+            safeStakeDepositPool.getBalance.call(),
             web3.eth.getBalance(nodeWithdrawalAddress).then(value => web3.utils.toBN(value)),
             web3.eth.getBalance(minipool.address).then(value => web3.utils.toBN(value)),
         ]).then(
@@ -129,8 +129,8 @@ export async function withdrawValidatorBalance(minipool, withdrawalBalance, from
     // console.log('rETH Contract Amount:', web3.utils.fromWei(balances1.rethContractEth), web3.utils.fromWei(balances2.rethContractEth), web3.utils.fromWei(balances2.rethContractEth.sub(balances1.rethContractEth)));
 
     // Get penalty rate for this minipool
-    const rocketMinipoolPenalty = await RocketMinipoolPenalty.deployed();
-    const penaltyRate = await rocketMinipoolPenalty.getPenaltyRate(minipool.address);
+    const safeStakeMinipoolPenalty = await SafeStakeMinipoolPenalty.deployed();
+    const penaltyRate = await safeStakeMinipoolPenalty.getPenaltyRate(minipool.address);
 
     // Calculate rewards
     let depositBalance = web3.utils.toBN(web3.utils.toWei('32'));

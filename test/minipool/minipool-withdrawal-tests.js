@@ -1,12 +1,12 @@
 import {
-    RocketDAONodeTrustedUpgrade,
-    RocketDAOProtocolSettingsMinipool,
-    RocketDAOProtocolSettingsNetwork,
-    RocketMinipoolPenalty,
-    RocketMinipoolStatus,
-    RocketStorage,
+    SafeStakeDAONodeTrustedUpgrade,
+    SafeStakeDAOProtocolSettingsMinipool,
+    SafeStakeDAOProtocolSettingsNetwork,
+    SafeStakeMinipoolPenalty,
+    SafeStakeMinipoolStatus,
+    SafeStakeStorage,
     PenaltyTest,
-    RocketNodeStaking, RocketDAONodeTrustedSettingsMinipool,
+    SafeStakeNodeStaking, SafeStakeDAONodeTrustedSettingsMinipool,
 } from '../_utils/artifacts';
 import { printTitle } from '../_utils/formatting';
 import { shouldRevert } from '../_utils/testing';
@@ -24,7 +24,7 @@ import {
 import { submitPrices } from '../_helpers/network';
 
 export default function() {
-    contract('RocketMinipool', async (accounts) => {
+    contract('SafeStakeMinipool', async (accounts) => {
 
 
         // Accounts
@@ -55,33 +55,33 @@ export default function() {
             await setNodeTrusted(trustedNode, 'saas_1', 'node@home.com', owner);
 
             // Set settings
-            await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsMinipool, 'minipool.launch.timeout', launchTimeout, {from: owner});
-            await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsMinipool, 'minipool.withdrawal.delay', withdrawalDelay, {from: owner});
-            await setDAONodeTrustedBootstrapSetting(RocketDAONodeTrustedSettingsMinipool, 'minipool.scrub.period', scrubPeriod, {from: owner});
+            await setDAOProtocolBootstrapSetting(SafeStakeDAOProtocolSettingsMinipool, 'minipool.launch.timeout', launchTimeout, {from: owner});
+            await setDAOProtocolBootstrapSetting(SafeStakeDAOProtocolSettingsMinipool, 'minipool.withdrawal.delay', withdrawalDelay, {from: owner});
+            await setDAONodeTrustedBootstrapSetting(SafeStakeDAONodeTrustedSettingsMinipool, 'minipool.scrub.period', scrubPeriod, {from: owner});
 
             // Set rETH collateralisation target to a value high enough it won't cause excess ETH to be funneled back into deposit pool and mess with our calcs
-            await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsNetwork, 'network.reth.collateral.target', web3.utils.toWei('50', 'ether'), {from: owner});
+            await setDAOProtocolBootstrapSetting(SafeStakeDAOProtocolSettingsNetwork, 'network.reth.collateral.target', web3.utils.toWei('50', 'ether'), {from: owner});
 
             // Set RPL price
             let block = await web3.eth.getBlockNumber();
             await submitPrices(block, web3.utils.toWei('1', 'ether'), '0', {from: trustedNode});
 
             // Add penalty helper contract
-            const rocketStorage = await RocketStorage.deployed();
-            penaltyTestContract = await PenaltyTest.new(rocketStorage.address, {from: owner});
-            await setDaoNodeTrustedBootstrapUpgrade('addContract', 'rocketPenaltyTest', penaltyTestContract.abi, penaltyTestContract.address, {
+            const safeStakeStorage = await SafeStakeStorage.deployed();
+            penaltyTestContract = await PenaltyTest.new(safeStakeStorage.address, {from: owner});
+            await setDaoNodeTrustedBootstrapUpgrade('addContract', 'safeStakePenaltyTest', penaltyTestContract.abi, penaltyTestContract.address, {
                 from: owner,
             });
 
             // Enable penalties
-            const rocketMinipoolPenalty = await RocketMinipoolPenalty.deployed();
-            await rocketMinipoolPenalty.setMaxPenaltyRate(maxPenaltyRate, {from: owner})
+            const safeStakeMinipoolPenalty = await SafeStakeMinipoolPenalty.deployed();
+            await safeStakeMinipoolPenalty.setMaxPenaltyRate(maxPenaltyRate, {from: owner})
 
             // Hard code fee to 50%
             const fee = web3.utils.toWei('0.5', 'ether');
-            await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsNetwork, 'network.node.fee.minimum', fee, {from: owner});
-            await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsNetwork, 'network.node.fee.target', fee, {from: owner});
-            await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsNetwork, 'network.node.fee.maximum', fee, {from: owner});
+            await setDAOProtocolBootstrapSetting(SafeStakeDAOProtocolSettingsNetwork, 'network.node.fee.minimum', fee, {from: owner});
+            await setDAOProtocolBootstrapSetting(SafeStakeDAOProtocolSettingsNetwork, 'network.node.fee.target', fee, {from: owner});
+            await setDAOProtocolBootstrapSetting(SafeStakeDAOProtocolSettingsNetwork, 'network.node.fee.maximum', fee, {from: owner});
 
             // Deposit some user funds to assign to pools
             let userDepositAmount = web3.utils.toWei('16', 'ether');
@@ -130,10 +130,10 @@ export default function() {
 
         async function slashAndCheck(from, expectedSlash) {
             // Get contracts
-            const rocketNodeStaking = await RocketNodeStaking.deployed()
-            const rplStake1 = await rocketNodeStaking.getNodeRPLStake(node)
+            const safeStakeNodeStaking = await SafeStakeNodeStaking.deployed()
+            const rplStake1 = await safeStakeNodeStaking.getNodeRPLStake(node)
             await minipool.slash({from: from})
-            const rplStake2 = await rocketNodeStaking.getNodeRPLStake(node)
+            const rplStake2 = await safeStakeNodeStaking.getNodeRPLStake(node)
             const slashedAmount = rplStake1.sub(rplStake2)
             assert(expectedSlash.eq(slashedAmount), 'Slashed amount was incorrect')
         }
@@ -324,8 +324,8 @@ export default function() {
 
         it(printTitle('guardian', 'can disable penalising all together'), async () => {
             // Disable penalising by setting rate to 0
-            const rocketMinipoolPenalty = await RocketMinipoolPenalty.deployed();
-            await rocketMinipoolPenalty.setMaxPenaltyRate('0', {from: owner})
+            const safeStakeMinipoolPenalty = await SafeStakeMinipoolPenalty.deployed();
+            await safeStakeMinipoolPenalty.setMaxPenaltyRate('0', {from: owner})
             // Try to penalise the minipool 50%
             await penaltyTestContract.setPenaltyRate(minipool.address, web3.utils.toWei('0.5'));
             // Mark minipool withdrawable

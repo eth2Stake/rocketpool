@@ -1,31 +1,31 @@
 import {
-  RocketMinipoolDelegate, RocketMinipoolManager, RocketMinipoolManagerNew,
-  RocketNodeDistributorDelegate,
-  RocketNodeDistributorFactory, RocketNodeManager, RocketNodeManagerNew,
-  RocketStorage,
-  RocketTokenRETH
+  SafeStakeMinipoolDelegate, SafeStakeMinipoolManager, SafeStakeMinipoolManagerNew,
+  SafeStakeNodeDistributorDelegate,
+  SafeStakeNodeDistributorFactory, SafeStakeNodeManager, SafeStakeNodeManagerNew,
+  SafeStakeStorage,
+  SafeStakeTokenRETH
 } from '../_utils/artifacts';
 
 
 export async function distributeRewards(nodeAddress, txOptions) {
   // Get contracts
-  const rocketStorage = await RocketStorage.deployed();
-  const rocketNodeDistributorFactory = await RocketNodeDistributorFactory.deployed();
-  const distributorAddress = await rocketNodeDistributorFactory.getProxyAddress(nodeAddress);
-  const distributor = await RocketNodeDistributorDelegate.at(distributorAddress);
-  const rocketTokenRETH = await RocketTokenRETH.deployed();
-  const rocketMinipoolManager = await RocketMinipoolManager.deployed();
-  const rocketNodeManager = await RocketNodeManager.deployed();
+  const safeStakeStorage = await SafeStakeStorage.deployed();
+  const safeStakeNodeDistributorFactory = await SafeStakeNodeDistributorFactory.deployed();
+  const distributorAddress = await safeStakeNodeDistributorFactory.getProxyAddress(nodeAddress);
+  const distributor = await SafeStakeNodeDistributorDelegate.at(distributorAddress);
+  const safeStakeTokenRETH = await SafeStakeTokenRETH.deployed();
+  const safeStakeMinipoolManager = await SafeStakeMinipoolManager.deployed();
+  const safeStakeNodeManager = await SafeStakeNodeManager.deployed();
   // Get node withdrawal address
-  const withdrawalAddress = await rocketStorage.getNodeWithdrawalAddress(nodeAddress);
+  const withdrawalAddress = await safeStakeStorage.getNodeWithdrawalAddress(nodeAddress);
   // Get distributor contract balance
   const distributorBalance = new web3.utils.BN(await web3.eth.getBalance(distributorAddress));
   // Get nodes average fee
-  const minipoolCount = new web3.utils.BN(await rocketMinipoolManager.getNodeMinipoolCount(nodeAddress)).toNumber();
+  const minipoolCount = new web3.utils.BN(await safeStakeMinipoolManager.getNodeMinipoolCount(nodeAddress)).toNumber();
 
   async function getMinipoolDetails(index) {
-    const minipoolAddress = await rocketMinipoolManager.getNodeMinipoolAt(nodeAddress, index);
-    const minipool = await RocketMinipoolDelegate.at(minipoolAddress)
+    const minipoolAddress = await safeStakeMinipoolManager.getNodeMinipoolAt(nodeAddress, index);
+    const minipool = await SafeStakeMinipoolDelegate.at(minipoolAddress)
     return Promise.all([
       minipool.getStatus(),
       minipool.getNodeFee()
@@ -57,7 +57,7 @@ export async function distributeRewards(nodeAddress, txOptions) {
   }
 
   // Query average fee from contracts
-  const averageFee = new web3.utils.BN(await rocketNodeManager.getAverageNodeFee(nodeAddress));
+  const averageFee = new web3.utils.BN(await safeStakeNodeManager.getAverageNodeFee(nodeAddress));
   assert.strictEqual(averageFee.toString(), expectedAverageFee.toString(), 'Incorrect average node fee');
 
   // Calculate expected node and user amounts from average fee
@@ -68,7 +68,7 @@ export async function distributeRewards(nodeAddress, txOptions) {
   async function getBalances() {
     return Promise.all([
       web3.eth.getBalance(withdrawalAddress),
-      web3.eth.getBalance(rocketTokenRETH.address),
+      web3.eth.getBalance(safeStakeTokenRETH.address),
     ]).then(
       ([nodeEth, userEth]) =>
         ({

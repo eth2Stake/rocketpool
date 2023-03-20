@@ -1,17 +1,17 @@
-import { RocketTokenDummyRPL } from '../_utils/artifacts';
+import { SafeStakeTokenDummyRPL } from '../_utils/artifacts';
 
 
 // Mint RPL from the dummy RPL contract to simulate a user having existing fixed supply RPL
 export async function mintDummyRPL(to, amount, txOptions) {
 
     // Load contracts
-    const rocketTokenDummyRPL = await RocketTokenDummyRPL.deployed();
+    const safeStakeTokenDummyRPL = await SafeStakeTokenDummyRPL.deployed();
 
     // Get balances
     function getBalances() {
         return Promise.all([
-            rocketTokenDummyRPL.totalSupply.call(),
-            rocketTokenDummyRPL.balanceOf.call(to),
+            safeStakeTokenDummyRPL.totalSupply.call(),
+            safeStakeTokenDummyRPL.balanceOf.call(to),
         ]).then(
             ([tokenSupply, userTokenBalance]) =>
             ({tokenSupply, userTokenBalance})
@@ -26,7 +26,7 @@ export async function mintDummyRPL(to, amount, txOptions) {
     txOptions.gasPrice = gasPrice;
 
     // Mint tokens
-    let txReceipt = await rocketTokenDummyRPL.mint(to, amount, txOptions);
+    let txReceipt = await safeStakeTokenDummyRPL.mint(to, amount, txOptions);
     let txFee = gasPrice.mul(web3.utils.toBN(txReceipt.receipt.gasUsed));
 
     // Get updated balances

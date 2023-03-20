@@ -1,5 +1,5 @@
 import { getCurrentTime, increaseTime, mineBlocks } from '../_utils/evm'
-import { RocketTokenRPL, RocketVault, RocketRewardsPool } from '../_utils/artifacts';
+import { SafeStakeTokenRPL, SafeStakeVault, SafeStakeRewardsPool } from '../_utils/artifacts';
 import { setRPLInflationIntervalRate, setRPLInflationStartTime } from '../dao/scenario-dao-protocol-bootstrap'
 
 // Set inflation config
@@ -13,8 +13,8 @@ export async function rplSetInflationConfig(config, txOptions) {
 // Get the current inflation period in blocks
 export async function rplInflationIntervalBlocksGet(txOptions) {
     // Load contracts
-    const rocketTokenRPL = await RocketTokenRPL.deployed();
-    return await rocketTokenRPL.getInflationIntervalBlocks.call();
+    const safeStakeTokenRPL = await SafeStakeTokenRPL.deployed();
+    return await safeStakeTokenRPL.getInflationIntervalBlocks.call();
 };
 
 
@@ -26,26 +26,26 @@ export async function rplClaimInflation(config, txOptions, tokenAmountToMatch = 
     }
 
     // Load contracts
-    const rocketTokenRPL = await RocketTokenRPL.deployed();
-    const rocketVault = await RocketVault.deployed();
+    const safeStakeTokenRPL = await SafeStakeTokenRPL.deployed();
+    const safeStakeVault = await SafeStakeVault.deployed();
 
     // Get the previously last inflation calculated block
-    const timeIntervalLastCalc = web3.utils.toBN(await rocketTokenRPL.getInflationCalcTime.call());
+    const timeIntervalLastCalc = web3.utils.toBN(await safeStakeTokenRPL.getInflationCalcTime.call());
 
     // Get data about the current inflation
     function getInflationData() {
         return Promise.all([
             getCurrentTime(web3),
-            rocketTokenRPL.totalSupply.call(),
-            rocketTokenRPL.getInflationIntervalStartTime.call(),
-            rocketTokenRPL.getInflationIntervalsPassed.call(),
-            rocketTokenRPL.getInflationCalcTime.call(),
-            rocketTokenRPL.getInflationIntervalTime.call(),
-            rocketTokenRPL.balanceOf(rocketVault.address),
-            rocketVault.balanceOfToken('rocketRewardsPool', rocketTokenRPL.address),
+            safeStakeTokenRPL.totalSupply.call(),
+            safeStakeTokenRPL.getInflationIntervalStartTime.call(),
+            safeStakeTokenRPL.getInflationIntervalsPassed.call(),
+            safeStakeTokenRPL.getInflationCalcTime.call(),
+            safeStakeTokenRPL.getInflationIntervalTime.call(),
+            safeStakeTokenRPL.balanceOf(safeStakeVault.address),
+            safeStakeVault.balanceOfToken('safeStakeRewardsPool', safeStakeTokenRPL.address),
         ]).then(
-            ([currentTime, tokenTotalSupply, inflationStartTime, inflationIntervalsPassed, inflationCalcTime, intervalTime, rocketVaultBalanceRPL, rocketVaultInternalBalanceRPL]) =>
-            ({currentTime, tokenTotalSupply, inflationStartTime, inflationIntervalsPassed, inflationCalcTime, intervalTime, rocketVaultBalanceRPL, rocketVaultInternalBalanceRPL})
+            ([currentTime, tokenTotalSupply, inflationStartTime, inflationIntervalsPassed, inflationCalcTime, intervalTime, safeStakeVaultBalanceRPL, safeStakeVaultInternalBalanceRPL]) =>
+            ({currentTime, tokenTotalSupply, inflationStartTime, inflationIntervalsPassed, inflationCalcTime, intervalTime, safeStakeVaultBalanceRPL, safeStakeVaultInternalBalanceRPL})
         );
     }
 
@@ -59,7 +59,7 @@ export async function rplClaimInflation(config, txOptions, tokenAmountToMatch = 
 
     // Get initial data
     let inflationData1 = await getInflationData();
-    //console.log(inflationData1.currentBlock, web3.utils.fromWei(inflationData1.tokenTotalSupply), inflationData1.inflationStartBlock.toString(), web3.utils.fromWei(inflationData1.rocketVaultBalanceRPL), web3.utils.fromWei(inflationData1.rocketVaultInternalBalanceRPL));
+    //console.log(inflationData1.currentBlock, web3.utils.fromWei(inflationData1.tokenTotalSupply), inflationData1.inflationStartBlock.toString(), web3.utils.fromWei(inflationData1.safeStakeVaultBalanceRPL), web3.utils.fromWei(inflationData1.safeStakeVaultInternalBalanceRPL));
 
     // Starting amount of total supply
     let totalSupplyStart = web3.utils.toBN(inflationData1.tokenTotalSupply);
@@ -108,7 +108,7 @@ export async function rplClaimInflation(config, txOptions, tokenAmountToMatch = 
 
     
     // Claim tokens now
-    await rocketTokenRPL.inflationMintTokens(txOptions);
+    await safeStakeTokenRPL.inflationMintTokens(txOptions);
 
     // Get inflation data
     let inflationData2 = await getInflationData();
@@ -117,7 +117,7 @@ export async function rplClaimInflation(config, txOptions, tokenAmountToMatch = 
     // console.log('Current time', await getCurrentTime(web3));
     // console.log('Inflation calc time', Number(inflationData2.inflationCalcTime));
 
-    //console.log(inflationData2.currentBlock, web3.utils.fromWei(inflationData2.tokenTotalSupply), inflationData2.inflationStartBlock.toString(), web3.utils.fromWei(inflationData2.rocketVaultBalanceRPL), web3.utils.fromWei(inflationData2.rocketVaultInternalBalanceRPL));
+    //console.log(inflationData2.currentBlock, web3.utils.fromWei(inflationData2.tokenTotalSupply), inflationData2.inflationStartBlock.toString(), web3.utils.fromWei(inflationData2.safeStakeVaultBalanceRPL), web3.utils.fromWei(inflationData2.safeStakeVaultInternalBalanceRPL));
 
     // Ending amount of total supply
     let totalSupplyEnd = web3.utils.toBN(inflationData2.tokenTotalSupply);
@@ -127,8 +127,8 @@ export async function rplClaimInflation(config, txOptions, tokenAmountToMatch = 
 
     // Verify the minted amount is correct based on inflation rate etc
     assert(expectedTokensMinted.eq(totalSupplyEnd.sub(totalSupplyStart)), 'Incorrect amount of minted tokens expected');
-    // Verify the minted tokens are now stored in Rocket Vault on behalf of Rocket Rewards Pool
-    assert(inflationData2.rocketVaultInternalBalanceRPL.eq(inflationData2.rocketVaultBalanceRPL), 'Incorrect amount of tokens stored in Rocket Vault for Rocket Rewards Pool');
+    // Verify the minted tokens are now stored in SafeStake Vault on behalf of SafeStake Rewards Pool
+    assert(inflationData2.safeStakeVaultInternalBalanceRPL.eq(inflationData2.safeStakeVaultBalanceRPL), 'Incorrect amount of tokens stored in SafeStake Vault for SafeStake Rewards Pool');
     // Are we verifying an exact amount of tokens given as a required parameter on this pass?
     if (tokenAmountToMatch) {
         tokenAmountToMatch = web3.utils.toBN(tokenAmountToMatch);

@@ -29,64 +29,64 @@ function loadABI(abiFilePath) {
 
 
 // Storage
-const rocketStorage =                       artifacts.require('RocketStorage.sol');
+const safeStakeStorage =                       artifacts.require('SafeStakeStorage.sol');
 
 // Network contracts
 const contracts = {
   // Vault
-  rocketVault:                              artifacts.require('RocketVault.sol'),
+  safeStakeVault:                              artifacts.require('SafeStakeVault.sol'),
   // Auction
-  rocketAuctionManager:                     artifacts.require('RocketAuctionManager.sol'),
+  safeStakeAuctionManager:                     artifacts.require('SafeStakeAuctionManager.sol'),
   // Deposit
-  rocketDepositPool:                        artifacts.require('RocketDepositPool.sol'),
+  safeStakeDepositPool:                        artifacts.require('SafeStakeDepositPool.sol'),
   // Minipool
-  rocketMinipoolDelegate:                   artifacts.require('RocketMinipoolDelegate.sol'),
-  rocketMinipoolManager:                    artifacts.require('RocketMinipoolManager.sol'),
-  rocketMinipoolQueue:                      artifacts.require('RocketMinipoolQueue.sol'),
-  rocketMinipoolStatus:                     artifacts.require('RocketMinipoolStatus.sol'),
-  rocketMinipoolPenalty:                    artifacts.require('RocketMinipoolPenalty.sol'),
+  safeStakeMinipoolDelegate:                   artifacts.require('SafeStakeMinipoolDelegate.sol'),
+  safeStakeMinipoolManager:                    artifacts.require('SafeStakeMinipoolManager.sol'),
+  safeStakeMinipoolQueue:                      artifacts.require('SafeStakeMinipoolQueue.sol'),
+  safeStakeMinipoolStatus:                     artifacts.require('SafeStakeMinipoolStatus.sol'),
+  safeStakeMinipoolPenalty:                    artifacts.require('SafeStakeMinipoolPenalty.sol'),
   // Network
-  rocketNetworkBalances:                    artifacts.require('RocketNetworkBalances.sol'),
-  rocketNetworkFees:                        artifacts.require('RocketNetworkFees.sol'),
-  rocketNetworkPrices:                      artifacts.require('RocketNetworkPrices.sol'),
-  rocketNetworkPenalties:                   artifacts.require('RocketNetworkPenalties.sol'),
+  safeStakeNetworkBalances:                    artifacts.require('SafeStakeNetworkBalances.sol'),
+  safeStakeNetworkFees:                        artifacts.require('SafeStakeNetworkFees.sol'),
+  safeStakeNetworkPrices:                      artifacts.require('SafeStakeNetworkPrices.sol'),
+  safeStakeNetworkPenalties:                   artifacts.require('SafeStakeNetworkPenalties.sol'),
   // Rewards
-  rocketRewardsPool:                        artifacts.require('RocketRewardsPool.sol'),
-  rocketClaimDAO:                           artifacts.require('RocketClaimDAO.sol'),
+  safeStakeRewardsPool:                        artifacts.require('SafeStakeRewardsPool.sol'),
+  safeStakeClaimDAO:                           artifacts.require('SafeStakeClaimDAO.sol'),
   // Node
-  rocketNodeDeposit:                        artifacts.require('RocketNodeDeposit.sol'),
-  rocketNodeManager:                        artifacts.require('RocketNodeManager.sol'),
-  rocketNodeStaking:                        artifacts.require('RocketNodeStaking.sol'),
+  safeStakeNodeDeposit:                        artifacts.require('SafeStakeNodeDeposit.sol'),
+  safeStakeNodeManager:                        artifacts.require('SafeStakeNodeManager.sol'),
+  safeStakeNodeStaking:                        artifacts.require('SafeStakeNodeStaking.sol'),
   // DAOs
-  rocketDAOProposal:                        artifacts.require('RocketDAOProposal.sol'),
-  rocketDAONodeTrusted:                     artifacts.require('RocketDAONodeTrusted.sol'),
-  rocketDAONodeTrustedProposals:            artifacts.require('RocketDAONodeTrustedProposals.sol'),
-  rocketDAONodeTrustedActions:              artifacts.require('RocketDAONodeTrustedActions.sol'),
-  rocketDAONodeTrustedUpgrade:              artifacts.require('RocketDAONodeTrustedUpgrade.sol'),
-  rocketDAONodeTrustedSettingsMembers:      artifacts.require('RocketDAONodeTrustedSettingsMembers.sol'),
-  rocketDAONodeTrustedSettingsProposals:    artifacts.require('RocketDAONodeTrustedSettingsProposals.sol'),
-  rocketDAONodeTrustedSettingsMinipool:     artifacts.require('RocketDAONodeTrustedSettingsMinipool.sol'),
-  rocketDAOProtocol:                        artifacts.require('RocketDAOProtocol.sol'),
-  rocketDAOProtocolProposals:               artifacts.require('RocketDAOProtocolProposals.sol'),
-  rocketDAOProtocolActions:                 artifacts.require('RocketDAOProtocolActions.sol'),
-  rocketDAOProtocolSettingsInflation:       artifacts.require('RocketDAOProtocolSettingsInflation.sol'),
-  rocketDAOProtocolSettingsRewards:         artifacts.require('RocketDAOProtocolSettingsRewards.sol'),
-  rocketDAOProtocolSettingsAuction:         artifacts.require('RocketDAOProtocolSettingsAuction.sol'),
-  rocketDAOProtocolSettingsNode:            artifacts.require('RocketDAOProtocolSettingsNode.sol'),
-  rocketDAOProtocolSettingsNetwork:         artifacts.require('RocketDAOProtocolSettingsNetwork.sol'),
-  rocketDAOProtocolSettingsDeposit:         artifacts.require('RocketDAOProtocolSettingsDeposit.sol'),
-  rocketDAOProtocolSettingsMinipool:        artifacts.require('RocketDAOProtocolSettingsMinipool.sol'),
+  safeStakeDAOProposal:                        artifacts.require('SafeStakeDAOProposal.sol'),
+  safeStakeDAONodeTrusted:                     artifacts.require('SafeStakeDAONodeTrusted.sol'),
+  safeStakeDAONodeTrustedProposals:            artifacts.require('SafeStakeDAONodeTrustedProposals.sol'),
+  safeStakeDAONodeTrustedActions:              artifacts.require('SafeStakeDAONodeTrustedActions.sol'),
+  safeStakeDAONodeTrustedUpgrade:              artifacts.require('SafeStakeDAONodeTrustedUpgrade.sol'),
+  safeStakeDAONodeTrustedSettingsMembers:      artifacts.require('SafeStakeDAONodeTrustedSettingsMembers.sol'),
+  safeStakeDAONodeTrustedSettingsProposals:    artifacts.require('SafeStakeDAONodeTrustedSettingsProposals.sol'),
+  safeStakeDAONodeTrustedSettingsMinipool:     artifacts.require('SafeStakeDAONodeTrustedSettingsMinipool.sol'),
+  safeStakeDAOProtocol:                        artifacts.require('SafeStakeDAOProtocol.sol'),
+  safeStakeDAOProtocolProposals:               artifacts.require('SafeStakeDAOProtocolProposals.sol'),
+  safeStakeDAOProtocolActions:                 artifacts.require('SafeStakeDAOProtocolActions.sol'),
+  safeStakeDAOProtocolSettingsInflation:       artifacts.require('SafeStakeDAOProtocolSettingsInflation.sol'),
+  safeStakeDAOProtocolSettingsRewards:         artifacts.require('SafeStakeDAOProtocolSettingsRewards.sol'),
+  safeStakeDAOProtocolSettingsAuction:         artifacts.require('SafeStakeDAOProtocolSettingsAuction.sol'),
+  safeStakeDAOProtocolSettingsNode:            artifacts.require('SafeStakeDAOProtocolSettingsNode.sol'),
+  safeStakeDAOProtocolSettingsNetwork:         artifacts.require('SafeStakeDAOProtocolSettingsNetwork.sol'),
+  safeStakeDAOProtocolSettingsDeposit:         artifacts.require('SafeStakeDAOProtocolSettingsDeposit.sol'),
+  safeStakeDAOProtocolSettingsMinipool:        artifacts.require('SafeStakeDAOProtocolSettingsMinipool.sol'),
   // Tokens
-  rocketTokenRPLFixedSupply:                artifacts.require('RocketTokenDummyRPL.sol'),
-  rocketTokenRETH:                          artifacts.require('RocketTokenRETH.sol'),
-  rocketTokenRPL:                           artifacts.require('RocketTokenRPL.sol'),
+  safeStakeTokenRPLFixedSupply:                artifacts.require('SafeStakeTokenDummyRPL.sol'),
+  safeStakeTokenRETH:                          artifacts.require('SafeStakeTokenRETH.sol'),
+  safeStakeTokenRPL:                           artifacts.require('SafeStakeTokenRPL.sol'),
   // v1.1
-  rocketMerkleDistributorMainnet:           artifacts.require('RocketMerkleDistributorMainnet.sol'),
-  rocketDAONodeTrustedSettingsRewards:      artifacts.require('RocketDAONodeTrustedSettingsRewards.sol'),
-  rocketSmoothingPool:                      artifacts.require('RocketSmoothingPool.sol'),
-  rocketNodeDistributorFactory:             artifacts.require('RocketNodeDistributorFactory.sol'),
-  rocketNodeDistributorDelegate:            artifacts.require('RocketNodeDistributorDelegate.sol'),
-  rocketMinipoolFactory:                    artifacts.require('RocketMinipoolFactory.sol'),
+  safeStakeMerkleDistributorMainnet:           artifacts.require('SafeStakeMerkleDistributorMainnet.sol'),
+  safeStakeDAONodeTrustedSettingsRewards:      artifacts.require('SafeStakeDAONodeTrustedSettingsRewards.sol'),
+  safeStakeSmoothingPool:                      artifacts.require('SafeStakeSmoothingPool.sol'),
+  safeStakeNodeDistributorFactory:             artifacts.require('SafeStakeNodeDistributorFactory.sol'),
+  safeStakeNodeDistributorDelegate:            artifacts.require('SafeStakeNodeDistributorDelegate.sol'),
+  safeStakeMinipoolFactory:                    artifacts.require('SafeStakeMinipoolFactory.sol'),
   // Utils
   addressQueueStorage:                      artifacts.require('AddressQueueStorage.sol'),
   addressSetStorage:                        artifacts.require('AddressSetStorage.sol'),
@@ -98,14 +98,14 @@ const revertOnTransfer = artifacts.require('RevertOnTransfer.sol');
 // Instance contract ABIs
 const abis = {
   // Minipool
-  rocketMinipool:                           [artifacts.require('RocketMinipoolDelegate.sol'), artifacts.require('RocketMinipool.sol')],
+  safeStakeMinipool:                           [artifacts.require('SafeStakeMinipoolDelegate.sol'), artifacts.require('SafeStakeMinipool.sol')],
 };
 
 
 /*** Deployment **********************/
 
 
-// Deploy Rocket Pool
+// Deploy SafeStake Pool
 module.exports = async (deployer, network) => {
 
   // Truffle add '-fork' for some reason when deploying to actual testnets
@@ -131,7 +131,7 @@ module.exports = async (deployer, network) => {
       precompiled: true
     };
     // Add our live RPL token address in place
-    contracts.rocketTokenRPLFixedSupply.address = '0xb4efd85c19999d84251304bda99e90b92300bd93';
+    contracts.safeStakeTokenRPLFixedSupply.address = '0xb4efd85c19999d84251304bda99e90b92300bd93';
   }
 
   // Goerli test network
@@ -190,11 +190,10 @@ module.exports = async (deployer, network) => {
   }
 
 
-  // Deploy rocketStorage first - has to be done in this order so that the following contracts already know the storage address
+  // Deploy safeStakeStorage first - has to be done in this order so that the following contracts already know the storage address
 
   let deployBlockFunc = new Promise(async (s,r)=>{
-    await deployer.deploy(rocketStorage).then(async(instance)=> {
-        console.log(instance.transactionHash);
+    await deployer.deploy(safeStakeStorage).then(async(instance)=> {
         const rsTx = await web3.eth.getTransactionReceipt(instance.transactionHash);
         s(rsTx.blockNumber);
     });
@@ -203,10 +202,9 @@ module.exports = async (deployer, network) => {
   if (!deployBlock){
     console.log("wtf");
   }
-  console.log(deployBlock);
 
   // Update the storage with the new addresses
-  let rocketStorageInstance = await rocketStorage.deployed();
+  let safeStakeStorageInstance = await safeStakeStorage.deployed();
   // Deploy other contracts - have to be inside an async loop
   const deployContracts = async function() {
     for (let contract in contracts) {
@@ -215,19 +213,19 @@ module.exports = async (deployer, network) => {
         switch (contract) {
 
           // New RPL contract - pass storage address & existing RPL contract address
-          case 'rocketTokenRPL':
-            await deployer.deploy(contracts[contract], rocketStorage.address, contracts.rocketTokenRPLFixedSupply.address);
+          case 'safeStakeTokenRPL':
+            await deployer.deploy(contracts[contract], safeStakeStorage.address, contracts.safeStakeTokenRPLFixedSupply.address);
           break;
 
           // Contracts with no constructor args
-          case 'rocketMinipoolDelegate':
-          case 'rocketNodeDistributorDelegate':
+          case 'safeStakeMinipoolDelegate':
+          case 'safeStakeNodeDistributorDelegate':
             await deployer.deploy(contracts[contract]);
           break;
 
           // All other contracts - pass storage address
           default:
-            await deployer.deploy(contracts[contract], rocketStorage.address);
+            await deployer.deploy(contracts[contract], safeStakeStorage.address);
           break;
 
         }
@@ -239,36 +237,36 @@ module.exports = async (deployer, network) => {
 
   // Register all other contracts with storage and store their abi
   const addContracts = async function() {
-    // Log RocketStorage
+    // Log SafeStakeStorage
     console.log('\x1b[31m%s\x1b[0m:', '   Set Storage Address');
-    console.log('     '+rocketStorage.address);
-    // Add Rocket Storage to deployed contracts
-    contracts.rocketStorage = artifacts.require('RocketStorage.sol');
+    console.log('     '+safeStakeStorage.address);
+    // Add SafeStake Storage to deployed contracts
+    contracts.safeStakeStorage = artifacts.require('SafeStakeStorage.sol');
     // Now process the rest
     for (let contract in contracts) {
-      if(contracts.hasOwnProperty(contract)) {
+      if(contracts.hasOwnProperty(contract)) {c++
         switch (contract) {
           default:
           // Log it
             console.log('\x1b[31m%s\x1b[0m:', '   Set Storage ' + contract + ' Address');
             console.log('     ' + contracts[contract].address);
             // Register the contract address as part of the network
-            await rocketStorageInstance.setBool(
+            await safeStakeStorageInstance.setBool(
               $web3.utils.soliditySha3('contract.exists', contracts[contract].address),
               true
             );
             // Register the contract's name by address
-            await rocketStorageInstance.setString(
+            await safeStakeStorageInstance.setString(
               $web3.utils.soliditySha3('contract.name', contracts[contract].address),
               contract
             );
             // Register the contract's address by name
-            await rocketStorageInstance.setAddress(
+            await safeStakeStorageInstance.setAddress(
               $web3.utils.soliditySha3('contract.address', contract),
               contracts[contract].address
             );
             // Compress and store the ABI by name
-            await rocketStorageInstance.setString(
+            await safeStakeStorageInstance.setString(
               $web3.utils.soliditySha3('contract.abi', contract),
               compressABI(contracts[contract].abi)
             );
@@ -291,13 +289,13 @@ module.exports = async (deployer, network) => {
             combinedAbi = combinedAbi.concat(artifact.abi);
           }
           // Compress and store the ABI
-          await rocketStorageInstance.setString(
+          await safeStakeStorageInstance.setString(
             $web3.utils.soliditySha3('contract.abi', contract),
             compressABI(combinedAbi)
           );
         } else {
           // Compress and store the ABI
-          await rocketStorageInstance.setString(
+          await safeStakeStorageInstance.setString(
             $web3.utils.soliditySha3('contract.abi', contract),
             compressABI(abis[contract].abi)
           );
@@ -318,14 +316,14 @@ module.exports = async (deployer, network) => {
   // Store deployed block
   console.log('\n');
   console.log('Setting deploy.block to ' + deployBlock);
-  await rocketStorageInstance.setUint(
+  await safeStakeStorageInstance.setUint(
     $web3.utils.soliditySha3('deploy.block'),
     deployBlock
   );
 
   // Disable direct access to storage now
-  await rocketStorageInstance.setDeployedStatus();
-  if(await rocketStorageInstance.getDeployedStatus() != true) throw 'Storage Access Not Locked Down!!';
+  await safeStakeStorageInstance.setDeployedStatus();
+  if(await safeStakeStorageInstance.getDeployedStatus() != true) throw 'Storage Access Not Locked Down!!';
 
   // Log it
   console.log('\n');

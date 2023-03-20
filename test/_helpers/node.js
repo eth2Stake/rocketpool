@@ -1,15 +1,15 @@
 import {
-    RocketNodeDeposit,
-    RocketNodeManager,
-    RocketNodeStaking,
-    RocketTokenRPL,
-    RocketDAONodeTrustedActions,
-    RocketDAONodeTrustedSettingsMembers,
-    RocketStorage,
-    RocketDAONodeTrusted,
-    RocketMinipoolManager,
-    RocketMinipoolDelegate,
-    RocketMinipoolFactory
+    SafeStakeNodeDeposit,
+    SafeStakeNodeManager,
+    SafeStakeNodeStaking,
+    SafeStakeTokenRPL,
+    SafeStakeDAONodeTrustedActions,
+    SafeStakeDAONodeTrustedSettingsMembers,
+    SafeStakeStorage,
+    SafeStakeDAONodeTrusted,
+    SafeStakeMinipoolManager,
+    SafeStakeMinipoolDelegate,
+    SafeStakeMinipoolFactory
 } from '../_utils/artifacts';
 import { setDaoNodeTrustedBootstrapMember } from '../dao/scenario-dao-node-trusted-bootstrap';
 import { daoNodeTrustedMemberJoin } from '../dao/scenario-dao-node-trusted';
@@ -22,48 +22,48 @@ import { getTxContractEvents } from '../_utils/contract';
 
 // Get a node's RPL stake
 export async function getNodeRPLStake(nodeAddress) {
-    const rocketNodeStaking = await RocketNodeStaking.deployed();
-    let stake = await rocketNodeStaking.getNodeRPLStake.call(nodeAddress);
+    const safeStakeNodeStaking = await SafeStakeNodeStaking.deployed();
+    let stake = await safeStakeNodeStaking.getNodeRPLStake.call(nodeAddress);
     return stake;
 }
 
 
 // Get a node's effective RPL stake
 export async function getNodeEffectiveRPLStake(nodeAddress) {
-    const rocketNodeStaking = await RocketNodeStaking.deployed();
-    let effectiveStake = await rocketNodeStaking.getNodeEffectiveRPLStake.call(nodeAddress);
+    const safeStakeNodeStaking = await SafeStakeNodeStaking.deployed();
+    let effectiveStake = await safeStakeNodeStaking.getNodeEffectiveRPLStake.call(nodeAddress);
     return effectiveStake;
 }
 
 
 // Get a node's minipool RPL stake
 export async function getNodeMinimumRPLStake(nodeAddress) {
-    const rocketNodeStaking = await RocketNodeStaking.deployed();
-    let minimumStake = await rocketNodeStaking.getNodeMinimumRPLStake.call(nodeAddress);
+    const safeStakeNodeStaking = await SafeStakeNodeStaking.deployed();
+    let minimumStake = await safeStakeNodeStaking.getNodeMinimumRPLStake.call(nodeAddress);
     return minimumStake;
 }
 
 
 // Get total effective RPL stake
 export async function getTotalEffectiveRPLStake() {
-    const rocketNodeStaking = await RocketNodeStaking.deployed();
-    let totalStake = await rocketNodeStaking.getTotalEffectiveRPLStake.call();
+    const safeStakeNodeStaking = await SafeStakeNodeStaking.deployed();
+    let totalStake = await safeStakeNodeStaking.getTotalEffectiveRPLStake.call();
     return totalStake;
 }
 
 
 // Get calculated effective RPL stake
 export async function getCalculatedTotalEffectiveRPLStake(price) {
-    const rocketNodeStaking = await RocketNodeStaking.deployed();
-    let totalStake = await rocketNodeStaking.calculateTotalEffectiveRPLStake.call(0, 0, price);
+    const safeStakeNodeStaking = await SafeStakeNodeStaking.deployed();
+    let totalStake = await safeStakeNodeStaking.calculateTotalEffectiveRPLStake.call(0, 0, price);
     return totalStake;
 }
 
 
 // Register a node
 export async function registerNode(txOptions) {
-    const rocketNodeManager = await RocketNodeManager.deployed();
-    await rocketNodeManager.registerNode('Australia/Brisbane', txOptions);
+    const safeStakeNodeManager = await SafeStakeNodeManager.deployed();
+    await safeStakeNodeManager.registerNode('Australia/Brisbane', txOptions);
 }
 
 
@@ -72,13 +72,13 @@ export async function setNodeTrusted(_account, _id, _url, owner) {
     // Mints fixed supply RPL, burns that for new RPL and gives it to the account
     let rplMint = async function(_account, _amount) {
         // Load contracts
-        const rocketTokenRPL = await RocketTokenRPL.deployed();
+        const safeStakeTokenRPL = await SafeStakeTokenRPL.deployed();
         // Convert
         _amount = web3.utils.toWei(_amount.toString(), 'ether');
         // Mint RPL fixed supply for the users to simulate current users having RPL
         await mintDummyRPL(_account, _amount, { from: owner });
         // Mint a large amount of dummy RPL to owner, who then burns it for real RPL which is sent to nodes for testing below
-        await allowDummyRPL(rocketTokenRPL.address, _amount, { from: _account });
+        await allowDummyRPL(safeStakeTokenRPL.address, _amount, { from: _account });
         // Burn existing fixed supply RPL for new RPL
         await burnFixedRPL(_amount, { from: _account }); 
     }
@@ -86,16 +86,16 @@ export async function setNodeTrusted(_account, _id, _url, owner) {
     // Allow the given account to spend this users RPL
     let rplAllowanceDAO = async function(_account, _amount) {
         // Load contracts
-        const rocketTokenRPL = await RocketTokenRPL.deployed();
-        const rocketDAONodeTrustedActions = await RocketDAONodeTrustedActions.deployed()
+        const safeStakeTokenRPL = await SafeStakeTokenRPL.deployed();
+        const safeStakeDAONodeTrustedActions = await SafeStakeDAONodeTrustedActions.deployed()
         // Convert
         _amount = web3.utils.toWei(_amount.toString(), 'ether');
         // Approve now
-        await rocketTokenRPL.approve(rocketDAONodeTrustedActions.address, _amount, { from: _account });
+        await safeStakeTokenRPL.approve(safeStakeDAONodeTrustedActions.address, _amount, { from: _account });
     }
 
     // Get the DAO settings
-    let daoNodesettings = await RocketDAONodeTrustedSettingsMembers.deployed();
+    let daoNodesettings = await SafeStakeDAONodeTrustedSettingsMembers.deployed();
     // How much RPL is required for a trusted node bond?
     let rplBondAmount = web3.utils.fromWei(await daoNodesettings.getRPLBond());
     // Mint RPL bond required for them to join
@@ -107,43 +107,43 @@ export async function setNodeTrusted(_account, _id, _url, owner) {
     // Now get them to join
     await daoNodeTrustedMemberJoin({from: _account});
     // Check registration was successful and details are correct
-    const rocketDAONodeTrusted = await RocketDAONodeTrusted.deployed();
-    const id = await rocketDAONodeTrusted.getMemberID(_account);
+    const safeStakeDAONodeTrusted = await SafeStakeDAONodeTrusted.deployed();
+    const id = await safeStakeDAONodeTrusted.getMemberID(_account);
     assert(id === _id, "Member ID is wrong");
-    const url = await rocketDAONodeTrusted.getMemberUrl(_account);
+    const url = await safeStakeDAONodeTrusted.getMemberUrl(_account);
     assert(url === _url, "Member URL is wrong");
-    const joinedTime = await rocketDAONodeTrusted.getMemberJoinedTime(_account);
+    const joinedTime = await safeStakeDAONodeTrusted.getMemberJoinedTime(_account);
     assert(!joinedTime.eq(0), "Member joined time is wrong");
-    const valid = await rocketDAONodeTrusted.getMemberIsValid(_account);
+    const valid = await safeStakeDAONodeTrusted.getMemberIsValid(_account);
     assert(valid, "Member valid flag is not set");
 }
 
 
 // Set a withdrawal address for a node
 export async function setNodeWithdrawalAddress(nodeAddress, withdrawalAddress, txOptions) {
-    const rocketStorage = await RocketStorage.deployed();
-    await rocketStorage.setWithdrawalAddress(nodeAddress, withdrawalAddress, true, txOptions);
+    const safeStakeStorage = await SafeStakeStorage.deployed();
+    await safeStakeStorage.setWithdrawalAddress(nodeAddress, withdrawalAddress, true, txOptions);
 }
 
 
 // Submit a node RPL stake
 export async function nodeStakeRPL(amount, txOptions) {
-    const [rocketNodeStaking, rocketTokenRPL] = await Promise.all([
-        RocketNodeStaking.deployed(),
-        RocketTokenRPL.deployed(),
+    const [safeStakeNodeStaking, safeStakeTokenRPL] = await Promise.all([
+        SafeStakeNodeStaking.deployed(),
+        SafeStakeTokenRPL.deployed(),
     ]);
-    await rocketTokenRPL.approve(rocketNodeStaking.address, amount, txOptions);
-    const before = await rocketNodeStaking.getNodeRPLStake(txOptions.from)
-    await rocketNodeStaking.stakeRPL(amount, txOptions);
-    const after = await rocketNodeStaking.getNodeRPLStake(txOptions.from)
+    await safeStakeTokenRPL.approve(safeStakeNodeStaking.address, amount, txOptions);
+    const before = await safeStakeNodeStaking.getNodeRPLStake(txOptions.from)
+    await safeStakeNodeStaking.stakeRPL(amount, txOptions);
+    const after = await safeStakeNodeStaking.getNodeRPLStake(txOptions.from)
     assert(after.sub(before).eq(web3.utils.toBN(amount)), 'Staking balance did not increase by amount staked')
 }
 
 
 // Withdraw a node RPL stake
 export async function nodeWithdrawRPL(amount, txOptions) {
-    const rocketNodeStaking= await RocketNodeStaking.deployed();
-    await rocketNodeStaking.withdrawRPL(amount, txOptions);
+    const safeStakeNodeStaking= await SafeStakeNodeStaking.deployed();
+    await safeStakeNodeStaking.withdrawRPL(amount, txOptions);
 }
 
 
@@ -153,26 +153,26 @@ export async function nodeDeposit(txOptions) {
 
     // Load contracts
     const [
-        rocketMinipoolManager,
-          rocketMinipoolFactory,
-        rocketNodeDeposit,
-        rocketStorage,
+        safeStakeMinipoolManager,
+          safeStakeMinipoolFactory,
+        safeStakeNodeDeposit,
+        safeStakeStorage,
     ] = await Promise.all([
-        RocketMinipoolManager.deployed(),
-        RocketMinipoolFactory.deployed(),
-        RocketNodeDeposit.deployed(),
-        RocketStorage.deployed()
+        SafeStakeMinipoolManager.deployed(),
+        SafeStakeMinipoolFactory.deployed(),
+        SafeStakeNodeDeposit.deployed(),
+        SafeStakeStorage.deployed()
     ]);
 
     // Get artifact and bytecode
-    const RocketMinipool = artifacts.require('RocketMinipool');
-    const contractBytecode = RocketMinipool.bytecode;
+    const SafeStakeMinipool = artifacts.require('SafeStakeMinipool');
+    const contractBytecode = SafeStakeMinipool.bytecode;
 
     // Get deposit type from tx amount
-    const depositType = await rocketNodeDeposit.getDepositType(txOptions.value);
+    const depositType = await safeStakeNodeDeposit.getDepositType(txOptions.value);
 
     // Construct creation code for minipool deploy
-    const constructorArgs = web3.eth.abi.encodeParameters(['address', 'address', 'uint8'], [rocketStorage.address, txOptions.from, depositType]);
+    const constructorArgs = web3.eth.abi.encodeParameters(['address', 'address', 'uint8'], [safeStakeStorage.address, txOptions.from, depositType]);
     const deployCode = contractBytecode + constructorArgs.substr(2);
     const salt = minipoolSalt++;
 
@@ -190,7 +190,7 @@ export async function nodeDeposit(txOptions) {
     // Construct deterministic minipool address
     const raw = web3.utils.soliditySha3(
       {type: 'bytes1', value: '0xff'},
-      {type: 'address', value: rocketMinipoolFactory.address},
+      {type: 'address', value: safeStakeMinipoolFactory.address},
       {type: 'bytes32', value: nodeSalt},
       {type: 'bytes32', value: bytecodeHash}
     )
@@ -209,5 +209,5 @@ export async function nodeDeposit(txOptions) {
     let depositDataRoot = getDepositDataRoot(depositData);
 
     // Make node deposit
-    await rocketNodeDeposit.deposit(web3.utils.toWei('0', 'ether'), depositData.pubkey, depositData.signature, depositDataRoot, salt, '0x' + minipoolAddress, txOptions);
+    await safeStakeNodeDeposit.deposit(web3.utils.toWei('0', 'ether'), depositData.pubkey, depositData.signature, depositDataRoot, salt, '0x' + minipoolAddress, txOptions);
 }

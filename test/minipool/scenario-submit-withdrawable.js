@@ -1,4 +1,4 @@
-import { RocketDAONodeTrusted, RocketMinipoolDelegate, RocketMinipoolStatus, RocketNodeStaking, RocketStorage } from '../_utils/artifacts';
+import { SafeStakeDAONodeTrusted, SafeStakeMinipoolDelegate, SafeStakeMinipoolStatus, SafeStakeNodeStaking, SafeStakeStorage } from '../_utils/artifacts';
 
 
 // Submit a minipool withdrawable event
@@ -6,19 +6,19 @@ export async function submitWithdrawable(minipoolAddress, txOptions) {
 
     // Load contracts
     const [
-        rocketDAONodeTrusted,
-        rocketMinipoolStatus,
-        rocketNodeStaking,
-        rocketStorage,
+        safeStakeDAONodeTrusted,
+        safeStakeMinipoolStatus,
+        safeStakeNodeStaking,
+        safeStakeStorage,
     ] = await Promise.all([
-        RocketDAONodeTrusted.deployed(),
-        RocketMinipoolStatus.deployed(),
-        RocketNodeStaking.deployed(),
-        RocketStorage.deployed(),
+        SafeStakeDAONodeTrusted.deployed(),
+        SafeStakeMinipoolStatus.deployed(),
+        SafeStakeNodeStaking.deployed(),
+        SafeStakeStorage.deployed(),
     ]);
 
     // Get parameters
-    let trustedNodeCount = await rocketDAONodeTrusted.getMemberCount.call();
+    let trustedNodeCount = await safeStakeDAONodeTrusted.getMemberCount.call();
 
     // Get submission keys
     let nodeSubmissionKey = web3.utils.soliditySha3('minipool.withdrawable.submitted.node', txOptions.from, minipoolAddress);
@@ -27,8 +27,8 @@ export async function submitWithdrawable(minipoolAddress, txOptions) {
     // Get submission details
     function getSubmissionDetails() {
         return Promise.all([
-            rocketStorage.getBool.call(nodeSubmissionKey),
-            rocketStorage.getUint.call(submissionCountKey),
+            safeStakeStorage.getBool.call(nodeSubmissionKey),
+            safeStakeStorage.getUint.call(submissionCountKey),
         ]).then(
             ([nodeSubmitted, count]) =>
             ({nodeSubmitted, count})
@@ -37,7 +37,7 @@ export async function submitWithdrawable(minipoolAddress, txOptions) {
 
     // Get minipool details
     function getMinipoolDetails() {
-        return RocketMinipoolDelegate.at(minipoolAddress).then(minipool => Promise.all([
+        return SafeStakeMinipoolDelegate.at(minipoolAddress).then(minipool => Promise.all([
             minipool.getStatus.call(),
             minipool.getUserDepositBalance.call(),
         ])).then(
@@ -48,9 +48,9 @@ export async function submitWithdrawable(minipoolAddress, txOptions) {
 
     // Get node details
     function getNodeDetails() {
-        return RocketMinipoolDelegate.at(minipoolAddress)
+        return SafeStakeMinipoolDelegate.at(minipoolAddress)
             .then(minipool => minipool.getNodeAddress.call())
-            .then(nodeAddress => rocketNodeStaking.getNodeRPLStake.call(nodeAddress))
+            .then(nodeAddress => safeStakeNodeStaking.getNodeRPLStake.call(nodeAddress))
             .then(rplStake => ({rplStake}));
     }
 
@@ -61,7 +61,7 @@ export async function submitWithdrawable(minipoolAddress, txOptions) {
     ]);
 
     // Submit
-    await rocketMinipoolStatus.submitMinipoolWithdrawable(minipoolAddress, txOptions);
+    await safeStakeMinipoolStatus.submitMinipoolWithdrawable(minipoolAddress, txOptions);
 
     // Get updated details
     let [submission2, nodeDetails2, minipoolDetails] = await Promise.all([
@@ -93,16 +93,16 @@ export async function executeSetWithdrawable(minipoolAddress, txOptions) {
 
     // Load contracts
     const [
-        rocketMinipoolStatus,
-        rocketNodeStaking,
+        safeStakeMinipoolStatus,
+        safeStakeNodeStaking,
     ] = await Promise.all([
-        RocketMinipoolStatus.deployed(),
-        RocketNodeStaking.deployed(),
+        SafeStakeMinipoolStatus.deployed(),
+        SafeStakeNodeStaking.deployed(),
     ]);
 
     // Get minipool details
     function getMinipoolDetails() {
-        return RocketMinipoolDelegate.at(minipoolAddress).then(minipool => Promise.all([
+        return SafeStakeMinipoolDelegate.at(minipoolAddress).then(minipool => Promise.all([
             minipool.getStatus.call(),
             minipool.getUserDepositBalance.call(),
         ])).then(
@@ -113,9 +113,9 @@ export async function executeSetWithdrawable(minipoolAddress, txOptions) {
 
     // Get node details
     function getNodeDetails() {
-        return RocketMinipoolDelegate.at(minipoolAddress)
+        return SafeStakeMinipoolDelegate.at(minipoolAddress)
           .then(minipool => minipool.getNodeAddress.call())
-          .then(nodeAddress => rocketNodeStaking.getNodeRPLStake.call(nodeAddress))
+          .then(nodeAddress => safeStakeNodeStaking.getNodeRPLStake.call(nodeAddress))
           .then(rplStake => ({rplStake}));
     }
 
@@ -123,7 +123,7 @@ export async function executeSetWithdrawable(minipoolAddress, txOptions) {
     let nodeDetails1 = await getNodeDetails().catch(e => ({}))
 
     // Submit
-    await rocketMinipoolStatus.executeMinipoolWithdrawable(minipoolAddress, txOptions);
+    await safeStakeMinipoolStatus.executeMinipoolWithdrawable(minipoolAddress, txOptions);
 
     // Get updated details
     let [nodeDetails2, minipoolDetails] = await Promise.all([

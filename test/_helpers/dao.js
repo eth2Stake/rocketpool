@@ -1,4 +1,4 @@
-import { RocketDAONodeTrusted, RocketDAONodeTrustedActions, RocketDAONodeTrustedSettingsMembers } from '../_utils/artifacts';
+import { SafeStakeDAONodeTrusted, SafeStakeDAONodeTrustedActions, SafeStakeDAONodeTrustedSettingsMembers } from '../_utils/artifacts';
 import { mintRPL, approveRPL } from './tokens';
 
 
@@ -6,31 +6,31 @@ export async function mintRPLBond(owner, node) {
 
     // Load contracts
     const [
-        rocketDAONodeTrustedActions,
-        rocketDAONodeTrustedSettings,
+        safeStakeDAONodeTrustedActions,
+        safeStakeDAONodeTrustedSettings,
     ] = await Promise.all([
-        RocketDAONodeTrustedActions.deployed(),
-        RocketDAONodeTrustedSettingsMembers.deployed(),
+        SafeStakeDAONodeTrustedActions.deployed(),
+        SafeStakeDAONodeTrustedSettingsMembers.deployed(),
     ]);
 
     // Get RPL bond amount
-    const bondAmount = await rocketDAONodeTrustedSettings.getRPLBond.call();
+    const bondAmount = await safeStakeDAONodeTrustedSettings.getRPLBond.call();
 
     // Mint RPL amount and approve DAO node contract to spend
     await mintRPL(owner, node, bondAmount);
-    await approveRPL(rocketDAONodeTrustedActions.address, bondAmount, {from: node});
+    await approveRPL(safeStakeDAONodeTrustedActions.address, bondAmount, {from: node});
 
 }
 
 
 export async function bootstrapMember(address, id, url, txOptions) {
-    const rocketDAONodeTrusted = await RocketDAONodeTrusted.deployed();
-    await rocketDAONodeTrusted.bootstrapMember(id, url, address, txOptions);
+    const safeStakeDAONodeTrusted = await SafeStakeDAONodeTrusted.deployed();
+    await safeStakeDAONodeTrusted.bootstrapMember(id, url, address, txOptions);
 }
 
 
 export async function memberJoin(txOptions) {
-    const rocketDAONodeTrustedActions = await RocketDAONodeTrustedActions.deployed();
-    await rocketDAONodeTrustedActions.actionJoin(txOptions);
+    const safeStakeDAONodeTrustedActions = await SafeStakeDAONodeTrustedActions.deployed();
+    await safeStakeDAONodeTrustedActions.actionJoin(txOptions);
 }
 

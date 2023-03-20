@@ -1,4 +1,4 @@
-import { RocketAuctionManager, RocketDAOProtocolSettingsAuction, RocketNetworkPrices } from '../_utils/artifacts';
+import { SafeStakeAuctionManager, SafeStakeDAOProtocolSettingsAuction, SafeStakeNetworkPrices } from '../_utils/artifacts';
 
 
 // Create a new lot for auction
@@ -6,13 +6,13 @@ export async function createLot(txOptions) {
 
     // Load contracts
     const [
-        rocketAuctionManager,
-        rocketAuctionSettings,
-        rocketNetworkPrices,
+        safeStakeAuctionManager,
+        safeStakeAuctionSettings,
+        safeStakeNetworkPrices,
     ] = await Promise.all([
-        RocketAuctionManager.deployed(),
-        RocketDAOProtocolSettingsAuction.deployed(),
-        RocketNetworkPrices.deployed(),
+        SafeStakeAuctionManager.deployed(),
+        SafeStakeDAOProtocolSettingsAuction.deployed(),
+        SafeStakeNetworkPrices.deployed(),
     ]);
 
     // Get parameters
@@ -23,20 +23,20 @@ export async function createLot(txOptions) {
         reservePriceRatio,
         rplPrice,
     ] = await Promise.all([
-        rocketAuctionSettings.getLotMaximumEthValue.call(),
-        rocketAuctionSettings.getLotDuration.call(),
-        rocketAuctionSettings.getStartingPriceRatio.call(),
-        rocketAuctionSettings.getReservePriceRatio.call(),
-        rocketNetworkPrices.getRPLPrice.call(),
+        safeStakeAuctionSettings.getLotMaximumEthValue.call(),
+        safeStakeAuctionSettings.getLotDuration.call(),
+        safeStakeAuctionSettings.getStartingPriceRatio.call(),
+        safeStakeAuctionSettings.getReservePriceRatio.call(),
+        safeStakeNetworkPrices.getRPLPrice.call(),
     ]);
 
     // Get auction contract details
     function getContractDetails() {
         return Promise.all([
-            rocketAuctionManager.getTotalRPLBalance.call(),
-            rocketAuctionManager.getAllottedRPLBalance.call(),
-            rocketAuctionManager.getRemainingRPLBalance.call(),
-            rocketAuctionManager.getLotCount.call(),
+            safeStakeAuctionManager.getTotalRPLBalance.call(),
+            safeStakeAuctionManager.getAllottedRPLBalance.call(),
+            safeStakeAuctionManager.getRemainingRPLBalance.call(),
+            safeStakeAuctionManager.getLotCount.call(),
         ]).then(
             ([totalRplBalance, allottedRplBalance, remainingRplBalance, lotCount]) =>
             ({totalRplBalance, allottedRplBalance, remainingRplBalance, lotCount})
@@ -46,16 +46,16 @@ export async function createLot(txOptions) {
     // Get lot details
     function getLotDetails(lotIndex) {
         return Promise.all([
-            rocketAuctionManager.getLotExists.call(lotIndex),
-            rocketAuctionManager.getLotStartBlock.call(lotIndex),
-            rocketAuctionManager.getLotEndBlock.call(lotIndex),
-            rocketAuctionManager.getLotStartPrice.call(lotIndex),
-            rocketAuctionManager.getLotReservePrice.call(lotIndex),
-            rocketAuctionManager.getLotTotalRPLAmount.call(lotIndex),
-            rocketAuctionManager.getLotCurrentPrice.call(lotIndex),
-            rocketAuctionManager.getLotClaimedRPLAmount.call(lotIndex),
-            rocketAuctionManager.getLotRemainingRPLAmount.call(lotIndex),
-            rocketAuctionManager.getLotIsCleared.call(lotIndex),
+            safeStakeAuctionManager.getLotExists.call(lotIndex),
+            safeStakeAuctionManager.getLotStartBlock.call(lotIndex),
+            safeStakeAuctionManager.getLotEndBlock.call(lotIndex),
+            safeStakeAuctionManager.getLotStartPrice.call(lotIndex),
+            safeStakeAuctionManager.getLotReservePrice.call(lotIndex),
+            safeStakeAuctionManager.getLotTotalRPLAmount.call(lotIndex),
+            safeStakeAuctionManager.getLotCurrentPrice.call(lotIndex),
+            safeStakeAuctionManager.getLotClaimedRPLAmount.call(lotIndex),
+            safeStakeAuctionManager.getLotRemainingRPLAmount.call(lotIndex),
+            safeStakeAuctionManager.getLotIsCleared.call(lotIndex),
         ]).then(
             ([exists, startBlock, endBlock, startPrice, reservePrice, totalRpl, currentPrice, claimedRpl, remainingRpl, isCleared]) =>
             ({exists, startBlock, endBlock, startPrice, reservePrice, totalRpl, currentPrice, claimedRpl, remainingRpl, isCleared})
@@ -66,7 +66,7 @@ export async function createLot(txOptions) {
     let details1 = await getContractDetails();
 
     // Create lot
-    await rocketAuctionManager.createLot(txOptions);
+    await safeStakeAuctionManager.createLot(txOptions);
 
     // Get updated contract details
     let [details2, lot] = await Promise.all([

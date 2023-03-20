@@ -1,6 +1,6 @@
 import { printTitle } from '../_utils/formatting';
 import { shouldRevert } from '../_utils/testing';
-import { RocketDAOProtocolSettingsNode } from '../_utils/artifacts';
+import { SafeStakeDAOProtocolSettingsNode } from '../_utils/artifacts';
 import { setDAOProtocolBootstrapSetting } from '../dao/scenario-dao-protocol-bootstrap';
 import { getMinipoolMinimumRPLStake } from '../_helpers/minipool';
 import { getNodeFee } from '../_helpers/network';
@@ -11,7 +11,7 @@ import { deposit } from './scenario-deposit';
 import { userDeposit } from '../_helpers/deposit'
 
 export default function() {
-    contract('RocketNodeDeposit', async (accounts) => {
+    contract('SafeStakeNodeDeposit', async (accounts) => {
 
 
         // Accounts
@@ -75,7 +75,7 @@ export default function() {
             await nodeStakeRPL(rplStake, {from: node});
 
             // Disable deposits
-            await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsNode, 'node.deposit.enabled', false, {from: owner});
+            await setDAOProtocolBootstrapSetting(SafeStakeDAOProtocolSettingsNode, 'node.deposit.enabled', false, {from: owner});
 
             // Attempt deposit
             await shouldRevert(deposit(noMinimumNodeFee, {

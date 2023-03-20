@@ -1,10 +1,10 @@
 import {
-    RocketClaimDAO,
-    RocketDAONodeTrusted,
-    RocketNetworkPrices,
-    RocketRewardsPool,
-    RocketStorage,
-    RocketTokenRETH, RocketTokenRPL,
+    SafeStakeClaimDAO,
+    SafeStakeDAONodeTrusted,
+    SafeStakeNetworkPrices,
+    SafeStakeRewardsPool,
+    SafeStakeStorage,
+    SafeStakeTokenRETH, SafeStakeTokenRPL,
 } from '../_utils/artifacts';
 import { parseRewardsMap } from '../_utils/merkle-tree';
 
@@ -14,21 +14,21 @@ export async function submitRewards(index, rewards, treasuryRPL, userETH, txOpti
 
     // Load contracts
     const [
-        rocketDAONodeTrusted,
-        rocketRewardsPool,
-        rocketTokenRETH,
-        rocketTokenRPL,
-        rocketClaimDAO
+        safeStakeDAONodeTrusted,
+        safeStakeRewardsPool,
+        safeStakeTokenRETH,
+        safeStakeTokenRPL,
+        safeStakeClaimDAO
     ] = await Promise.all([
-        RocketDAONodeTrusted.deployed(),
-        RocketRewardsPool.deployed(),
-        RocketTokenRETH.deployed(),
-        RocketTokenRPL.deployed(),
-        RocketClaimDAO.deployed()
+        SafeStakeDAONodeTrusted.deployed(),
+        SafeStakeRewardsPool.deployed(),
+        SafeStakeTokenRETH.deployed(),
+        SafeStakeTokenRPL.deployed(),
+        SafeStakeClaimDAO.deployed()
     ]);
 
     // Get parameters
-    let trustedNodeCount = await rocketDAONodeTrusted.getMemberCount.call();
+    let trustedNodeCount = await safeStakeDAONodeTrusted.getMemberCount.call();
 
     // Construct the merkle tree
     let treeData = parseRewardsMap(rewards);
@@ -80,8 +80,8 @@ export async function submitRewards(index, rewards, treasuryRPL, userETH, txOpti
     // Get submission details
     function getSubmissionDetails() {
         return Promise.all([
-            rocketRewardsPool.getTrustedNodeSubmitted(txOptions.from, index),
-            rocketRewardsPool.getSubmissionCount(submission),
+            safeStakeRewardsPool.getTrustedNodeSubmitted(txOptions.from, index),
+            safeStakeRewardsPool.getSubmissionCount(submission),
         ]).then(
             ([nodeSubmitted, count]) =>
             ({nodeSubmitted, count})
@@ -91,21 +91,21 @@ export async function submitRewards(index, rewards, treasuryRPL, userETH, txOpti
     // Get initial submission details
     let [submission1, rewardIndex1, treasuryRpl1, rethBalance1] = await Promise.all([
         getSubmissionDetails(),
-        rocketRewardsPool.getRewardIndex(),
-        rocketTokenRPL.balanceOf(rocketClaimDAO.address),
-        web3.eth.getBalance(rocketTokenRETH.address)
+        safeStakeRewardsPool.getRewardIndex(),
+        safeStakeTokenRPL.balanceOf(safeStakeClaimDAO.address),
+        web3.eth.getBalance(safeStakeTokenRETH.address)
     ]);
 
 
     // Submit prices
-    await rocketRewardsPool.submitRewardSnapshot(submission, txOptions);
+    await safeStakeRewardsPool.submitRewardSnapshot(submission, txOptions);
 
     // Get updated submission details & prices
     let [submission2, rewardIndex2, treasuryRpl2, rethBalance2] = await Promise.all([
         getSubmissionDetails(),
-        rocketRewardsPool.getRewardIndex(),
-        rocketTokenRPL.balanceOf(rocketClaimDAO.address),
-        web3.eth.getBalance(rocketTokenRETH.address)
+        safeStakeRewardsPool.getRewardIndex(),
+        safeStakeTokenRPL.balanceOf(safeStakeClaimDAO.address),
+        web3.eth.getBalance(safeStakeTokenRETH.address)
     ]);
 
     // Check if prices should be updated
@@ -141,9 +141,9 @@ export async function executeRewards(index, rewards, treasuryRPL, userETH, txOpt
 
     // Load contracts
     const [
-        rocketRewardsPool,
+        safeStakeRewardsPool,
     ] = await Promise.all([
-        RocketRewardsPool.deployed(),
+        SafeStakeRewardsPool.deployed(),
     ]);
 
     // Construct the merkle tree
@@ -194,9 +194,9 @@ export async function executeRewards(index, rewards, treasuryRPL, userETH, txOpt
     }
 
     // Submit prices
-    let rewardIndex1 = await rocketRewardsPool.getRewardIndex();
-    await rocketRewardsPool.executeRewardSnapshot(submission, txOptions);
-    let rewardIndex2 = await rocketRewardsPool.getRewardIndex();
+    let rewardIndex1 = await safeStakeRewardsPool.getRewardIndex();
+    await safeStakeRewardsPool.executeRewardSnapshot(submission, txOptions);
+    let rewardIndex2 = await safeStakeRewardsPool.getRewardIndex();
 
     // Check index incremented
     assert(rewardIndex2.eq(rewardIndex1.add(web3.utils.toBN(1))), 'Incorrect updated network prices block');

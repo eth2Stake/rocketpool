@@ -1,4 +1,4 @@
-import { RocketDepositPool, RocketDAOProtocolSettingsDeposit, RocketMinipoolQueue, RocketDAOProtocolSettingsMinipool, RocketVault } from '../_utils/artifacts';
+import { SafeStakeDepositPool, SafeStakeDAOProtocolSettingsDeposit, SafeStakeMinipoolQueue, SafeStakeDAOProtocolSettingsMinipool, SafeStakeVault } from '../_utils/artifacts';
 
 
 // Assign deposits to minipools
@@ -6,17 +6,17 @@ export async function assignDeposits(txOptions) {
 
     // Load contracts
     const [
-        rocketDepositPool,
-        rocketDAOProtocolSettingsDeposit,
-        rocketMinipoolQueue,
-        rocketDAOProtocolSettingsMinipool,
-        rocketVault,
+        safeStakeDepositPool,
+        safeStakeDAOProtocolSettingsDeposit,
+        safeStakeMinipoolQueue,
+        safeStakeDAOProtocolSettingsMinipool,
+        safeStakeVault,
     ] = await Promise.all([
-        RocketDepositPool.deployed(),
-        RocketDAOProtocolSettingsDeposit.deployed(),
-        RocketMinipoolQueue.deployed(),
-        RocketDAOProtocolSettingsMinipool.deployed(),
-        RocketVault.deployed(),
+        SafeStakeDepositPool.deployed(),
+        SafeStakeDAOProtocolSettingsDeposit.deployed(),
+        SafeStakeMinipoolQueue.deployed(),
+        SafeStakeDAOProtocolSettingsMinipool.deployed(),
+        SafeStakeVault.deployed(),
     ]);
 
     // Get parameters
@@ -26,10 +26,10 @@ export async function assignDeposits(txOptions) {
         fullMinipoolQueueLength, halfMinipoolQueueLength, emptyMinipoolQueueLength,
         fullDepositUserAmount, halfDepositUserAmount, emptyDepositUserAmount,
     ] = await Promise.all([
-        rocketDepositPool.getBalance.call(),
-        rocketDAOProtocolSettingsDeposit.getMaximumDepositAssignments.call(),
-        rocketMinipoolQueue.getLength.call(1), rocketMinipoolQueue.getLength.call(2), rocketMinipoolQueue.getLength.call(3),
-        rocketDAOProtocolSettingsMinipool.getDepositUserAmount(1), rocketDAOProtocolSettingsMinipool.getDepositUserAmount(2), rocketDAOProtocolSettingsMinipool.getDepositUserAmount(3),
+        safeStakeDepositPool.getBalance.call(),
+        safeStakeDAOProtocolSettingsDeposit.getMaximumDepositAssignments.call(),
+        safeStakeMinipoolQueue.getLength.call(1), safeStakeMinipoolQueue.getLength.call(2), safeStakeMinipoolQueue.getLength.call(3),
+        safeStakeDAOProtocolSettingsMinipool.getDepositUserAmount(1), safeStakeDAOProtocolSettingsMinipool.getDepositUserAmount(2), safeStakeDAOProtocolSettingsMinipool.getDepositUserAmount(3),
     ]);
 
     // Get queued minipool capacities
@@ -54,8 +54,8 @@ export async function assignDeposits(txOptions) {
     // Get balances
     function getBalances() {
         return Promise.all([
-            rocketDepositPool.getBalance.call(),
-            web3.eth.getBalance(rocketVault.address).then(value => web3.utils.toBN(value)),
+            safeStakeDepositPool.getBalance.call(),
+            web3.eth.getBalance(safeStakeVault.address).then(value => web3.utils.toBN(value)),
         ]).then(
             ([depositPoolEth, vaultEth]) =>
             ({depositPoolEth, vaultEth})
@@ -65,8 +65,8 @@ export async function assignDeposits(txOptions) {
     // Get minipool queue details
     function getMinipoolQueueDetails() {
         return Promise.all([
-            rocketMinipoolQueue.getTotalLength.call(),
-            rocketMinipoolQueue.getTotalCapacity.call(),
+            safeStakeMinipoolQueue.getTotalLength.call(),
+            safeStakeMinipoolQueue.getTotalCapacity.call(),
         ]).then(
             ([totalLength, totalCapacity]) =>
             ({totalLength, totalCapacity})
@@ -80,7 +80,7 @@ export async function assignDeposits(txOptions) {
     ]);
 
     // Assign deposits
-    await rocketDepositPool.assignDeposits(txOptions);
+    await safeStakeDepositPool.assignDeposits(txOptions);
 
     // Get updated balances & minipool queue details
     let [balances2, queue2] = await Promise.all([

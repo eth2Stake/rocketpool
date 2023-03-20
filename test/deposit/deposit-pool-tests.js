@@ -8,12 +8,12 @@ import { getRethExchangeRate, getRethTotalSupply, mintRPL } from '../_helpers/to
 import { getDepositSetting } from '../_helpers/settings';
 import { assignDeposits } from './scenario-assign-deposits';
 import { deposit } from './scenario-deposit';
-import { RocketDAONodeTrustedSettingsMembers, RocketDAOProtocolSettingsDeposit } from '../_utils/artifacts'
+import { SafeStakeDAONodeTrustedSettingsMembers, SafeStakeDAOProtocolSettingsDeposit } from '../_utils/artifacts'
 import { setDAOProtocolBootstrapSetting } from '../dao/scenario-dao-protocol-bootstrap';
 import { setDAONodeTrustedBootstrapSetting } from '../dao/scenario-dao-node-trusted-bootstrap'
 
 export default function() {
-    contract('RocketDepositPool', async (accounts) => {
+    contract('SafeStakeDepositPool', async (accounts) => {
 
 
         // Accounts
@@ -75,7 +75,7 @@ export default function() {
         it(printTitle('staker', 'cannot make a deposit while deposits are disabled'), async () => {
 
             // Disable deposits
-            await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsDeposit, 'deposit.enabled', false, {from: owner});
+            await setDAOProtocolBootstrapSetting(SafeStakeDAOProtocolSettingsDeposit, 'deposit.enabled', false, {from: owner});
 
             // Attempt deposit
             await shouldRevert(deposit({
@@ -105,7 +105,7 @@ export default function() {
         it(printTitle('staker', 'cannot make a deposit which would exceed the maximum deposit pool size'), async () => {
 
             // Set max deposit pool size
-            await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsDeposit, 'deposit.pool.maximum', web3.utils.toWei('100', 'ether'), {from: owner});
+            await setDAOProtocolBootstrapSetting(SafeStakeDAOProtocolSettingsDeposit, 'deposit.pool.maximum', web3.utils.toWei('100', 'ether'), {from: owner});
 
             // Attempt deposit
             await shouldRevert(deposit({
@@ -129,10 +129,10 @@ export default function() {
             });
 
             // Disable deposit assignment
-            await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsDeposit, 'deposit.assign.enabled', false, {from: owner});
+            await setDAOProtocolBootstrapSetting(SafeStakeDAOProtocolSettingsDeposit, 'deposit.assign.enabled', false, {from: owner});
 
             // Disable minimum unbonded commission threshold
-            await setDAONodeTrustedBootstrapSetting(RocketDAONodeTrustedSettingsMembers, 'members.minipool.unbonded.min.fee', '0', {from: owner});
+            await setDAONodeTrustedBootstrapSetting(SafeStakeDAONodeTrustedSettingsMembers, 'members.minipool.unbonded.min.fee', '0', {from: owner});
 
             // Stake RPL to cover minipools
             let minipoolRplStake = await getMinipoolMinimumRPLStake();
@@ -147,8 +147,8 @@ export default function() {
             await nodeDeposit({from: trustedNode, value: web3.utils.toWei('16', 'ether')});
 
             // Re-enable deposit assignment & set limit
-            await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsDeposit, 'deposit.assign.enabled', true, {from: owner});
-            await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsDeposit, 'deposit.assign.maximum', 3, {from: owner});
+            await setDAOProtocolBootstrapSetting(SafeStakeDAOProtocolSettingsDeposit, 'deposit.assign.enabled', true, {from: owner});
+            await setDAOProtocolBootstrapSetting(SafeStakeDAOProtocolSettingsDeposit, 'deposit.assign.maximum', 3, {from: owner});
 
             // Assign deposits with assignable deposits
             await assignDeposits({
@@ -161,7 +161,7 @@ export default function() {
         it(printTitle('random address', 'cannot assign deposits while deposit assignment is disabled'), async () => {
 
             // Disable deposit assignment
-            await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsDeposit, 'deposit.assign.enabled', false, {from: owner});
+            await setDAOProtocolBootstrapSetting(SafeStakeDAOProtocolSettingsDeposit, 'deposit.assign.enabled', false, {from: owner});
 
             // Attempt to assign deposits
             await shouldRevert(assignDeposits({

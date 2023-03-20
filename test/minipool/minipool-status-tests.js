@@ -7,9 +7,9 @@ import { registerNode, setNodeTrusted, nodeStakeRPL } from '../_helpers/node';
 import { mintRPL } from '../_helpers/tokens';
 import { executeSetWithdrawable, submitWithdrawable } from './scenario-submit-withdrawable'
 import {
-    RocketDAONodeTrustedSettingsMinipool,
-    RocketDAONodeTrustedSettingsProposals,
-    RocketDAOProtocolSettingsMinipool
+    SafeStakeDAONodeTrustedSettingsMinipool,
+    SafeStakeDAONodeTrustedSettingsProposals,
+    SafeStakeDAOProtocolSettingsMinipool
 } from '../_utils/artifacts';
 import { setDAOProtocolBootstrapSetting } from '../dao/scenario-dao-protocol-bootstrap';
 import { daoNodeTrustedExecute, daoNodeTrustedMemberLeave, daoNodeTrustedPropose, daoNodeTrustedVote } from '../dao/scenario-dao-node-trusted'
@@ -17,7 +17,7 @@ import { getDAOProposalEndTime, getDAOProposalStartTime } from '../dao/scenario-
 import { setDAONodeTrustedBootstrapSetting } from '../dao/scenario-dao-node-trusted-bootstrap'
 
 export default function() {
-    contract('RocketMinipoolStatus', async (accounts) => {
+    contract('SafeStakeMinipoolStatus', async (accounts) => {
 
         // Accounts
         const [
@@ -88,11 +88,11 @@ export default function() {
             assert(stakingStatus3.eq(web3.utils.toBN(2)), 'Incorrect staking minipool status');
 
             // Set a small proposal cooldown
-            await setDAONodeTrustedBootstrapSetting(RocketDAONodeTrustedSettingsProposals, 'proposal.cooldown', proposalCooldown, { from: owner });
-            await setDAONodeTrustedBootstrapSetting(RocketDAONodeTrustedSettingsProposals, 'proposal.vote.blocks', proposalVoteBlocks, { from: owner });
-            await setDAONodeTrustedBootstrapSetting(RocketDAONodeTrustedSettingsMinipool, 'minipool.scrub.period', scrubPeriod, {from: owner});
+            await setDAONodeTrustedBootstrapSetting(SafeStakeDAONodeTrustedSettingsProposals, 'proposal.cooldown', proposalCooldown, { from: owner });
+            await setDAONodeTrustedBootstrapSetting(SafeStakeDAONodeTrustedSettingsProposals, 'proposal.vote.blocks', proposalVoteBlocks, { from: owner });
+            await setDAONodeTrustedBootstrapSetting(SafeStakeDAONodeTrustedSettingsMinipool, 'minipool.scrub.period', scrubPeriod, {from: owner});
             // Set a small vote delay
-            await setDAONodeTrustedBootstrapSetting(RocketDAONodeTrustedSettingsProposals, 'proposal.vote.delay.blocks', 4, { from: owner });
+            await setDAONodeTrustedBootstrapSetting(SafeStakeDAONodeTrustedSettingsProposals, 'proposal.vote.delay.blocks', 4, { from: owner });
 
         });
 
@@ -172,7 +172,7 @@ export default function() {
         it(printTitle('trusted nodes', 'cannot submit a withdrawable event for a minipool while withdrawable submissions are disabled'), async () => {
 
             // Disable submissions
-            await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsMinipool, 'minipool.submit.withdrawable.enabled', false, {from: owner});
+            await setDAOProtocolBootstrapSetting(SafeStakeDAOProtocolSettingsMinipool, 'minipool.submit.withdrawable.enabled', false, {from: owner});
 
             // Attempt to submit withdrawable event for staking minipool
             await shouldRevert(submitWithdrawable(stakingMinipool1.address, {

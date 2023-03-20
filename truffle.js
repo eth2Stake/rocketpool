@@ -1,7 +1,7 @@
 /**
-  Rocket Pool
+  SafeStake Pool
   @author David Rugendyke
-  @email david@rocketpool.net
+  @email david@safeStakepool.net
   @version 0.2 
 */
 

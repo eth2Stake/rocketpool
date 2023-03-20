@@ -1,8 +1,8 @@
 import { printTitle } from '../_utils/formatting';
 import {
-    RocketNodeManager,
-    RocketDAONodeTrustedSettingsMinipool,
-    RocketNodeDistributorFactory, RocketNodeManagerNew, RocketNodeManagerOld
+    SafeStakeNodeManager,
+    SafeStakeDAONodeTrustedSettingsMinipool,
+    SafeStakeNodeDistributorFactory, SafeStakeNodeManagerNew, SafeStakeNodeManagerOld
 } from '../_utils/artifacts';
 import {
     createMinipool,
@@ -18,7 +18,7 @@ import { setDAONodeTrustedBootstrapSetting } from '../dao/scenario-dao-node-trus
 import { shouldRevert } from '../_utils/testing';
 
 export default function() {
-    contract('RocketNodeDistributor', async (accounts) => {
+    contract('SafeStakeNodeDistributor', async (accounts) => {
 
         // Accounts
         const [
@@ -37,12 +37,12 @@ export default function() {
 
         before(async () => {
             // Get contracts
-            const rocketNodeDistributorFactory = await RocketNodeDistributorFactory.deployed();
+            const safeStakeNodeDistributorFactory = await SafeStakeNodeDistributorFactory.deployed();
             // Set settings
-            await setDAONodeTrustedBootstrapSetting(RocketDAONodeTrustedSettingsMinipool, 'minipool.scrub.period', scrubPeriod, {from: owner});
+            await setDAONodeTrustedBootstrapSetting(SafeStakeDAONodeTrustedSettingsMinipool, 'minipool.scrub.period', scrubPeriod, {from: owner});
             // Register node
             await registerNode({from: node1});
-            distributorAddress = await rocketNodeDistributorFactory.getProxyAddress(node1);
+            distributorAddress = await safeStakeNodeDistributorFactory.getProxyAddress(node1);
             // Register trusted node
             await registerNode({from: trustedNode});
             await setNodeTrusted(trustedNode, 'saas_1', 'node@home.com', owner);
@@ -60,16 +60,16 @@ export default function() {
             await registerNode({from: node2});
             await nodeStakeRPL(rplStake, {from: node2});
             // Get contracts
-            const rocketNodeManager = await RocketNodeManager.deployed();
+            const safeStakeNodeManager = await SafeStakeNodeManager.deployed();
             // Attempt to initialise
-            await shouldRevert(rocketNodeManager.initialiseFeeDistributor({from: node2}), 'Was able to initialise again', 'Already initialised');
+            await shouldRevert(safeStakeNodeManager.initialiseFeeDistributor({from: node2}), 'Was able to initialise again', 'Already initialised');
         });
 
 
         it(printTitle('node operator', 'can not initialise fee distributor if already initialised'), async () => {
             // Attempt to initialise a second time
-            const rocketNodeManager = await RocketNodeManager.deployed();
-            await shouldRevert(rocketNodeManager.initialiseFeeDistributor({from: node1}), 'Was able to initialise again', 'Already initialised');
+            const safeStakeNodeManager = await SafeStakeNodeManager.deployed();
+            await shouldRevert(safeStakeNodeManager.initialiseFeeDistributor({from: node1}), 'Was able to initialise again', 'Already initialised');
         });
 
 

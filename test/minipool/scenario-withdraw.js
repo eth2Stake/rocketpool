@@ -1,23 +1,23 @@
-import { RocketNodeManager, RocketTokenNETH } from '../_utils/artifacts';
+import { SafeStakeNodeManager, SafeStakeTokenNETH } from '../_utils/artifacts';
 
 
 // Withdraw from a minipool
 export async function withdraw(minipool, txOptions) {
 
     // Load contracts
-    const [rocketNodeManager, rocketTokenNETH] = await Promise.all([
-        RocketNodeManager.deployed(),
-        RocketTokenNETH.deployed(),
+    const [safeStakeNodeManager, safeStakeTokenNETH] = await Promise.all([
+        SafeStakeNodeManager.deployed(),
+        SafeStakeTokenNETH.deployed(),
     ]);
 
     // Get parameters
     let nodeAddress = await minipool.getNodeAddress.call();
-    let nodeWithdrawalAddress = await rocketNodeManager.getNodeWithdrawalAddress.call(nodeAddress);
+    let nodeWithdrawalAddress = await safeStakeNodeManager.getNodeWithdrawalAddress.call(nodeAddress);
 
     // Get minipool balances
     function getMinipoolBalances() {
         return Promise.all([
-            rocketTokenNETH.balanceOf.call(minipool.address),
+            safeStakeTokenNETH.balanceOf.call(minipool.address),
             minipool.getNodeRefundBalance.call(),
         ]).then(
             ([neth, nodeRefund]) =>
@@ -28,7 +28,7 @@ export async function withdraw(minipool, txOptions) {
     // Get node balances
     function getNodeBalances() {
         return Promise.all([
-            rocketTokenNETH.balanceOf.call(nodeWithdrawalAddress),
+            safeStakeTokenNETH.balanceOf.call(nodeWithdrawalAddress),
             web3.eth.getBalance(nodeWithdrawalAddress).then(value => web3.utils.toBN(value)),
         ]).then(
             ([neth, eth]) =>

@@ -1,4 +1,4 @@
-import { RocketAuctionManager, RocketDAOProtocolSettingsAuction, RocketVault } from '../_utils/artifacts';
+import { SafeStakeAuctionManager, SafeStakeDAOProtocolSettingsAuction, SafeStakeVault } from '../_utils/artifacts';
 
 
 // Place a bid on a lot
@@ -6,13 +6,13 @@ export async function placeBid(lotIndex, txOptions) {
 
     // Load contracts
     const [
-        rocketAuctionManager,
-        rocketAuctionSettings,
-        rocketVault,
+        safeStakeAuctionManager,
+        safeStakeAuctionSettings,
+        safeStakeVault,
     ] = await Promise.all([
-        RocketAuctionManager.deployed(),
-        RocketDAOProtocolSettingsAuction.deployed(),
-        RocketVault.deployed(),
+        SafeStakeAuctionManager.deployed(),
+        SafeStakeDAOProtocolSettingsAuction.deployed(),
+        SafeStakeVault.deployed(),
     ]);
 
     // Calculation base value
@@ -21,13 +21,13 @@ export async function placeBid(lotIndex, txOptions) {
     // Get lot details
     function getLotDetails(bidderAddress) {
         return Promise.all([
-            rocketAuctionManager.getLotTotalRPLAmount.call(lotIndex),
-            rocketAuctionManager.getLotTotalBidAmount.call(lotIndex),
-            rocketAuctionManager.getLotAddressBidAmount.call(lotIndex, bidderAddress),
-            rocketAuctionManager.getLotPriceByTotalBids.call(lotIndex),
-            rocketAuctionManager.getLotCurrentPrice.call(lotIndex),
-            rocketAuctionManager.getLotClaimedRPLAmount.call(lotIndex),
-            rocketAuctionManager.getLotRemainingRPLAmount.call(lotIndex),
+            safeStakeAuctionManager.getLotTotalRPLAmount.call(lotIndex),
+            safeStakeAuctionManager.getLotTotalBidAmount.call(lotIndex),
+            safeStakeAuctionManager.getLotAddressBidAmount.call(lotIndex, bidderAddress),
+            safeStakeAuctionManager.getLotPriceByTotalBids.call(lotIndex),
+            safeStakeAuctionManager.getLotCurrentPrice.call(lotIndex),
+            safeStakeAuctionManager.getLotClaimedRPLAmount.call(lotIndex),
+            safeStakeAuctionManager.getLotRemainingRPLAmount.call(lotIndex),
         ]).then(
             ([totalRplAmount, totalBidAmount, addressBidAmount, priceByTotalBids, currentPrice, claimedRplAmount, remainingRplAmount]) =>
             ({totalRplAmount, totalBidAmount, addressBidAmount, priceByTotalBids, currentPrice, claimedRplAmount, remainingRplAmount})
@@ -38,8 +38,8 @@ export async function placeBid(lotIndex, txOptions) {
     function getBalances(bidderAddress) {
         return Promise.all([
             web3.eth.getBalance(bidderAddress).then(value => web3.utils.toBN(value)),
-            web3.eth.getBalance(rocketVault.address).then(value => web3.utils.toBN(value)),
-            rocketVault.balanceOf.call('rocketDepositPool'),
+            web3.eth.getBalance(safeStakeVault.address).then(value => web3.utils.toBN(value)),
+            safeStakeVault.balanceOf.call('safeStakeDepositPool'),
         ]).then(
             ([bidderEth, vaultEth, depositPoolEth]) =>
             ({bidderEth, vaultEth, depositPoolEth})
@@ -49,7 +49,7 @@ export async function placeBid(lotIndex, txOptions) {
     // Get lot price at block
     function getLotPriceAtBlock() {
         return web3.eth.getBlock('latest')
-            .then(block => rocketAuctionManager.getLotPriceAtBlock.call(lotIndex, block.number));
+            .then(block => safeStakeAuctionManager.getLotPriceAtBlock.call(lotIndex, block.number));
     }
 
     // Get initial lot details & balances
@@ -63,7 +63,7 @@ export async function placeBid(lotIndex, txOptions) {
     txOptions.gasPrice = gasPrice;
 
     // Place bid
-    let txReceipt = await rocketAuctionManager.placeBid(lotIndex, txOptions);
+    let txReceipt = await safeStakeAuctionManager.placeBid(lotIndex, txOptions);
     let txFee = gasPrice.mul(web3.utils.toBN(txReceipt.receipt.gasUsed));
 
     // Get updated lot details & balances

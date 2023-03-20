@@ -1,50 +1,50 @@
-import { RocketTokenRETH, RocketTokenNETH, RocketTokenDummyRPL, RocketTokenRPL } from '../_utils/artifacts';
+import { SafeStakeTokenRETH, SafeStakeTokenNETH, SafeStakeTokenDummyRPL, SafeStakeTokenRPL } from '../_utils/artifacts';
 
 
 // Get the RPL balance of an address
 export async function getRplBalance(address) {
-    const rocketTokenRPL = await RocketTokenRPL.deployed();
-    let balance = rocketTokenRPL.balanceOf.call(address);
+    const safeStakeTokenRPL = await SafeStakeTokenRPL.deployed();
+    let balance = safeStakeTokenRPL.balanceOf.call(address);
     return balance;
 }
 
 
 // Get the rETH balance of an address
 export async function getRethBalance(address) {
-    const rocketTokenRETH = await RocketTokenRETH.deployed();
-    let balance = rocketTokenRETH.balanceOf.call(address);
+    const safeStakeTokenRETH = await SafeStakeTokenRETH.deployed();
+    let balance = safeStakeTokenRETH.balanceOf.call(address);
     return balance;
 }
 
 
 // Get the current rETH exchange rate
 export async function getRethExchangeRate() {
-    const rocketTokenRETH = await RocketTokenRETH.deployed();
-    let exchangeRate = await rocketTokenRETH.getExchangeRate.call();
+    const safeStakeTokenRETH = await SafeStakeTokenRETH.deployed();
+    let exchangeRate = await safeStakeTokenRETH.getExchangeRate.call();
     return exchangeRate;
 }
 
 
 // Get the current rETH collateral rate
 export async function getRethCollateralRate() {
-    const rocketTokenRETH = await RocketTokenRETH.deployed();
-    let collateralRate = await rocketTokenRETH.getCollateralRate.call();
+    const safeStakeTokenRETH = await SafeStakeTokenRETH.deployed();
+    let collateralRate = await safeStakeTokenRETH.getCollateralRate.call();
     return collateralRate;
 }
 
 
 // Get the current rETH token supply
 export async function getRethTotalSupply() {
-    const rocketTokenRETH = await RocketTokenRETH.deployed();
-    let totalSupply = await rocketTokenRETH.totalSupply.call();
+    const safeStakeTokenRETH = await SafeStakeTokenRETH.deployed();
+    let totalSupply = await safeStakeTokenRETH.totalSupply.call();
     return totalSupply;
 }
 
 
 // Get the nETH balance of an address
 export async function getNethBalance(address) {
-    const rocketTokenNETH = await RocketTokenNETH.deployed();
-    let balance = rocketTokenNETH.balanceOf.call(address);
+    const safeStakeTokenNETH = await SafeStakeTokenNETH.deployed();
+    let balance = safeStakeTokenNETH.balanceOf.call(address);
     return balance;
 }
 
@@ -53,29 +53,29 @@ export async function getNethBalance(address) {
 export async function mintRPL(owner, toAddress, amount) {
 
     // Load contracts
-    const [rocketTokenDummyRPL, rocketTokenRPL] = await Promise.all([
-        RocketTokenDummyRPL.deployed(),
-        RocketTokenRPL.deployed(),
+    const [safeStakeTokenDummyRPL, safeStakeTokenRPL] = await Promise.all([
+        SafeStakeTokenDummyRPL.deployed(),
+        SafeStakeTokenRPL.deployed(),
     ]);
 
     // Mint dummy RPL to address
-    await rocketTokenDummyRPL.mint(toAddress, amount, {from: owner});
+    await safeStakeTokenDummyRPL.mint(toAddress, amount, {from: owner});
 
     // Swap dummy RPL for RPL
-    await rocketTokenDummyRPL.approve(rocketTokenRPL.address, amount, {from: toAddress});
-    await rocketTokenRPL.swapTokens(amount, {from: toAddress});
+    await safeStakeTokenDummyRPL.approve(safeStakeTokenRPL.address, amount, {from: toAddress});
+    await safeStakeTokenRPL.swapTokens(amount, {from: toAddress});
 
 }
 
 
 // Approve RPL to be spend by an address
 export async function approveRPL(spender, amount, txOptions) {
-    const rocketTokenRPL = await RocketTokenRPL.deployed();
-    await rocketTokenRPL.approve(spender, amount, txOptions);
+    const safeStakeTokenRPL = await SafeStakeTokenRPL.deployed();
+    await safeStakeTokenRPL.approve(spender, amount, txOptions);
 }
 
 
 export async function depositExcessCollateral(txOptions) {
-    const rocketTokenRETH = await RocketTokenRETH.deployed();
-    await rocketTokenRETH.depositExcessCollateral(txOptions);
+    const safeStakeTokenRETH = await SafeStakeTokenRETH.deployed();
+    await safeStakeTokenRETH.depositExcessCollateral(txOptions);
 }

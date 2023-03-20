@@ -1,4 +1,4 @@
-import { RocketDAONodeTrusted, RocketNetworkBalances, RocketStorage } from '../_utils/artifacts';
+import { SafeStakeDAONodeTrusted, SafeStakeNetworkBalances, SafeStakeStorage } from '../_utils/artifacts';
 
 
 // Submit network balances
@@ -6,17 +6,17 @@ export async function submitBalances(block, totalEth, stakingEth, rethSupply, tx
 
     // Load contracts
     const [
-        rocketDAONodeTrusted,
-        rocketNetworkBalances,
-        rocketStorage,
+        safeStakeDAONodeTrusted,
+        safeStakeNetworkBalances,
+        safeStakeStorage,
     ] = await Promise.all([
-        RocketDAONodeTrusted.deployed(),
-        RocketNetworkBalances.deployed(),
-        RocketStorage.deployed(),
+        SafeStakeDAONodeTrusted.deployed(),
+        SafeStakeNetworkBalances.deployed(),
+        SafeStakeStorage.deployed(),
     ]);
 
     // Get parameters
-    let trustedNodeCount = await rocketDAONodeTrusted.getMemberCount.call();
+    let trustedNodeCount = await safeStakeDAONodeTrusted.getMemberCount.call();
 
     // Get submission keys
     let nodeSubmissionKey = web3.utils.soliditySha3('network.balances.submitted.node', txOptions.from, block, totalEth, stakingEth, rethSupply);
@@ -25,8 +25,8 @@ export async function submitBalances(block, totalEth, stakingEth, rethSupply, tx
     // Get submission details
     function getSubmissionDetails() {
         return Promise.all([
-            rocketStorage.getBool.call(nodeSubmissionKey),
-            rocketStorage.getUint.call(submissionCountKey),
+            safeStakeStorage.getBool.call(nodeSubmissionKey),
+            safeStakeStorage.getUint.call(submissionCountKey),
         ]).then(
             ([nodeSubmitted, count]) =>
             ({nodeSubmitted, count})
@@ -36,10 +36,10 @@ export async function submitBalances(block, totalEth, stakingEth, rethSupply, tx
     // Get balances
     function getBalances() {
         return Promise.all([
-            rocketNetworkBalances.getBalancesBlock.call(),
-            rocketNetworkBalances.getTotalETHBalance.call(),
-            rocketNetworkBalances.getStakingETHBalance.call(),
-            rocketNetworkBalances.getTotalRETHSupply.call(),
+            safeStakeNetworkBalances.getBalancesBlock.call(),
+            safeStakeNetworkBalances.getTotalETHBalance.call(),
+            safeStakeNetworkBalances.getStakingETHBalance.call(),
+            safeStakeNetworkBalances.getTotalRETHSupply.call(),
         ]).then(
             ([block, totalEth, stakingEth, rethSupply]) =>
             ({block, totalEth, stakingEth, rethSupply})
@@ -50,7 +50,7 @@ export async function submitBalances(block, totalEth, stakingEth, rethSupply, tx
     let submission1 = await getSubmissionDetails();
 
     // Submit balances
-    await rocketNetworkBalances.submitBalances(block, totalEth, stakingEth, rethSupply, txOptions);
+    await safeStakeNetworkBalances.submitBalances(block, totalEth, stakingEth, rethSupply, txOptions);
 
     // Get updated submission details & balances
     let [submission2, balances] = await Promise.all([
@@ -85,15 +85,15 @@ export async function submitBalances(block, totalEth, stakingEth, rethSupply, tx
 export async function executeUpdateBalances(block, totalEth, stakingEth, rethSupply, txOptions) {
 
     // Load contracts
-    const rocketNetworkBalances = await RocketNetworkBalances.deployed()
+    const safeStakeNetworkBalances = await SafeStakeNetworkBalances.deployed()
 
     // Get balances
     function getBalances() {
         return Promise.all([
-            rocketNetworkBalances.getBalancesBlock.call(),
-            rocketNetworkBalances.getTotalETHBalance.call(),
-            rocketNetworkBalances.getStakingETHBalance.call(),
-            rocketNetworkBalances.getTotalRETHSupply.call(),
+            safeStakeNetworkBalances.getBalancesBlock.call(),
+            safeStakeNetworkBalances.getTotalETHBalance.call(),
+            safeStakeNetworkBalances.getStakingETHBalance.call(),
+            safeStakeNetworkBalances.getTotalRETHSupply.call(),
         ]).then(
           ([block, totalEth, stakingEth, rethSupply]) =>
             ({block, totalEth, stakingEth, rethSupply})
@@ -101,7 +101,7 @@ export async function executeUpdateBalances(block, totalEth, stakingEth, rethSup
     }
 
     // Submit balances
-    await rocketNetworkBalances.executeUpdateBalances(block, totalEth, stakingEth, rethSupply, txOptions);
+    await safeStakeNetworkBalances.executeUpdateBalances(block, totalEth, stakingEth, rethSupply, txOptions);
 
     // Get updated balances
     let balances = await getBalances()

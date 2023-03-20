@@ -4,10 +4,10 @@ import { shouldRevert } from '../_utils/testing';
 import { nodeDeposit, nodeStakeRPL, registerNode, setNodeTrusted } from '../_helpers/node'
 import { executeUpdatePrices, submitPrices } from './scenario-submit-prices'
 import {
-    RocketDAONodeTrustedSettingsProposals,
-    RocketDAOProtocolSettingsNetwork,
-    RocketDAOProtocolSettingsNode,
-    RocketNetworkPrices
+    SafeStakeDAONodeTrustedSettingsProposals,
+    SafeStakeDAOProtocolSettingsNetwork,
+    SafeStakeDAOProtocolSettingsNode,
+    SafeStakeNetworkPrices
 } from '../_utils/artifacts'
 import { setDAOProtocolBootstrapSetting } from '../dao/scenario-dao-protocol-bootstrap';
 import { setDAONodeTrustedBootstrapSetting } from '../dao/scenario-dao-node-trusted-bootstrap'
@@ -16,7 +16,7 @@ import { getDAOProposalEndTime, getDAOProposalStartTime } from '../dao/scenario-
 import { mintRPL } from '../_helpers/tokens'
 
 export default function() {
-    contract('RocketNetworkPrices', async (accounts) => {
+    contract('SafeStakeNetworkPrices', async (accounts) => {
 
 
         // Accounts
@@ -50,10 +50,10 @@ export default function() {
             await setNodeTrusted(trustedNode3, 'saas_3', 'node@home.com', owner);
 
             // Set a small proposal cooldown
-            await setDAONodeTrustedBootstrapSetting(RocketDAONodeTrustedSettingsProposals, 'proposal.cooldown.time', proposalCooldown, { from: owner });
-            await setDAONodeTrustedBootstrapSetting(RocketDAONodeTrustedSettingsProposals, 'proposal.vote.time', proposalVoteTime, { from: owner });
+            await setDAONodeTrustedBootstrapSetting(SafeStakeDAONodeTrustedSettingsProposals, 'proposal.cooldown.time', proposalCooldown, { from: owner });
+            await setDAONodeTrustedBootstrapSetting(SafeStakeDAONodeTrustedSettingsProposals, 'proposal.vote.time', proposalVoteTime, { from: owner });
             // Set a small vote delay
-            await setDAONodeTrustedBootstrapSetting(RocketDAONodeTrustedSettingsProposals, 'proposal.vote.delay.blocks', 4, { from: owner });
+            await setDAONodeTrustedBootstrapSetting(SafeStakeDAONodeTrustedSettingsProposals, 'proposal.vote.delay.blocks', 4, { from: owner });
 
         });
 
@@ -132,7 +132,7 @@ export default function() {
             let rplPrice = web3.utils.toWei('0.02', 'ether');
 
             // Disable submissions
-            await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsNetwork, 'network.submit.prices.enabled', false, {from: owner});
+            await setDAOProtocolBootstrapSetting(SafeStakeDAOProtocolSettingsNetwork, 'network.submit.prices.enabled', false, {from: owner});
 
             // Attempt to submit prices
             await shouldRevert(submitPrices(block, rplPrice, {
@@ -265,9 +265,9 @@ export default function() {
             // Mint some RPL so we can stake
             await mintRPL(owner, trustedNode1, web3.utils.toWei('10000', 'ether'));
             // Load contract
-            const rocketNetworkPrices = await RocketNetworkPrices.deployed();
+            const safeStakeNetworkPrices = await SafeStakeNetworkPrices.deployed();
             // Set update frequency to 500
-            await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsNetwork, 'network.submit.prices.frequency', 500, {from: owner});
+            await setDAOProtocolBootstrapSetting(SafeStakeDAOProtocolSettingsNetwork, 'network.submit.prices.frequency', 500, {from: owner});
             // Mine to block 800
             const block = await web3.eth.getBlockNumber();
             await mineBlocks(web3, 800 - block);
@@ -275,19 +275,19 @@ export default function() {
             await submitPrices(500, web3.utils.toWei('1', 'ether'), {from: trustedNode1});
             await submitPrices(500, web3.utils.toWei('1', 'ether'), {from: trustedNode2});
             // Record the latest reportable block (should be 500)
-            const latest1 = await rocketNetworkPrices.getLatestReportableBlock();
+            const latest1 = await safeStakeNetworkPrices.getLatestReportableBlock();
             assert(latest1.eq(web3.utils.toBN(500)), 'Incorrect latest reportable block')
             // Update effective RPL stake on-chain by staking
             await nodeStakeRPL(web3.utils.toWei('1.6', 'ether'), {from: trustedNode1});
             await nodeDeposit({from: trustedNode1, value: web3.utils.toWei('16', 'ether')});
-            const onchain1 = await rocketNetworkPrices.getEffectiveRPLStakeUpdatedBlock();      // Should contain the current block number (~800)
+            const onchain1 = await safeStakeNetworkPrices.getEffectiveRPLStakeUpdatedBlock();      // Should contain the current block number (~800)
             // Record the latest reportable block
-            const latest2 = await rocketNetworkPrices.getLatestReportableBlock();
+            const latest2 = await safeStakeNetworkPrices.getLatestReportableBlock();
             // Updating on-chain effective stake should not change the latest reportable block (should still be 500)
             assert(latest1.eq(latest2), 'Latest reportable block changed');
             // Change the update frequency to 300
-            await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsNetwork, 'network.submit.prices.frequency', 300, {from: owner});
-            const latest3 = await rocketNetworkPrices.getLatestReportableBlock();
+            await setDAOProtocolBootstrapSetting(SafeStakeDAOProtocolSettingsNetwork, 'network.submit.prices.frequency', 300, {from: owner});
+            const latest3 = await safeStakeNetworkPrices.getLatestReportableBlock();
             // We've simulated the edge case where the on-chain value of the effective RPL stake was updated and then a change to the update frequency
             // resulted in the latest window falling on a block lower than the on-chain update. So the contract should now report the block that it was last
             // updated instead of the latest window

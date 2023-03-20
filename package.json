@@ -1,14 +1,14 @@
 {
-  "name": "rocketpool",
+  "name": "safeStakepool",
   "version": "3.0.0",
   "description": "A next generation decentralised Ethereum 2.0 proof of stake protocol",
-  "repository": "git@github.com:rocket-pool/rocketpool.git",
-  "author": "David Rugendyke <contact@rocketpool.net>",
+  "repository": "git@github.com:safeStake-pool/safeStakepool.git",
+  "author": "David Rugendyke <contact@safeStakepool.net>",
   "scripts": {
     "console": "truffle console",
     "compile": "truffle compile",
     "migrate": "truffle migrate",
-    "test": "scripts/test.sh test/rocket-pool-tests.js",
+    "test": "scripts/test.sh test/safeStake-pool-tests.js",
     "test-cov": "./node_modules/.bin/solidity-coverage",
     "format": "prettier --write '**/*.js'"
   },

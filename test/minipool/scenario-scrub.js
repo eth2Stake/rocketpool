@@ -1,10 +1,10 @@
 // Dissolve a minipool
 import {
-    RocketDAONodeTrusted,
-    RocketDAONodeTrustedSettingsMinipool, RocketDAOProtocolSettingsNode, RocketNetworkPrices,
-    RocketNodeStaking,
-    RocketTokenRPL,
-    RocketVault
+    SafeStakeDAONodeTrusted,
+    SafeStakeDAONodeTrustedSettingsMinipool, SafeStakeDAOProtocolSettingsNode, SafeStakeNetworkPrices,
+    SafeStakeNodeStaking,
+    SafeStakeTokenRPL,
+    SafeStakeVault
 } from '../_utils/artifacts';
 
 
@@ -14,12 +14,12 @@ export async function voteScrub(minipool, txOptions) {
     const nodeAddress = await minipool.getNodeAddress.call();
 
     // Get contracts
-    const rocketNodeStaking = await RocketNodeStaking.deployed();
-    const rocketVault = await RocketVault.deployed();
-    const rocketTokenRPL = await RocketTokenRPL.deployed();
-    const rocketDAONodeTrustedSettingsMinipool = await RocketDAONodeTrustedSettingsMinipool.deployed();
-    const rocketNetworkPrices = await RocketNetworkPrices.deployed();
-    const rocketDAOProtocolSettingsNode = await RocketDAOProtocolSettingsNode.deployed();
+    const safeStakeNodeStaking = await SafeStakeNodeStaking.deployed();
+    const safeStakeVault = await SafeStakeVault.deployed();
+    const safeStakeTokenRPL = await SafeStakeTokenRPL.deployed();
+    const safeStakeDAONodeTrustedSettingsMinipool = await SafeStakeDAONodeTrustedSettingsMinipool.deployed();
+    const safeStakeNetworkPrices = await SafeStakeNetworkPrices.deployed();
+    const safeStakeDAOProtocolSettingsNode = await SafeStakeDAOProtocolSettingsNode.deployed();
 
     // Get minipool details
     function getMinipoolDetails() {
@@ -27,9 +27,9 @@ export async function voteScrub(minipool, txOptions) {
             minipool.getStatus.call(),
             minipool.getUserDepositBalance.call(),
             minipool.getTotalScrubVotes.call(),
-            rocketNodeStaking.getNodeRPLStake.call(nodeAddress),
-            rocketVault.balanceOfToken('rocketAuctionManager', rocketTokenRPL.address),
-            rocketDAONodeTrustedSettingsMinipool.getScrubPenaltyEnabled()
+            safeStakeNodeStaking.getNodeRPLStake.call(nodeAddress),
+            safeStakeVault.balanceOfToken('safeStakeAuctionManager', safeStakeTokenRPL.address),
+            safeStakeDAONodeTrustedSettingsMinipool.getScrubPenaltyEnabled()
         ]).then(
             ([status, userDepositBalance, votes, nodeRPLStake, auctionBalance, penaltyEnabled]) =>
             ({status, userDepositBalance, votes, nodeRPLStake, auctionBalance, penaltyEnabled})
@@ -46,8 +46,8 @@ export async function voteScrub(minipool, txOptions) {
     let details2 = await getMinipoolDetails();
 
     // Get member count
-    const rocketDAONodeTrusted = await RocketDAONodeTrusted.deployed();
-    const memberCount = web3.utils.toBN(await rocketDAONodeTrusted.getMemberCount());
+    const safeStakeDAONodeTrusted = await SafeStakeDAONodeTrusted.deployed();
+    const memberCount = web3.utils.toBN(await safeStakeDAONodeTrusted.getMemberCount());
     const quorum = memberCount.div(web3.utils.toBN(2));
 
     // Check state
@@ -60,11 +60,11 @@ export async function voteScrub(minipool, txOptions) {
             // Calculate amount slashed
             const slashAmount = details1.nodeRPLStake.sub(details2.nodeRPLStake);
             // Get current RPL price
-            const rplPrice = await rocketNetworkPrices.getRPLPrice.call();
+            const rplPrice = await safeStakeNetworkPrices.getRPLPrice.call();
             // Calculate amount slashed in ETH
             const slashAmountEth = slashAmount.mul(rplPrice).div(web3.utils.toBN(web3.utils.toWei('1', 'ether')));
             // Calculate expected slash amount
-            const minimumStake = await rocketDAOProtocolSettingsNode.getMinimumPerMinipoolStake();
+            const minimumStake = await safeStakeDAOProtocolSettingsNode.getMinimumPerMinipoolStake();
             const expectedSlash = web3.utils.toBN(web3.utils.toWei('16', 'ether')).mul(minimumStake).div(web3.utils.toBN(web3.utils.toWei('1', 'ether')));
             // Perform checks
             assert(slashAmountEth.eq(expectedSlash), 'Amount of RPL slashed is incorrect');

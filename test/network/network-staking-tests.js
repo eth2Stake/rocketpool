@@ -14,12 +14,12 @@ import {
     getTotalEffectiveRPLStake, getCalculatedTotalEffectiveRPLStake
 } from '../_helpers/node'
 import {
-    RocketDAONodeTrustedSettingsMinipool,
-    RocketDAOProtocolSettingsMinipool,
-    RocketDAOProtocolSettingsNetwork,
-    RocketDAOProtocolSettingsNode,
-    RocketDAOProtocolSettingsRewards,
-    RocketNetworkPrices
+    SafeStakeDAONodeTrustedSettingsMinipool,
+    SafeStakeDAOProtocolSettingsMinipool,
+    SafeStakeDAOProtocolSettingsNetwork,
+    SafeStakeDAOProtocolSettingsNode,
+    SafeStakeDAOProtocolSettingsRewards,
+    SafeStakeNetworkPrices
 } from '../_utils/artifacts';
 import { setDAOProtocolBootstrapSetting, setRewardsClaimIntervalTime, setRPLInflationStartTime } from '../dao/scenario-dao-protocol-bootstrap'
 import { mintRPL } from '../_helpers/tokens';
@@ -35,7 +35,7 @@ import { setDAONodeTrustedBootstrapSetting } from '../dao/scenario-dao-node-trus
 
 
 export default function() {
-    contract('RocketNodeStaking', async (accounts) => {
+    contract('SafeStakeNodeStaking', async (accounts) => {
 
         // One day in seconds
         const ONE_DAY = 24 * 60 * 60;
@@ -95,12 +95,12 @@ export default function() {
 
         // Setup
         before(async () => {
-            // Disable RocketClaimNode claims contract
-            await setDAONetworkBootstrapRewardsClaimer('rocketClaimNode', web3.utils.toWei('0', 'ether'), {from: owner});
+            // Disable SafeStakeClaimNode claims contract
+            await setDAONetworkBootstrapRewardsClaimer('safeStakeClaimNode', web3.utils.toWei('0', 'ether'), {from: owner});
 
             // Set settings
-            await setDAONodeTrustedBootstrapSetting(RocketDAONodeTrustedSettingsMinipool, 'minipool.scrub.period', scrubPeriod, {from: owner});
-            await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsMinipool, 'minipool.launch.timeout', launchTimeout, {from: owner});
+            await setDAONodeTrustedBootstrapSetting(SafeStakeDAONodeTrustedSettingsMinipool, 'minipool.scrub.period', scrubPeriod, {from: owner});
+            await setDAOProtocolBootstrapSetting(SafeStakeDAOProtocolSettingsMinipool, 'minipool.launch.timeout', launchTimeout, {from: owner});
 
             // Register nodes
             await registerNode({from: registeredNode1});
@@ -122,7 +122,7 @@ export default function() {
             await setNodeTrusted(registeredNodeTrusted2, 'saas_2', 'node@home.com', owner);
 
             // Set max per-minipool stake to 100% and RPL price to 1 ether
-            await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsNode, 'node.per.minipool.stake.maximum', web3.utils.toWei(maxStakePerMinipool, 'ether'), {from: owner});
+            await setDAOProtocolBootstrapSetting(SafeStakeDAOProtocolSettingsNode, 'node.per.minipool.stake.maximum', web3.utils.toWei(maxStakePerMinipool, 'ether'), {from: owner});
             let block = await web3.eth.getBlockNumber();
             await submitPrices(block, web3.utils.toWei('1', 'ether'), '0', {from: registeredNodeTrusted1});
             await submitPrices(block, web3.utils.toWei('1', 'ether'), '0', {from: registeredNodeTrusted2});
@@ -164,8 +164,8 @@ export default function() {
         async function setPrice(price) {
             await mineBlocks(web3, 1);
             let blockNumber = await web3.eth.getBlockNumber();
-            const rocketDaoProtocolSettingsNetwork = await RocketDAOProtocolSettingsNetwork.deployed();
-            const updateFrequency = await rocketDaoProtocolSettingsNetwork.getSubmitPricesFrequency();
+            const safeStakeDaoProtocolSettingsNetwork = await SafeStakeDAOProtocolSettingsNetwork.deployed();
+            const updateFrequency = await safeStakeDaoProtocolSettingsNetwork.getSubmitPricesFrequency();
             const nextUpdateBlock = web3.utils.toBN(blockNumber).div(updateFrequency).add(web3.utils.toBN('1')).mul(updateFrequency);
             let calculatedTotalEffectiveStake = await getCalculatedTotalEffectiveRPLStake(price);
             await mineBlocks(web3, nextUpdateBlock.sub(web3.utils.toBN(blockNumber)).toNumber());
@@ -248,13 +248,13 @@ export default function() {
         it(printTitle('node1', 'cannot stake RPL while network is not in consensus'), async () => {
             const priceFrequency = 50;
             // Set price frequency to a low value so we can mine fewer blocks
-            await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsNetwork, 'network.submit.prices.frequency', priceFrequency, {from: owner});
+            await setDAOProtocolBootstrapSetting(SafeStakeDAOProtocolSettingsNetwork, 'network.submit.prices.frequency', priceFrequency, {from: owner});
             // Set withdrawal cooldown to 0
-            await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsRewards, 'rpl.rewards.claim.period.time', 0, {from: owner});
+            await setDAOProtocolBootstrapSetting(SafeStakeDAOProtocolSettingsRewards, 'rpl.rewards.claim.period.time', 0, {from: owner});
             // Set price at current block
             await setPrice(web3.utils.toWei('1', 'ether'))
-            const rocketNetworkPrices = await RocketNetworkPrices.deployed();
-            const pricesBlock = await rocketNetworkPrices.getPricesBlock();
+            const safeStakeNetworkPrices = await SafeStakeNetworkPrices.deployed();
+            const pricesBlock = await safeStakeNetworkPrices.getPricesBlock();
             // Should be able to stake at current time as price is in consensus
             await nodeStakeRPL(web3.utils.toWei('1.6', 'ether'), {from: registeredNode1});
             // Create a minipool to increase our max RPL stake
@@ -301,9 +301,9 @@ export default function() {
         it(printTitle('node1', 'cannot mark a minipool as withdrawable while network is not in consensus'), async () => {
             const priceFrequency = 50;
             // Set price frequency to a low value so we can mine fewer blocks
-            await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsNetwork, 'network.submit.prices.frequency', priceFrequency, {from: owner});
+            await setDAOProtocolBootstrapSetting(SafeStakeDAOProtocolSettingsNetwork, 'network.submit.prices.frequency', priceFrequency, {from: owner});
             // Set withdrawal cooldown to 0
-            await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsRewards, 'rpl.rewards.claim.period.time', 0, {from: owner});
+            await setDAOProtocolBootstrapSetting(SafeStakeDAOProtocolSettingsRewards, 'rpl.rewards.claim.period.time', 0, {from: owner});
             // Set price at current block
             await setPrice(web3.utils.toWei('1', 'ether'));
             // Should be able to stake at current time as price is in consensus

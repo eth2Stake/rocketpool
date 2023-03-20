@@ -1,4 +1,4 @@
-import { RocketMinipoolManager, RocketDAOProtocolSettingsMinipool, RocketNetworkPrices, RocketDAOProtocolSettingsNode, RocketNodeStaking, RocketTokenRPL, RocketVault } from '../_utils/artifacts';
+import { SafeStakeMinipoolManager, SafeStakeDAOProtocolSettingsMinipool, SafeStakeNetworkPrices, SafeStakeDAOProtocolSettingsNode, SafeStakeNodeStaking, SafeStakeTokenRPL, SafeStakeVault } from '../_utils/artifacts';
 
 
 // Stake RPL against the node
@@ -6,21 +6,21 @@ export async function stakeRpl(amount, txOptions) {
 
     // Load contracts
     const [
-        rocketMinipoolManager,
-        rocketDAOProtocolSettingsMinipool,
-        rocketNetworkPrices,
-        rocketDAOProtocolSettingsNode,
-        rocketNodeStaking,
-        rocketTokenRPL,
-        rocketVault,
+        safeStakeMinipoolManager,
+        safeStakeDAOProtocolSettingsMinipool,
+        safeStakeNetworkPrices,
+        safeStakeDAOProtocolSettingsNode,
+        safeStakeNodeStaking,
+        safeStakeTokenRPL,
+        safeStakeVault,
     ] = await Promise.all([
-        RocketMinipoolManager.deployed(),
-        RocketDAOProtocolSettingsMinipool.deployed(),
-        RocketNetworkPrices.deployed(),
-        RocketDAOProtocolSettingsNode.deployed(),
-        RocketNodeStaking.deployed(),
-        RocketTokenRPL.deployed(),
-        RocketVault.deployed(),
+        SafeStakeMinipoolManager.deployed(),
+        SafeStakeDAOProtocolSettingsMinipool.deployed(),
+        SafeStakeNetworkPrices.deployed(),
+        SafeStakeDAOProtocolSettingsNode.deployed(),
+        SafeStakeNodeStaking.deployed(),
+        SafeStakeTokenRPL.deployed(),
+        SafeStakeVault.deployed(),
     ]);
 
     // Get parameters
@@ -30,18 +30,18 @@ export async function stakeRpl(amount, txOptions) {
         maxPerMinipoolStake,
         rplPrice,
     ] = await Promise.all([
-        rocketDAOProtocolSettingsMinipool.getHalfDepositUserAmount.call(),
-        rocketDAOProtocolSettingsNode.getMinimumPerMinipoolStake.call(),
-        rocketDAOProtocolSettingsNode.getMaximumPerMinipoolStake.call(),
-        rocketNetworkPrices.getRPLPrice.call(),
+        safeStakeDAOProtocolSettingsMinipool.getHalfDepositUserAmount.call(),
+        safeStakeDAOProtocolSettingsNode.getMinimumPerMinipoolStake.call(),
+        safeStakeDAOProtocolSettingsNode.getMaximumPerMinipoolStake.call(),
+        safeStakeNetworkPrices.getRPLPrice.call(),
     ]);
 
     // Get token balances
     function getTokenBalances(nodeAddress) {
         return Promise.all([
-            rocketTokenRPL.balanceOf.call(nodeAddress),
-            rocketTokenRPL.balanceOf.call(rocketVault.address),
-            rocketVault.balanceOfToken.call('rocketNodeStaking', rocketTokenRPL.address),
+            safeStakeTokenRPL.balanceOf.call(nodeAddress),
+            safeStakeTokenRPL.balanceOf.call(safeStakeVault.address),
+            safeStakeVault.balanceOfToken.call('safeStakeNodeStaking', safeStakeTokenRPL.address),
         ]).then(
             ([nodeRpl, vaultRpl, stakingRpl]) =>
             ({nodeRpl, vaultRpl, stakingRpl})
@@ -51,11 +51,11 @@ export async function stakeRpl(amount, txOptions) {
     // Get staking details
     function getStakingDetails(nodeAddress) {
         return Promise.all([
-            rocketNodeStaking.getTotalRPLStake.call(),
-            rocketNodeStaking.getTotalEffectiveRPLStake.call(),
-            rocketNodeStaking.getNodeRPLStake.call(nodeAddress),
-            rocketNodeStaking.getNodeEffectiveRPLStake.call(nodeAddress),
-            rocketNodeStaking.getNodeMinipoolLimit.call(nodeAddress),
+            safeStakeNodeStaking.getTotalRPLStake.call(),
+            safeStakeNodeStaking.getTotalEffectiveRPLStake.call(),
+            safeStakeNodeStaking.getNodeRPLStake.call(nodeAddress),
+            safeStakeNodeStaking.getNodeEffectiveRPLStake.call(nodeAddress),
+            safeStakeNodeStaking.getNodeMinipoolLimit.call(nodeAddress),
         ]).then(
             ([totalStake, totalEffectiveStake, nodeStake, nodeEffectiveStake, nodeMinipoolLimit]) =>
             ({totalStake, totalEffectiveStake, nodeStake, nodeEffectiveStake, nodeMinipoolLimit})
@@ -65,10 +65,10 @@ export async function stakeRpl(amount, txOptions) {
     // Get minipool counts
     function getMinipoolCounts(nodeAddress) {
         return Promise.all([
-            rocketMinipoolManager.getMinipoolCount.call(),
-            rocketMinipoolManager.getNodeMinipoolCount.call(nodeAddress),
-            rocketMinipoolManager.getStakingMinipoolCount.call(),
-            rocketMinipoolManager.getNodeStakingMinipoolCount.call(nodeAddress),
+            safeStakeMinipoolManager.getMinipoolCount.call(),
+            safeStakeMinipoolManager.getNodeMinipoolCount.call(nodeAddress),
+            safeStakeMinipoolManager.getStakingMinipoolCount.call(),
+            safeStakeMinipoolManager.getNodeStakingMinipoolCount.call(nodeAddress),
         ]).then(
             ([total, node, totalStaking, nodeStaking]) =>
             ({total, node, totalStaking, nodeStaking})
@@ -82,7 +82,7 @@ export async function stakeRpl(amount, txOptions) {
     ]);
 
     // Stake RPL
-    await rocketNodeStaking.stakeRPL(amount, txOptions);
+    await safeStakeNodeStaking.stakeRPL(amount, txOptions);
 
     // Get updated token balances, staking details & minipool counts
     let [balances2, details2, minipoolCounts] = await Promise.all([
@@ -101,7 +101,7 @@ export async function stakeRpl(amount, txOptions) {
     // Check token balances
     assert(balances2.nodeRpl.eq(balances1.nodeRpl.sub(web3.utils.toBN(amount))), 'Incorrect updated node RPL balance');
     assert(balances2.vaultRpl.eq(balances1.vaultRpl.add(web3.utils.toBN(amount))), 'Incorrect updated vault RPL balance');
-    assert(balances2.stakingRpl.eq(balances1.stakingRpl.add(web3.utils.toBN(amount))), 'Incorrect updated RocketNodeStaking contract RPL vault balance');
+    assert(balances2.stakingRpl.eq(balances1.stakingRpl.add(web3.utils.toBN(amount))), 'Incorrect updated SafeStakeNodeStaking contract RPL vault balance');
 
     // Check staking details
     assert(details2.totalStake.eq(details1.totalStake.add(web3.utils.toBN(amount))), 'Incorrect updated total RPL stake');

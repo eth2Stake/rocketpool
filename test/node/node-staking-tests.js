@@ -1,7 +1,7 @@
 import {
-    RocketDAONodeTrustedSettingsMinipool,
-    RocketDAOProtocolSettingsMinipool,
-    RocketNodeStaking
+    SafeStakeDAONodeTrustedSettingsMinipool,
+    SafeStakeDAOProtocolSettingsMinipool,
+    SafeStakeNodeStaking
 } from '../_utils/artifacts';
 import { printTitle } from '../_utils/formatting';
 import { shouldRevert } from '../_utils/testing';
@@ -18,7 +18,7 @@ import { increaseTime } from '../_utils/evm'
 import { setDAONodeTrustedBootstrapSetting } from '../dao/scenario-dao-node-trusted-bootstrap';
 
 export default function() {
-    contract('RocketNodeStaking', async (accounts) => {
+    contract('SafeStakeNodeStaking', async (accounts) => {
 
 
         // Accounts
@@ -32,13 +32,13 @@ export default function() {
         let scrubPeriod = (60 * 60 * 24); // 24 hours
 
         // Setup
-        let rocketNodeStaking;
+        let safeStakeNodeStaking;
         before(async () => {
             // Load contracts
-            rocketNodeStaking = await RocketNodeStaking.deployed();
+            safeStakeNodeStaking = await SafeStakeNodeStaking.deployed();
 
             // Set settings
-            await setDAONodeTrustedBootstrapSetting(RocketDAONodeTrustedSettingsMinipool, 'minipool.scrub.period', scrubPeriod, {from: owner});
+            await setDAONodeTrustedBootstrapSetting(SafeStakeDAONodeTrustedSettingsMinipool, 'minipool.scrub.period', scrubPeriod, {from: owner});
 
             // Register node
             await registerNode({from: node});
@@ -61,7 +61,7 @@ export default function() {
             const rplAmount = web3.utils.toWei('5000', 'ether');
 
             // Approve transfer & stake RPL once
-            await approveRPL(rocketNodeStaking.address, rplAmount, {from: node});
+            await approveRPL(safeStakeNodeStaking.address, rplAmount, {from: node});
             await stakeRpl(rplAmount, {
                 from: node,
             });
@@ -70,7 +70,7 @@ export default function() {
             await nodeDeposit({from: node, value: web3.utils.toWei('16', 'ether')});
 
             // Approve transfer & stake RPL twice
-            await approveRPL(rocketNodeStaking.address, rplAmount, {from: node});
+            await approveRPL(safeStakeNodeStaking.address, rplAmount, {from: node});
             await stakeRpl(rplAmount, {
                 from: node,
             });
@@ -84,7 +84,7 @@ export default function() {
             const rplAmount = web3.utils.toWei('10000', 'ether');
 
             // Approve transfer & attempt to stake RPL
-            await approveRPL(rocketNodeStaking.address, rplAmount, {from: node});
+            await approveRPL(safeStakeNodeStaking.address, rplAmount, {from: node});
             await shouldRevert(stakeRpl(rplAmount, {
                 from: random,
             }), 'Random address staked RPL');

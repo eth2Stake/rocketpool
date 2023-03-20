@@ -1,9 +1,9 @@
 import {
-    RocketMinipoolDelegate, RocketMinipoolFactory,
-    RocketMinipoolManager,
-    RocketMinipoolManagerOld,
-    RocketNodeDeposit,
-    RocketStorage,
+    SafeStakeMinipoolDelegate, SafeStakeMinipoolFactory,
+    SafeStakeMinipoolManager,
+    SafeStakeMinipoolManagerOld,
+    SafeStakeNodeDeposit,
+    SafeStakeStorage,
 } from '../_utils/artifacts';
 import { getTxContractEvents } from '../_utils/contract';
 import { getDepositDataRoot, getValidatorPubkey, getValidatorSignature } from '../_utils/beacon';
@@ -15,23 +15,23 @@ export async function deposit(minimumNodeFee, txOptions, preUpdate = false) {
 
     // Load contracts
     const [
-        rocketMinipoolManager,
-        rocketMinipoolFactory,
-        rocketNodeDeposit,
-        rocketStorage,
-        rocket
+        safeStakeMinipoolManager,
+        safeStakeMinipoolFactory,
+        safeStakeNodeDeposit,
+        safeStakeStorage,
+        safeStake
     ] = await Promise.all([
-        RocketMinipoolManager.deployed(),
-        preUpdate ? RocketMinipoolManagerOld.deployed() : RocketMinipoolFactory.deployed(),
-        RocketNodeDeposit.deployed(),
-        RocketStorage.deployed()
+        SafeStakeMinipoolManager.deployed(),
+        preUpdate ? SafeStakeMinipoolManagerOld.deployed() : SafeStakeMinipoolFactory.deployed(),
+        SafeStakeNodeDeposit.deployed(),
+        SafeStakeStorage.deployed()
     ]);
 
     // Get minipool counts
     function getMinipoolCounts(nodeAddress) {
         return Promise.all([
-            rocketMinipoolManager.getMinipoolCount.call(),
-            rocketMinipoolManager.getNodeMinipoolCount.call(nodeAddress),
+            safeStakeMinipoolManager.getMinipoolCount.call(),
+            safeStakeMinipoolManager.getNodeMinipoolCount.call(nodeAddress),
         ]).then(
             ([network, node]) =>
             ({network, node})
@@ -40,8 +40,8 @@ export async function deposit(minimumNodeFee, txOptions, preUpdate = false) {
 
     // Get minipool details
     function getMinipoolDetails(minipoolAddress) {
-        return RocketMinipoolDelegate.at(minipoolAddress).then(minipool => Promise.all([
-            rocketMinipoolManager.getMinipoolExists.call(minipoolAddress),
+        return SafeStakeMinipoolDelegate.at(minipoolAddress).then(minipool => Promise.all([
+            safeStakeMinipoolManager.getMinipoolExists.call(minipoolAddress),
             minipool.getNodeAddress.call(),
             minipool.getNodeDepositBalance.call(),
             minipool.getNodeDepositAssigned.call(),
@@ -57,14 +57,14 @@ export async function deposit(minimumNodeFee, txOptions, preUpdate = false) {
     // Deposit
 
     // Get artifact and bytecode
-    const RocketMinipool = artifacts.require('RocketMinipool');
-    const contractBytecode = RocketMinipool.bytecode;
+    const SafeStakeMinipool = artifacts.require('SafeStakeMinipool');
+    const contractBytecode = SafeStakeMinipool.bytecode;
 
     // Get deposit type from tx amount
-    const depositType = await rocketNodeDeposit.getDepositType(txOptions.value);
+    const depositType = await safeStakeNodeDeposit.getDepositType(txOptions.value);
 
     // Construct creation code for minipool deploy
-    const constructorArgs = web3.eth.abi.encodeParameters(['address', 'address', 'uint8'], [rocketStorage.address, txOptions.from, depositType]);
+    const constructorArgs = web3.eth.abi.encodeParameters(['address', 'address', 'uint8'], [safeStakeStorage.address, txOptions.from, depositType]);
     const deployCode = contractBytecode + constructorArgs.substr(2);
     const salt = minipoolSalt++;
 
@@ -82,7 +82,7 @@ export async function deposit(minimumNodeFee, txOptions, preUpdate = false) {
     // Construct deterministic minipool address
     const raw = web3.utils.soliditySha3(
       {type: 'bytes1', value: '0xff'},
-      {type: 'address', value: rocketMinipoolFactory.address},
+      {type: 'address', value: safeStakeMinipoolFactory.address},
       {type: 'bytes32', value: nodeSalt},
       {type: 'bytes32', value: bytecodeHash}
     )
@@ -101,7 +101,7 @@ export async function deposit(minimumNodeFee, txOptions, preUpdate = false) {
     let depositDataRoot = getDepositDataRoot(depositData);
 
     // Make node deposit
-    await rocketNodeDeposit.deposit(minimumNodeFee, depositData.pubkey, depositData.signature, depositDataRoot, salt, minipoolAddress, txOptions);
+    await safeStakeNodeDeposit.deposit(minimumNodeFee, depositData.pubkey, depositData.signature, depositDataRoot, salt, minipoolAddress, txOptions);
 
     // Get updated minipool indexes & created minipool details
     let minipoolCounts2 = await getMinipoolCounts(txOptions.from);
@@ -110,8 +110,8 @@ export async function deposit(minimumNodeFee, txOptions, preUpdate = false) {
         lastNodeMinipoolAddress,
         minipoolDetails,
     ] = await Promise.all([
-        rocketMinipoolManager.getMinipoolAt.call(minipoolCounts2.network.sub(web3.utils.toBN(1))),
-        rocketMinipoolManager.getNodeMinipoolAt.call(txOptions.from, minipoolCounts2.node.sub(web3.utils.toBN(1))),
+        safeStakeMinipoolManager.getMinipoolAt.call(minipoolCounts2.network.sub(web3.utils.toBN(1))),
+        safeStakeMinipoolManager.getNodeMinipoolAt.call(txOptions.from, minipoolCounts2.node.sub(web3.utils.toBN(1))),
         getMinipoolDetails(minipoolAddress),
     ]);
 

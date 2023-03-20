@@ -1,7 +1,7 @@
 import { printTitle } from '../_utils/formatting';
 import { shouldRevert } from '../_utils/testing';
 import { registerNode } from '../_helpers/node';
-import { RocketDAOProtocolSettingsNode, RocketNodeManager } from '../_utils/artifacts'
+import { SafeStakeDAOProtocolSettingsNode, SafeStakeNodeManager } from '../_utils/artifacts'
 import { setDAOProtocolBootstrapSetting, setRewardsClaimIntervalTime } from '../dao/scenario-dao-protocol-bootstrap';
 import { register } from './scenario-register';
 import { setTimezoneLocation } from './scenario-set-timezone';
@@ -11,7 +11,7 @@ import { increaseTime } from '../_utils/evm';
 
 
 export default function() {
-    contract('RocketNodeManager', async (accounts) => {
+    contract('SafeStakeNodeManager', async (accounts) => {
 
         // One day in seconds
         const ONE_DAY = 24 * 60 * 60;
@@ -36,7 +36,7 @@ export default function() {
         // Setup
         before(async () => {
             // Enable smoothing pool registrations
-            await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsNode, 'node.smoothing.pool.registration.enabled', true, {from: owner});
+            await setDAOProtocolBootstrapSetting(SafeStakeDAOProtocolSettingsNode, 'node.smoothing.pool.registration.enabled', true, {from: owner});
 
             // Register nodes
             await registerNode({from: registeredNode1});
@@ -65,7 +65,7 @@ export default function() {
         it(printTitle('node operator', 'cannot register a node while registrations are disabled'), async () => {
 
             // Disable registrations
-            await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsNode, 'node.registration.enabled', false, {from: owner});
+            await setDAOProtocolBootstrapSetting(SafeStakeDAOProtocolSettingsNode, 'node.registration.enabled', false, {from: owner});
 
             // Attempt registration
             await shouldRevert(register('Australia/Brisbane', {
@@ -233,7 +233,7 @@ export default function() {
 
 
         it(printTitle('node operator', 'can not register for smoothing pool if registrations are disbaled'), async () => {
-            await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsNode, 'node.smoothing.pool.registration.enabled', false, {from: owner});
+            await setDAOProtocolBootstrapSetting(SafeStakeDAOProtocolSettingsNode, 'node.smoothing.pool.registration.enabled', false, {from: owner});
             await shouldRevert(setSmoothingPoolRegistrationState(true, { from: registeredNode1 }), 'Was able to register while registrations were disabled', 'Smoothing pool registrations are not active');
         });
 
@@ -268,11 +268,11 @@ export default function() {
 
         it(printTitle('random', 'can query timezone counts'), async () => {
 
-            const rocketNodeManager = await RocketNodeManager.deployed();
-            await rocketNodeManager.registerNode('Australia/Sydney', {from: random2});
-            await rocketNodeManager.registerNode('Australia/Perth', {from: random3});
+            const safeStakeNodeManager = await SafeStakeNodeManager.deployed();
+            await safeStakeNodeManager.registerNode('Australia/Sydney', {from: random2});
+            await safeStakeNodeManager.registerNode('Australia/Perth', {from: random3});
 
-            const timezones = await rocketNodeManager.getNodeCountPerTimezone(0, 0)
+            const timezones = await safeStakeNodeManager.getNodeCountPerTimezone(0, 0)
 
             const expects = {
                 'Australia/Brisbane': 2,

@@ -1,4 +1,4 @@
-import { RocketDAONodeTrusted, RocketDAONodeTrustedUpgrade, RocketStorage, RocketVault, RocketTokenRPL } from '../_utils/artifacts';
+import { SafeStakeDAONodeTrusted, SafeStakeDAONodeTrustedUpgrade, SafeStakeStorage, SafeStakeVault, SafeStakeTokenRPL } from '../_utils/artifacts';
 import { compressABI, decompressABI } from '../_utils/contract';
 
 
@@ -6,12 +6,12 @@ import { compressABI, decompressABI } from '../_utils/contract';
 export async function setDaoNodeTrustedBootstrapMember(_id, _url, _nodeAddress, txOptions) {
 
     // Load contracts
-    const rocketDAONodeTrusted = await RocketDAONodeTrusted.deployed();
+    const safeStakeDAONodeTrusted = await SafeStakeDAONodeTrusted.deployed();
 
     // Get data about the tx
     function getTxData() {
         return Promise.all([
-            rocketDAONodeTrusted.getMemberID.call(_nodeAddress),
+            safeStakeDAONodeTrusted.getMemberID.call(_nodeAddress),
         ]).then(
             ([memberID]) =>
             ({memberID})
@@ -22,7 +22,7 @@ export async function setDaoNodeTrustedBootstrapMember(_id, _url, _nodeAddress, 
     let ds1 = await getTxData();
 
     // Set as a bootstrapped member
-    await rocketDAONodeTrusted.bootstrapMember(_id, _url, _nodeAddress, txOptions);
+    await safeStakeDAONodeTrusted.bootstrapMember(_id, _url, _nodeAddress, txOptions);
 
     // Capture data
     let ds2 = await getTxData();
@@ -42,14 +42,14 @@ export async function setDAONodeTrustedBootstrapSetting(_settingContractInstance
     }
 
     // Load contracts
-    const rocketDAONodeTrusted = await RocketDAONodeTrusted.deployed();
-    const rocketDAONodeTrustedSettingsContract = await _settingContractInstance.deployed();
+    const safeStakeDAONodeTrusted = await SafeStakeDAONodeTrusted.deployed();
+    const safeStakeDAONodeTrustedSettingsContract = await _settingContractInstance.deployed();
 
     // Get data about the tx
     function getTxData() {
         return Promise.all([
-            rocketDAONodeTrustedSettingsContract.getSettingUint.call(_settingPath),
-            rocketDAONodeTrustedSettingsContract.getSettingBool.call(_settingPath)
+            safeStakeDAONodeTrustedSettingsContract.getSettingUint.call(_settingPath),
+            safeStakeDAONodeTrustedSettingsContract.getSettingBool.call(_settingPath)
         ]).then(
             ([settingUintValue, settingBoolValue]) =>
             ({settingUintValue, settingBoolValue})
@@ -61,8 +61,8 @@ export async function setDAONodeTrustedBootstrapSetting(_settingContractInstance
     //console.log(Number(ds1.settingValue));
 
     // Set as a bootstrapped setting. detect type first, can be a number, string or bn object
-    if(typeof(_value) == 'number' || typeof(_value) == 'string' || typeof(_value) == 'object') await rocketDAONodeTrusted.bootstrapSettingUint(_settingContractInstance._json.contractName.lowerCaseFirstLetter(), _settingPath, _value, txOptions);
-    if(typeof(_value) == 'boolean') await rocketDAONodeTrusted.bootstrapSettingBool(_settingContractInstance._json.contractName.lowerCaseFirstLetter(), _settingPath, _value, txOptions);
+    if(typeof(_value) == 'number' || typeof(_value) == 'string' || typeof(_value) == 'object') await safeStakeDAONodeTrusted.bootstrapSettingUint(_settingContractInstance._json.contractName.lowerCaseFirstLetter(), _settingPath, _value, txOptions);
+    if(typeof(_value) == 'boolean') await safeStakeDAONodeTrusted.bootstrapSettingBool(_settingContractInstance._json.contractName.lowerCaseFirstLetter(), _settingPath, _value, txOptions);
     
     // Capture data
     let ds2 = await getTxData();
@@ -79,12 +79,12 @@ export async function setDAONodeTrustedBootstrapSetting(_settingContractInstance
 export async function setDaoNodeTrustedBootstrapModeDisabled(txOptions) {
 
     // Load contracts
-    const rocketDAONodeTrusted = await RocketDAONodeTrusted.deployed();
+    const safeStakeDAONodeTrusted = await SafeStakeDAONodeTrusted.deployed();
 
     // Get data about the tx
     function getTxData() {
         return Promise.all([
-            rocketDAONodeTrusted.getBootstrapModeDisabled.call(),
+            safeStakeDAONodeTrusted.getBootstrapModeDisabled.call(),
         ]).then(
             ([bootstrapmodeDisabled]) =>
             ({bootstrapmodeDisabled})
@@ -95,7 +95,7 @@ export async function setDaoNodeTrustedBootstrapModeDisabled(txOptions) {
     let ds1 = await getTxData();
 
     // Set as a bootstrapped member
-    await rocketDAONodeTrusted.bootstrapDisable(true, txOptions);
+    await safeStakeDAONodeTrusted.bootstrapDisable(true, txOptions);
 
     // Capture data
     let ds2 = await getTxData();
@@ -111,11 +111,11 @@ export async function setDaoNodeTrustedBootstrapUpgrade(_type, _name, _abi, _con
 
     // Load contracts
     const [
-        rocketStorage,
-        rocketDAONodeTrusted,
+        safeStakeStorage,
+        safeStakeDAONodeTrusted,
     ] = await Promise.all([
-        RocketStorage.deployed(),
-        RocketDAONodeTrusted.deployed(),
+        SafeStakeStorage.deployed(),
+        SafeStakeDAONodeTrusted.deployed(),
     ]);
 
     // Add test method to ABI
@@ -140,8 +140,8 @@ export async function setDaoNodeTrustedBootstrapUpgrade(_type, _name, _abi, _con
     // Get contract data
     function getContractData() {
         return Promise.all([
-            rocketStorage.getAddress.call(web3.utils.soliditySha3('contract.address', _name)),
-            rocketStorage.getString.call(web3.utils.soliditySha3('contract.abi', _name)),
+            safeStakeStorage.getAddress.call(web3.utils.soliditySha3('contract.address', _name)),
+            safeStakeStorage.getString.call(web3.utils.soliditySha3('contract.abi', _name)),
         ]).then(
             ([address, abi]) =>
             ({address, abi})
@@ -149,8 +149,8 @@ export async function setDaoNodeTrustedBootstrapUpgrade(_type, _name, _abi, _con
     }
     function getContractAddressData(_contractAddress) {
         return Promise.all([
-            rocketStorage.getBool.call(web3.utils.soliditySha3('contract.exists', _contractAddress)),
-            rocketStorage.getString.call(web3.utils.soliditySha3('contract.name', _contractAddress)),
+            safeStakeStorage.getBool.call(web3.utils.soliditySha3('contract.exists', _contractAddress)),
+            safeStakeStorage.getString.call(web3.utils.soliditySha3('contract.name', _contractAddress)),
         ]).then(
             ([exists, name]) =>
             ({exists, name})
@@ -163,7 +163,7 @@ export async function setDaoNodeTrustedBootstrapUpgrade(_type, _name, _abi, _con
     // console.log(_type, _name, _contractAddress);
 
     // Upgrade contract
-    await rocketDAONodeTrusted.bootstrapUpgrade(_type, _name, compressedAbi, _contractAddress, txOptions);
+    await safeStakeDAONodeTrusted.bootstrapUpgrade(_type, _name, compressedAbi, _contractAddress, txOptions);
 
     // Get updated contract data
     let contract2 = await getContractData();
@@ -194,7 +194,7 @@ export async function setDaoNodeTrustedBootstrapUpgrade(_type, _name, _abi, _con
     }
     if(_type == 'upgradeABI' || _type == 'addABI') {
         // Check ABI details
-        let contractAbi = await rocketStorage.getString.call(web3.utils.soliditySha3('contract.abi', _name));
+        let contractAbi = await safeStakeStorage.getString.call(web3.utils.soliditySha3('contract.abi', _name));
         let contract = new web3.eth.Contract(decompressABI(contractAbi), '0x0000000000000000000000000000000000000000');
         assert.notEqual(contract.methods.testMethod, undefined, 'Contract ABI was not set');
     }
@@ -207,16 +207,16 @@ export async function setDaoNodeTrustedBootstrapUpgrade(_type, _name, _abi, _con
 export async function setDaoNodeTrustedMemberRequired(_id, _url, txOptions) {
 
     // Load contracts
-    const rocketDAONodeTrusted = await RocketDAONodeTrusted.deployed();
-    const rocketVault = await RocketVault.deployed();
-    const rocketTokenRPL = await RocketTokenRPL.deployed();
+    const safeStakeDAONodeTrusted = await SafeStakeDAONodeTrusted.deployed();
+    const safeStakeVault = await SafeStakeVault.deployed();
+    const safeStakeTokenRPL = await SafeStakeTokenRPL.deployed();
 
     // Get data about the tx
     function getTxData() {
         return Promise.all([
-            rocketDAONodeTrusted.getMemberCount.call(),
-            rocketTokenRPL.balanceOf(txOptions.from),
-            rocketVault.balanceOfToken('rocketDAONodeTrustedActions', rocketTokenRPL.address),
+            safeStakeDAONodeTrusted.getMemberCount.call(),
+            safeStakeTokenRPL.balanceOf(txOptions.from),
+            safeStakeVault.balanceOfToken('safeStakeDAONodeTrustedActions', safeStakeTokenRPL.address),
         ]).then(
             ([memberTotal, rplBalanceBond, rplBalanceVault]) =>
             ({memberTotal, rplBalanceBond, rplBalanceVault})
@@ -228,7 +228,7 @@ export async function setDaoNodeTrustedMemberRequired(_id, _url, txOptions) {
     //console.log('Member Total', Number(ds1.memberTotal), web3.utils.fromWei(ds1.rplBalanceBond), web3.utils.fromWei(ds1.rplBalanceVault));
 
     // Add a new proposal
-    await rocketDAONodeTrusted.memberJoinRequired(_id, _url, txOptions);
+    await safeStakeDAONodeTrusted.memberJoinRequired(_id, _url, txOptions);
 
     // Capture data
     let ds2 = await getTxData();
@@ -236,5 +236,5 @@ export async function setDaoNodeTrustedMemberRequired(_id, _url, txOptions) {
 
     // Check member count has increased
     assert(ds2.memberTotal.eq(ds1.memberTotal.add(web3.utils.toBN(1))), 'Member count has not increased');
-    assert(ds2.rplBalanceVault.eq(ds1.rplBalanceVault.add(ds1.rplBalanceBond)), 'RocketVault address does not contain the correct RPL bond amount');
+    assert(ds2.rplBalanceVault.eq(ds1.rplBalanceVault.add(ds1.rplBalanceBond)), 'SafeStakeVault address does not contain the correct RPL bond amount');
 }

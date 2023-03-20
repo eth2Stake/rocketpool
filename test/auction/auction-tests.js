@@ -2,11 +2,11 @@ import { increaseTime, mineBlocks } from '../_utils/evm';
 import { printTitle } from '../_utils/formatting';
 import { shouldRevert } from '../_utils/testing';
 import {
-    RocketDAONodeTrustedSettingsMinipool,
-    RocketDAOProtocolSettingsAuction,
-    RocketDAOProtocolSettingsMinipool,
-    RocketNetworkPrices,
-    RocketNodeStaking
+    SafeStakeDAONodeTrustedSettingsMinipool,
+    SafeStakeDAOProtocolSettingsAuction,
+    SafeStakeDAOProtocolSettingsMinipool,
+    SafeStakeNetworkPrices,
+    SafeStakeNodeStaking
 } from '../_utils/artifacts';
 import { auctionCreateLot, auctionPlaceBid, getLotStartBlock, getLotPriceAtBlock } from '../_helpers/auction';
 import { userDeposit } from '../_helpers/deposit';
@@ -23,7 +23,7 @@ import { withdrawValidatorBalance } from '../minipool/scenario-withdraw-validato
 import { setDAONodeTrustedBootstrapSetting } from '../dao/scenario-dao-node-trusted-bootstrap';
 
 export default function() {
-    contract('RocketAuctionManager', async (accounts) => {
+    contract('SafeStakeAuctionManager', async (accounts) => {
 
 
         // Accounts
@@ -41,7 +41,7 @@ export default function() {
         let minipool;
         before(async () => {
             // Set settings
-            await setDAONodeTrustedBootstrapSetting(RocketDAONodeTrustedSettingsMinipool, 'minipool.scrub.period', scrubPeriod, {from: owner});
+            await setDAONodeTrustedBootstrapSetting(SafeStakeDAONodeTrustedSettingsMinipool, 'minipool.scrub.period', scrubPeriod, {from: owner});
 
             // Register node
             await registerNode({from: node});
@@ -88,7 +88,7 @@ export default function() {
             await withdrawValidatorBalance(minipool, '0', node, true);
 
             // Disable lot creation
-            await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsAuction, 'auction.lot.create.enabled', false, {from: owner});
+            await setDAOProtocolBootstrapSetting(SafeStakeDAOProtocolSettingsAuction, 'auction.lot.create.enabled', false, {from: owner});
 
             // Attempt to create lot
             await shouldRevert(createLot({
@@ -111,16 +111,16 @@ export default function() {
         it(printTitle('auction lot', 'has correct price at block'), async () => {
 
             // Get contracts
-            const rocketNodeStaking = await RocketNodeStaking.deployed();
+            const safeStakeNodeStaking = await SafeStakeNodeStaking.deployed();
 
             // Set lot settings
-            await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsAuction, 'auction.lot.duration', 100, {from: owner});
-            await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsAuction, 'auction.price.start', web3.utils.toWei('1', 'ether'), {from: owner});
-            await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsAuction, 'auction.price.reserve', web3.utils.toWei('0', 'ether'), {from: owner});
+            await setDAOProtocolBootstrapSetting(SafeStakeDAOProtocolSettingsAuction, 'auction.lot.duration', 100, {from: owner});
+            await setDAOProtocolBootstrapSetting(SafeStakeDAOProtocolSettingsAuction, 'auction.price.start', web3.utils.toWei('1', 'ether'), {from: owner});
+            await setDAOProtocolBootstrapSetting(SafeStakeDAOProtocolSettingsAuction, 'auction.price.reserve', web3.utils.toWei('0', 'ether'), {from: owner});
 
             // Set RPL price
             let block = await web3.eth.getBlockNumber();
-            let effectiveRPLStake = await rocketNodeStaking.calculateTotalEffectiveRPLStake(0, 0, web3.utils.toWei('1', 'ether'));
+            let effectiveRPLStake = await safeStakeNodeStaking.calculateTotalEffectiveRPLStake(0, 0, web3.utils.toWei('1', 'ether'));
             await submitPrices(block, web3.utils.toWei('1', 'ether'), effectiveRPLStake, {from: trustedNode});
 
             // Create lot
@@ -225,7 +225,7 @@ export default function() {
             await auctionCreateLot({from: random1});
 
             // Disable bidding
-            await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsAuction, 'auction.lot.bidding.enabled', false, {from: owner});
+            await setDAOProtocolBootstrapSetting(SafeStakeDAOProtocolSettingsAuction, 'auction.lot.bidding.enabled', false, {from: owner});
 
             // Attempt to place bid
             await shouldRevert(placeBid(0, {
@@ -255,7 +255,7 @@ export default function() {
         it(printTitle('random address', 'cannot bid on a lot after the lot bidding period has concluded'), async () => {
 
             // Set lot duration
-            await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsAuction, 'auction.lot.duration', 0, {from: owner});
+            await setDAOProtocolBootstrapSetting(SafeStakeDAOProtocolSettingsAuction, 'auction.lot.duration', 0, {from: owner});
 
             // Create lot
             await submitMinipoolWithdrawable(minipool.address, {from: trustedNode});
@@ -379,7 +379,7 @@ export default function() {
         it(printTitle('random address', 'can recover unclaimed RPL from a lot'), async () => {
 
             // Create closed lots
-            await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsAuction, 'auction.lot.duration', 0, {from: owner});
+            await setDAOProtocolBootstrapSetting(SafeStakeDAOProtocolSettingsAuction, 'auction.lot.duration', 0, {from: owner});
             await submitMinipoolWithdrawable(minipool.address, {from: trustedNode});
             await withdrawValidatorBalance(minipool, '0', node, true);
             await auctionCreateLot({from: random1});
@@ -401,7 +401,7 @@ export default function() {
         it(printTitle('random address', 'cannot recover unclaimed RPL from a lot which doesn\'t exist'), async () => {
 
             // Create closed lot
-            await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsAuction, 'auction.lot.duration', 0, {from: owner});
+            await setDAOProtocolBootstrapSetting(SafeStakeDAOProtocolSettingsAuction, 'auction.lot.duration', 0, {from: owner});
             await submitMinipoolWithdrawable(minipool.address, {from: trustedNode});
             await withdrawValidatorBalance(minipool, '0', node, true);
             await auctionCreateLot({from: random1});
@@ -432,7 +432,7 @@ export default function() {
         it(printTitle('random address', 'cannot recover unclaimed RPL from a lot twice'), async () => {
 
             // Create closed lot
-            await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsAuction, 'auction.lot.duration', 0, {from: owner});
+            await setDAOProtocolBootstrapSetting(SafeStakeDAOProtocolSettingsAuction, 'auction.lot.duration', 0, {from: owner});
             await submitMinipoolWithdrawable(minipool.address, {from: trustedNode});
             await withdrawValidatorBalance(minipool, '0', node, true);
             await auctionCreateLot({from: random1});
@@ -451,7 +451,7 @@ export default function() {
         it(printTitle('random address', 'cannot recover unclaimed RPL from a lot which has no RPL to recover'), async () => {
 
             // Set lot duration
-            await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsAuction, 'auction.lot.duration', 10, {from: owner});
+            await setDAOProtocolBootstrapSetting(SafeStakeDAOProtocolSettingsAuction, 'auction.lot.duration', 10, {from: owner});
 
             // Create lot & place bid to clear
             await submitMinipoolWithdrawable(minipool.address, {from: trustedNode});

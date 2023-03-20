@@ -13,8 +13,8 @@ import {
     getCalculatedTotalEffectiveRPLStake
 } from '../_helpers/node'
 import {
-  RocketDAONodeTrustedSettingsMinipool,
-  RocketDAOProtocolSettingsNode, RocketMerkleDistributorMainnet, RocketSmoothingPool, RocketStorage,
+  SafeStakeDAONodeTrustedSettingsMinipool,
+  SafeStakeDAOProtocolSettingsNode, SafeStakeMerkleDistributorMainnet, SafeStakeSmoothingPool, SafeStakeStorage,
 } from '../_utils/artifacts';
 import { setDAOProtocolBootstrapSetting, setRewardsClaimIntervalTime, setRPLInflationStartTime } from '../dao/scenario-dao-protocol-bootstrap'
 import { mintRPL } from '../_helpers/tokens';
@@ -22,7 +22,7 @@ import { rewardsClaimersPercTotalGet } from './scenario-rewards-claim';
 import { setDAONetworkBootstrapRewardsClaimer, spendRewardsClaimTreasury, setRPLInflationIntervalRate } from '../dao/scenario-dao-protocol-bootstrap';
 
 // Contracts
-import { RocketRewardsPool } from '../_utils/artifacts';
+import { SafeStakeRewardsPool } from '../_utils/artifacts';
 import { createMinipool, stakeMinipool } from '../_helpers/minipool'
 import { userDeposit } from '../_helpers/deposit'
 import { setDAONodeTrustedBootstrapSetting } from '../dao/scenario-dao-node-trusted-bootstrap';
@@ -35,7 +35,7 @@ import { getDAOProposalStartTime } from '../dao/scenario-dao-proposal';
 
 
 export default function() {
-    contract('RocketRewardsPool', async (accounts) => {
+    contract('SafeStakeRewardsPool', async (accounts) => {
 
         // One day in seconds
         const ONE_DAY = 24 * 60 * 60;
@@ -114,11 +114,11 @@ export default function() {
 
         // Setup
         before(async () => {
-            // Disable RocketClaimNode claims contract
-            await setDAONetworkBootstrapRewardsClaimer('rocketClaimNode', web3.utils.toWei('0', 'ether'), {from: owner});
+            // Disable SafeStakeClaimNode claims contract
+            await setDAONetworkBootstrapRewardsClaimer('safeStakeClaimNode', web3.utils.toWei('0', 'ether'), {from: owner});
 
             // Set settings
-            await setDAONodeTrustedBootstrapSetting(RocketDAONodeTrustedSettingsMinipool, 'minipool.scrub.period', scrubPeriod, {from: owner});
+            await setDAONodeTrustedBootstrapSetting(SafeStakeDAONodeTrustedSettingsMinipool, 'minipool.scrub.period', scrubPeriod, {from: owner});
 
             // Register nodes
             await registerNode({from: registeredNode1});
@@ -137,7 +137,7 @@ export default function() {
 
             // Set max per-minipool stake to 100% and RPL price to 1 ether
             const block = await web3.eth.getBlockNumber();
-            await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsNode, 'node.per.minipool.stake.maximum', web3.utils.toWei('1', 'ether'), {from: owner});
+            await setDAOProtocolBootstrapSetting(SafeStakeDAOProtocolSettingsNode, 'node.per.minipool.stake.maximum', web3.utils.toWei('1', 'ether'), {from: owner});
             await submitPrices(block, web3.utils.toWei('1', 'ether'), '0', {from: registeredNodeTrusted1});
             await submitPrices(block, web3.utils.toWei('1', 'ether'), '0', {from: registeredNodeTrusted2});
 
@@ -200,15 +200,15 @@ export default function() {
 
         it(printTitle('guardian', 'set contract claimer percentage for rewards, then update it'), async () => {
             // Set the amount this contract can claim
-            await setDAONetworkBootstrapRewardsClaimer('rocketClaimDAO', web3.utils.toWei('0.0001', 'ether'), {
+            await setDAONetworkBootstrapRewardsClaimer('safeStakeClaimDAO', web3.utils.toWei('0.0001', 'ether'), {
                 from: owner,
             });
             // Set the amount this contract can claim, then update it
-            await setDAONetworkBootstrapRewardsClaimer('rocketClaimNode', web3.utils.toWei('0.01', 'ether'), {
+            await setDAONetworkBootstrapRewardsClaimer('safeStakeClaimNode', web3.utils.toWei('0.01', 'ether'), {
                 from: owner,
             });
             // Update now
-            await setDAONetworkBootstrapRewardsClaimer('rocketClaimNode', web3.utils.toWei('0.02', 'ether'), {
+            await setDAONetworkBootstrapRewardsClaimer('safeStakeClaimNode', web3.utils.toWei('0.02', 'ether'), {
                 from: owner,
             });
         });
@@ -218,11 +218,11 @@ export default function() {
             // Get the total current claims amounts
             let totalClaimersPerc = parseFloat(web3.utils.fromWei(await rewardsClaimersPercTotalGet()));
             // Set the amount this contract can claim, then update it
-            await setDAONetworkBootstrapRewardsClaimer('rocketClaimNode', web3.utils.toWei('0.01', 'ether'), {
+            await setDAONetworkBootstrapRewardsClaimer('safeStakeClaimNode', web3.utils.toWei('0.01', 'ether'), {
                 from: owner,
             });
             // Update now
-            await setDAONetworkBootstrapRewardsClaimer('rocketClaimNode', web3.utils.toWei('0', 'ether'), {
+            await setDAONetworkBootstrapRewardsClaimer('safeStakeClaimNode', web3.utils.toWei('0', 'ether'), {
                 from: owner,
             }, totalClaimersPerc);
         });
@@ -235,7 +235,7 @@ export default function() {
             // Get the total % needed to make 100%
             let claimAmount = (1 - totalClaimersPerc).toFixed(4);
             // Set the amount this contract can claim and expect total claimers amount to equal 1 ether (100%)
-            await setDAONetworkBootstrapRewardsClaimer('rocketClaimNode', web3.utils.toWei(claimAmount.toString(), 'ether'), {
+            await setDAONetworkBootstrapRewardsClaimer('safeStakeClaimNode', web3.utils.toWei(claimAmount.toString(), 'ether'), {
                 from: owner,
             }, 1);
         });
@@ -247,7 +247,7 @@ export default function() {
             // Get the total % needed to make 100%
             let claimAmount = ((1 - totalClaimersPerc) + 0.001).toFixed(4);
             // Set the amount this contract can claim and expect total claimers amount to equal 1 ether (100%)
-            await shouldRevert(setDAONetworkBootstrapRewardsClaimer('rocketClaimNode', web3.utils.toWei(claimAmount.toString(), 'ether'), {
+            await shouldRevert(setDAONetworkBootstrapRewardsClaimer('safeStakeClaimNode', web3.utils.toWei(claimAmount.toString(), 'ether'), {
                 from: owner,
             }), "Total claimers percentrage over 100%");
         });
@@ -259,7 +259,7 @@ export default function() {
         it(printTitle('node', 'can claim RPL and ETH'), async () => {
             // Initialize RPL inflation & claims contract
             let rplInflationStartTime = await rplInflationSetup();
-            await rewardsContractSetup('rocketClaimNode', 0.5);
+            await rewardsContractSetup('safeStakeClaimNode', 0.5);
 
             // Move to inflation start plus one claim interval
             let currentTime = await getCurrentTime(web3);
@@ -267,11 +267,11 @@ export default function() {
             await increaseTime(web3, rplInflationStartTime - currentTime + claimIntervalTime);
 
             // Send ETH to rewards pool
-            const rocketSmoothingPool = await RocketSmoothingPool.deployed();
-            await web3.eth.sendTransaction({ from: owner, to: rocketSmoothingPool.address, value: web3.utils.toWei('20', 'ether')});
+            const safeStakeSmoothingPool = await SafeStakeSmoothingPool.deployed();
+            await web3.eth.sendTransaction({ from: owner, to: safeStakeSmoothingPool.address, value: web3.utils.toWei('20', 'ether')});
 
-            const rocketRewardsPool = await RocketRewardsPool.deployed();
-            const pendingRewards = await rocketRewardsPool.getPendingETHRewards.call();
+            const safeStakeRewardsPool = await SafeStakeRewardsPool.deployed();
+            const pendingRewards = await safeStakeRewardsPool.getPendingETHRewards.call();
 
             // Submit rewards snapshot
             const rewards = [
@@ -338,7 +338,7 @@ export default function() {
         it(printTitle('node', 'can claim from withdrawal address'), async () => {
             // Initialize RPL inflation & claims contract
             let rplInflationStartTime = await rplInflationSetup();
-            await rewardsContractSetup('rocketClaimNode', 0.5);
+            await rewardsContractSetup('safeStakeClaimNode', 0.5);
 
             // Move to inflation start plus one claim interval
             let currentTime = await getCurrentTime(web3);
@@ -346,8 +346,8 @@ export default function() {
             await increaseTime(web3, rplInflationStartTime - currentTime + claimIntervalTime);
 
             // Send ETH to rewards pool
-            const rocketSmoothingPool = await RocketSmoothingPool.deployed();
-            await web3.eth.sendTransaction({ from: owner, to: rocketSmoothingPool.address, value: web3.utils.toWei('20', 'ether')});
+            const safeStakeSmoothingPool = await SafeStakeSmoothingPool.deployed();
+            await web3.eth.sendTransaction({ from: owner, to: safeStakeSmoothingPool.address, value: web3.utils.toWei('20', 'ether')});
 
             // Submit rewards snapshot
             const rewards = [
@@ -372,7 +372,7 @@ export default function() {
         it(printTitle('node', 'can not claim with invalid proof'), async () => {
             // Initialize RPL inflation & claims contract
             let rplInflationStartTime = await rplInflationSetup();
-            await rewardsContractSetup('rocketClaimNode', 0.5);
+            await rewardsContractSetup('safeStakeClaimNode', 0.5);
 
             // Move to inflation start plus one claim interval
             let currentTime = await getCurrentTime(web3);
@@ -400,17 +400,17 @@ export default function() {
             let amountsETH = [proof.amountETH];
             let proofs = [proof.proof];
 
-            let rocketMerkleDistributorMainnet = await RocketMerkleDistributorMainnet.deployed();
+            let safeStakeMerkleDistributorMainnet = await SafeStakeMerkleDistributorMainnet.deployed();
 
             // Attempt to claim reward for registeredNode1 with registeredNode2
-            await shouldRevert(rocketMerkleDistributorMainnet.claim(registeredNode2, [0], amountsRPL, amountsETH, proofs, {from: registeredNode2}), 'Was able to claim with invalid proof', 'Invalid proof');
+            await shouldRevert(safeStakeMerkleDistributorMainnet.claim(registeredNode2, [0], amountsRPL, amountsETH, proofs, {from: registeredNode2}), 'Was able to claim with invalid proof', 'Invalid proof');
         });
 
 
         it(printTitle('node', 'can not claim same interval twice'), async () => {
             // Initialize RPL inflation & claims contract
             let rplInflationStartTime = await rplInflationSetup();
-            await rewardsContractSetup('rocketClaimNode', 0.5);
+            await rewardsContractSetup('safeStakeClaimNode', 0.5);
 
             // Move to inflation start plus one claim interval
             let currentTime = await getCurrentTime(web3);
@@ -458,7 +458,7 @@ export default function() {
         it(printTitle('node', 'can claim mulitiple periods in a single tx'), async () => {
             // Initialize RPL inflation & claims contract
             let rplInflationStartTime = await rplInflationSetup();
-            await rewardsContractSetup('rocketClaimNode', 0.5);
+            await rewardsContractSetup('safeStakeClaimNode', 0.5);
 
             // Move to inflation start plus one claim interval
             let currentTime = await getCurrentTime(web3);
@@ -507,7 +507,7 @@ export default function() {
         it(printTitle('node', 'can claim RPL and stake'), async () => {
             // Initialize RPL inflation & claims contract
             let rplInflationStartTime = await rplInflationSetup();
-            await rewardsContractSetup('rocketClaimNode', 0.5);
+            await rewardsContractSetup('safeStakeClaimNode', 0.5);
 
             // Move to inflation start plus one claim interval
             let currentTime = await getCurrentTime(web3);
@@ -559,7 +559,7 @@ export default function() {
         it(printTitle('node', 'can not stake amount greater than claim'), async () => {
             // Initialize RPL inflation & claims contract
             let rplInflationStartTime = await rplInflationSetup();
-            await rewardsContractSetup('rocketClaimNode', 0.5);
+            await rewardsContractSetup('safeStakeClaimNode', 0.5);
 
             // Move to inflation start plus one claim interval
             let currentTime = await getCurrentTime(web3);
@@ -589,7 +589,7 @@ export default function() {
         it(printTitle('node', 'can claim RPL and stake multiple snapshots'), async () => {
             // Initialize RPL inflation & claims contract
             let rplInflationStartTime = await rplInflationSetup();
-            await rewardsContractSetup('rocketClaimNode', 0.5);
+            await rewardsContractSetup('safeStakeClaimNode', 0.5);
 
             // Move to inflation start plus one claim interval
             let currentTime = await getCurrentTime(web3);
@@ -624,7 +624,7 @@ export default function() {
         it(printTitle('random', 'can execute reward period if consensus is reached'), async () => {
             // Initialize RPL inflation & claims contract
             let rplInflationStartTime = await rplInflationSetup();
-            await rewardsContractSetup('rocketClaimNode', 0.5);
+            await rewardsContractSetup('safeStakeClaimNode', 0.5);
 
             // Move to inflation start plus one claim interval
             let currentTime = await getCurrentTime(web3);
@@ -663,7 +663,7 @@ export default function() {
         it(printTitle('misc', 'claim bitmap is correct'), async () => {
             // Initialize RPL inflation & claims contract
             let rplInflationStartTime = await rplInflationSetup();
-            await rewardsContractSetup('rocketClaimNode', 0.5);
+            await rewardsContractSetup('safeStakeClaimNode', 0.5);
 
             // Move to inflation start plus one claim interval
             let currentTime = await getCurrentTime(web3);
@@ -695,13 +695,13 @@ export default function() {
             });
 
             // Retrieve the bitmap of claims
-            const rocketStorage = await RocketStorage.deployed();
+            const safeStakeStorage = await SafeStakeStorage.deployed();
             const key = web3.utils.soliditySha3(
                 {type: 'string', value: 'rewards.interval.claimed'},
                 {type: 'address', value: registeredNode1},
                 {type: 'uint256', value: 0}
             )
-            const bitmap = (await rocketStorage.getUint.call(key)).toNumber();
+            const bitmap = (await safeStakeStorage.getUint.call(key)).toNumber();
 
             // Construct the expected bitmap and compare
             let expected = 0;

@@ -1,9 +1,9 @@
 import {
-    RocketDAONodeTrusted,
-    RocketMerkleDistributorMainnet,
-    RocketNetworkPrices, RocketNodeManager, RocketNodeStaking,
-    RocketRewardsPool,
-    RocketStorage, RocketTokenRPL
+    SafeStakeDAONodeTrusted,
+    SafeStakeMerkleDistributorMainnet,
+    SafeStakeNetworkPrices, SafeStakeNodeManager, SafeStakeNodeStaking,
+    SafeStakeRewardsPool,
+    SafeStakeStorage, SafeStakeTokenRPL
 } from '../_utils/artifacts';
 import { parseRewardsMap } from '../_utils/merkle-tree';
 
@@ -13,30 +13,30 @@ export async function claimAndStakeRewards(nodeAddress, indices, rewards, stakeA
 
     // Load contracts
     const [
-        rocketRewardsPool,
-        rocketNodeManager,
-        rocketNodeStaking,
-        rocketMerkleDistributorMainnet,
-        rocketStorage,
-        rocketTokenRPL,
+        safeStakeRewardsPool,
+        safeStakeNodeManager,
+        safeStakeNodeStaking,
+        safeStakeMerkleDistributorMainnet,
+        safeStakeStorage,
+        safeStakeTokenRPL,
     ] = await Promise.all([
-        RocketRewardsPool.deployed(),
-        RocketNodeManager.deployed(),
-        RocketNodeStaking.deployed(),
-        RocketMerkleDistributorMainnet.deployed(),
-        RocketStorage.deployed(),
-        RocketTokenRPL.deployed(),
+        SafeStakeRewardsPool.deployed(),
+        SafeStakeNodeManager.deployed(),
+        SafeStakeNodeStaking.deployed(),
+        SafeStakeMerkleDistributorMainnet.deployed(),
+        SafeStakeStorage.deployed(),
+        SafeStakeTokenRPL.deployed(),
     ]);
 
     // Get node withdrawal address
-    let nodeWithdrawalAddress = await rocketNodeManager.getNodeWithdrawalAddress.call(nodeAddress);
+    let nodeWithdrawalAddress = await safeStakeNodeManager.getNodeWithdrawalAddress.call(nodeAddress);
 
     // Get balances
     function getBalances() {
         return Promise.all([
-            rocketRewardsPool.getClaimIntervalTimeStart(),
-            rocketTokenRPL.balanceOf.call(nodeWithdrawalAddress),
-            rocketNodeStaking.getNodeRPLStake(nodeAddress),
+            safeStakeRewardsPool.getClaimIntervalTimeStart(),
+            safeStakeTokenRPL.balanceOf.call(nodeWithdrawalAddress),
+            safeStakeNodeStaking.getNodeRPLStake(nodeAddress),
             web3.eth.getBalance(nodeWithdrawalAddress)
         ]).then(
           ([claimIntervalTimeStart, nodeRpl, rplStake, nodeEth]) =>
@@ -74,7 +74,7 @@ export async function claimAndStakeRewards(nodeAddress, indices, rewards, stakeA
         totalAmountRPL = totalAmountRPL.add(web3.utils.toBN(proof.amountRPL));
     }
 
-    const tx = await rocketMerkleDistributorMainnet.claimAndStake(nodeAddress, indices, amountsRPL, amountsETH, proofs, stakeAmount, txOptions);
+    const tx = await safeStakeMerkleDistributorMainnet.claimAndStake(nodeAddress, indices, amountsRPL, amountsETH, proofs, stakeAmount, txOptions);
     let gasUsed = web3.utils.toBN('0');
 
     if(nodeWithdrawalAddress.toLowerCase() === txOptions.from.toLowerCase()) {

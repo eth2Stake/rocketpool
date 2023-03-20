@@ -1,17 +1,17 @@
-import { RocketNodeManager } from '../_utils/artifacts';
+import { SafeStakeNodeManager } from '../_utils/artifacts';
 
 
 // Register a node
 export async function register(timezoneLocation, txOptions) {
 
     // Load contracts
-    const rocketNodeManager = await RocketNodeManager.deployed();
+    const safeStakeNodeManager = await SafeStakeNodeManager.deployed();
 
     // Get node details
     function getNodeDetails(nodeAddress) {
         return Promise.all([
-            rocketNodeManager.getNodeExists.call(nodeAddress),
-            rocketNodeManager.getNodeTimezoneLocation.call(nodeAddress),
+            safeStakeNodeManager.getNodeExists.call(nodeAddress),
+            safeStakeNodeManager.getNodeTimezoneLocation.call(nodeAddress),
         ]).then(
             ([exists, timezoneLocation]) =>
             ({exists, timezoneLocation})
@@ -19,15 +19,15 @@ export async function register(timezoneLocation, txOptions) {
     }
 
     // Get initial node index
-    let nodeCount1 = await rocketNodeManager.getNodeCount.call();
+    let nodeCount1 = await safeStakeNodeManager.getNodeCount.call();
 
     // Register
-    await rocketNodeManager.registerNode(timezoneLocation, txOptions);
+    await safeStakeNodeManager.registerNode(timezoneLocation, txOptions);
 
     // Get updated node index & node details
-    let nodeCount2 = await rocketNodeManager.getNodeCount.call();
+    let nodeCount2 = await safeStakeNodeManager.getNodeCount.call();
     let [lastNodeAddress, details] = await Promise.all([
-        rocketNodeManager.getNodeAt.call(nodeCount2.sub(web3.utils.toBN(1))),
+        safeStakeNodeManager.getNodeAt.call(nodeCount2.sub(web3.utils.toBN(1))),
         getNodeDetails(txOptions.from),
     ]);
 

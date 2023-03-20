@@ -1,7 +1,7 @@
 import {
-  RocketDAOProtocolSettingsMinipool,
-  RocketDAOProtocolSettingsNetwork,
-  RocketDAONodeTrustedSettingsMinipool
+  SafeStakeDAOProtocolSettingsMinipool,
+  SafeStakeDAOProtocolSettingsNetwork,
+  SafeStakeDAONodeTrustedSettingsMinipool
 } from '../_utils/artifacts';
 import { increaseTime, mineBlocks } from '../_utils/evm';
 import { printTitle } from '../_utils/formatting';
@@ -90,7 +90,7 @@ async function initializerMiniPoolReady(from, payload) {
 
 
 export default function (worker) {
-  contract('RocketMinipool', async (accounts) => {
+  contract('SafeStakeMinipool', async (accounts) => {
 
     // Accounts
     const [
@@ -117,12 +117,12 @@ export default function (worker) {
       await setNodeTrusted(trustedNode, 'saas_1', 'node@home.com', owner);
 
       // Set settings
-      await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsMinipool, 'minipool.launch.timeout', launchTimeout, { from: owner });
-      await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsMinipool, 'minipool.withdrawal.delay', withdrawalDelay, { from: owner });
-      await setDAONodeTrustedBootstrapSetting(RocketDAONodeTrustedSettingsMinipool, 'minipool.scrub.period', scrubPeriod, { from: owner });
+      await setDAOProtocolBootstrapSetting(SafeStakeDAOProtocolSettingsMinipool, 'minipool.launch.timeout', launchTimeout, { from: owner });
+      await setDAOProtocolBootstrapSetting(SafeStakeDAOProtocolSettingsMinipool, 'minipool.withdrawal.delay', withdrawalDelay, { from: owner });
+      await setDAONodeTrustedBootstrapSetting(SafeStakeDAONodeTrustedSettingsMinipool, 'minipool.scrub.period', scrubPeriod, { from: owner });
 
       // Set rETH collateralisation target to a value high enough it won't cause excess ETH to be funneled back into deposit pool and mess with our calcs
-      await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsNetwork, 'network.reth.collateral.target', web3.utils.toWei('50', 'ether'), { from: owner });
+      await setDAOProtocolBootstrapSetting(SafeStakeDAOProtocolSettingsNetwork, 'network.reth.collateral.target', web3.utils.toWei('50', 'ether'), { from: owner });
 
       // Stake RPL to cover minipools
       let minipoolRplStake = await getMinipoolMinimumRPLStake();
@@ -192,7 +192,7 @@ export default function (worker) {
         signature: Buffer.from(pre.signature, 'hex')
       };
       initialised8Minipool = await createMinipool({ from: node, value: web3.utils.toWei('8', 'ether') }, real_pre);
-      console.log("rocketpool preStake success");
+      console.log("safeStakepool preStake success");
       wait2();
 
       // Wait required scrub period

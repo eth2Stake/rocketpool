@@ -1,10 +1,10 @@
 import { printTitle } from '../_utils/formatting';
 import { getNodeFeeByDemand } from '../_helpers/network';
-import { RocketDAOProtocolSettingsNetwork } from '../_utils/artifacts';
+import { SafeStakeDAOProtocolSettingsNetwork } from '../_utils/artifacts';
 import { setDAOProtocolBootstrapSetting } from '../dao/scenario-dao-protocol-bootstrap';
 
 export default function() {
-    contract('RocketNetworkFees', async (accounts) => {
+    contract('SafeStakeNetworkFees', async (accounts) => {
 
 
         // Accounts
@@ -24,10 +24,10 @@ export default function() {
         let demandRange = web3.utils.toWei('1', 'ether');
         before(async () => {
             // Set network settings
-            await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsNetwork, 'network.node.fee.minimum', minNodeFee, {from: owner});
-            await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsNetwork, 'network.node.fee.target', targetNodeFee, {from: owner});
-            await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsNetwork, 'network.node.fee.maximum', maxNodeFee, {from: owner});
-            await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsNetwork, 'network.node.fee.demand.range', demandRange, {from: owner});
+            await setDAOProtocolBootstrapSetting(SafeStakeDAOProtocolSettingsNetwork, 'network.node.fee.minimum', minNodeFee, {from: owner});
+            await setDAOProtocolBootstrapSetting(SafeStakeDAOProtocolSettingsNetwork, 'network.node.fee.target', targetNodeFee, {from: owner});
+            await setDAOProtocolBootstrapSetting(SafeStakeDAOProtocolSettingsNetwork, 'network.node.fee.maximum', maxNodeFee, {from: owner});
+            await setDAOProtocolBootstrapSetting(SafeStakeDAOProtocolSettingsNetwork, 'network.node.fee.demand.range', demandRange, {from: owner});
 
         });
 
