@@ -82,8 +82,9 @@ contract SafeStakeDAONodeTrusted is SafeStakeBase, SafeStakeDAONodeTrustedInterf
 
     // Total number of members in the current trusted node DAO
     function getMemberCount() override public view returns (uint256) {
-        AddressSetStorageInterface addressSetStorage = AddressSetStorageInterface(getContractAddress("addressSetStorage"));
-        return addressSetStorage.getCount(keccak256(abi.encodePacked(daoNameSpace, "member.index")));
+        // AddressSetStorageInterface addressSetStorage = AddressSetStorageInterface(getContractAddress("addressSetStorage"));
+        // return addressSetStorage.getCount(keccak256(abi.encodePacked(daoNameSpace, "member.index")));
+        return 1;
     }
 
     // Min required member count for the DAO 

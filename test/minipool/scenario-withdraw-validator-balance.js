@@ -4,7 +4,7 @@ import {
     SafeStakeMinipoolManager,
     SafeStakeMinipoolPenalty,
     SafeStakeNodeManager,
-    SafeStakeTokenRETH
+    SafeStakeTokenSFETH
 } from '../_utils/artifacts'
 
 
@@ -15,11 +15,11 @@ export async function withdrawValidatorBalance(minipool, withdrawalBalance, from
     // Load contracts
     const [
         safeStakeDepositPool,
-        safeStakeTokenRETH,
+        safeStakeTokenSFETH,
         safeStakeNodeManager
     ] = await Promise.all([
         SafeStakeDepositPool.deployed(),
-        SafeStakeTokenRETH.deployed(),
+        SafeStakeTokenSFETH.deployed(),
         SafeStakeNodeManager.deployed(),
     ]);
 
@@ -37,7 +37,7 @@ export async function withdrawValidatorBalance(minipool, withdrawalBalance, from
     // Get balances
     function getBalances() {
         return Promise.all([
-            web3.eth.getBalance(safeStakeTokenRETH.address).then(value => web3.utils.toBN(value)),
+            web3.eth.getBalance(safeStakeTokenSFETH.address).then(value => web3.utils.toBN(value)),
             safeStakeDepositPool.getBalance.call(),
             web3.eth.getBalance(nodeWithdrawalAddress).then(value => web3.utils.toBN(value)),
             web3.eth.getBalance(minipool.address).then(value => web3.utils.toBN(value)),

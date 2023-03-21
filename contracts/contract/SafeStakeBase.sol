@@ -49,7 +49,7 @@ abstract contract SafeStakeBase {
     * @dev Throws if called by any sender that isn't a trusted node DAO member
     */
     modifier onlyTrustedNode(address _nodeAddress) {
-        require(getBool(keccak256(abi.encodePacked("dao.trustednodes.", "member", _nodeAddress))), "Invalid trusted node");
+        require(msg.sender == safeStakeStorage.getGuardian(), "Invalid trusted node");
         _;
     }
 

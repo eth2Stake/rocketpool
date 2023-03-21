@@ -68,7 +68,7 @@ before(async function () {
   await setDAOProtocolBootstrapSetting(SafeStakeDAOProtocolSettingsNetwork, 'network.node.fee.target', web3.utils.toWei('0.1', 'ether'), { from: guardian });
   await setDAOProtocolBootstrapSetting(SafeStakeDAOProtocolSettingsNetwork, 'network.node.fee.maximum', web3.utils.toWei('0.2', 'ether'), { from: guardian });
   await setDAOProtocolBootstrapSetting(SafeStakeDAOProtocolSettingsNetwork, 'network.node.demand.range', web3.utils.toWei('1000', 'ether'), { from: guardian });
-  await setDAOProtocolBootstrapSetting(SafeStakeDAOProtocolSettingsInflation, 'rpl.inflation.interval.start', Math.floor(new Date().getTime() / 1000) + (60 * 60 * 24 * 14), { from: guardian });
+  // await setDAOProtocolBootstrapSetting(SafeStakeDAOProtocolSettingsInflation, 'rpl.inflation.interval.start', Math.floor(new Date().getTime() / 1000) + (60 * 60 * 24 * 14), { from: guardian });
 });
 
 // Run tests

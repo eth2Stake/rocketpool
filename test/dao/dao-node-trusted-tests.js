@@ -777,7 +777,7 @@ export default function() {
                 from: guardian,
             }), 'Upgraded a protected contract', 'Cannot upgrade the vault');
             
-            await shouldRevert(setDaoNodeTrustedBootstrapUpgrade('upgradeContract', 'safeStakeTokenRETH', safeStakeMinipoolManagerNew.abi, safeStakeMinipoolManagerNew.address, {
+            await shouldRevert(setDaoNodeTrustedBootstrapUpgrade('upgradeContract', 'safeStakeTokenSFETH', safeStakeMinipoolManagerNew.abi, safeStakeMinipoolManagerNew.address, {
                 from: guardian,
             }), 'Upgraded a protected contract', 'Cannot upgrade token contracts');
             

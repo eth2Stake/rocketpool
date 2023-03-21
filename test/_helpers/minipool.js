@@ -166,10 +166,11 @@ export async function createMinipool(txOptions,depositData = null, salt = null) 
             amount: BigInt(16000000000), // gwei
             signature: getValidatorSignature(),
         };
+        if (depositType == 3){
+            depositData.amount =  BigInt(8000000000);
+        }
     }
-    // if (depositType == 3){
-    //     depositData.amount =  BigInt(8000000000);
-    // }
+
 
     let depositDataRoot = getDepositDataRoot(depositData);
 
@@ -211,7 +212,7 @@ export async function stakeMinipool(minipool, txOptions) {
 }
 
 // Progress a minipool to staking
-export async function stake8Minipool(minipool, txOptions,depositData) {
+export async function stake8Minipool(minipool, txOptions,depositData= null) {
 
     // Get contracts
     // const safeStakeMinipoolManager = await SafeStakeMinipoolManager.deployed()
@@ -228,6 +229,20 @@ export async function stake8Minipool(minipool, txOptions,depositData) {
     //     amount: BigInt(24000000000), // gwei
     //     signature: getValidatorSignature(),
     // };
+    const safeStakeMinipoolManager = await SafeStakeMinipoolManager.deployed()
+
+    // Get minipool validator pubkey
+    const validatorPubkey = await safeStakeMinipoolManager.getMinipoolPubkey(minipool.address);
+
+    // Get minipool withdrawal credentials
+    let withdrawalCredentials = await safeStakeMinipoolManager.getMinipoolWithdrawalCredentials.call(minipool.address);
+    // Get validator deposit data
+    depositData = {
+        pubkey: Buffer.from(validatorPubkey.substr(2), 'hex'),
+        withdrawalCredentials: Buffer.from(withdrawalCredentials.substr(2), 'hex'),
+        amount: BigInt(24000000000), // gwei
+        signature: getValidatorSignature(),
+    };
     let depositDataRoot = getDepositDataRoot(depositData);
 
     // Stake
