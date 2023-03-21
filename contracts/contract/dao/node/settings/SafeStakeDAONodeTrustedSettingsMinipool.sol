@@ -64,8 +64,7 @@ contract SafeStakeDAONodeTrustedSettingsMinipool is SafeStakeDAONodeTrustedSetti
         return getSettingUint("minipool.scrub.quorum");
     }
 
-    // True if scrubbing results in an RPL penalty for the node operator
-    function getScrubPenaltyEnabled() override external view returns (bool) {
-        return getSettingBool("minipool.scrub.penalty.enabled");
-    }
+    // function getScrubPenaltyEnabled() override external view returns (bool) {
+    //     return getSettingBool("minipool.scrub.penalty.enabled");
+    // }
 }

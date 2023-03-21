@@ -9,7 +9,6 @@ import "../../interface/minipool/SafeStakeMinipoolInterface.sol";
 import "../../interface/minipool/SafeStakeMinipoolManagerInterface.sol";
 import "../../interface/minipool/SafeStakeMinipoolStatusInterface.sol";
 import "../../interface/dao/node/SafeStakeDAONodeTrustedInterface.sol";
-import "../../interface/node/SafeStakeNodeStakingInterface.sol";
 import "../../interface/dao/protocol/settings/SafeStakeDAOProtocolSettingsMinipoolInterface.sol";
 import "../../interface/dao/protocol/settings/SafeStakeDAOProtocolSettingsNetworkInterface.sol";
 import "../../types/MinipoolStatus.sol";

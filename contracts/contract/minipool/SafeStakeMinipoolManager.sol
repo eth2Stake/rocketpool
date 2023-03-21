@@ -14,10 +14,8 @@ import "../../interface/dao/node/SafeStakeDAONodeTrustedInterface.sol";
 import "../../interface/minipool/SafeStakeMinipoolInterface.sol";
 import "../../interface/minipool/SafeStakeMinipoolManagerInterface.sol";
 import "../../interface/minipool/SafeStakeMinipoolQueueInterface.sol";
-import "../../interface/node/SafeStakeNodeStakingInterface.sol";
 import "../../interface/util/AddressSetStorageInterface.sol";
 import "../../interface/node/SafeStakeNodeManagerInterface.sol";
-import "../../interface/network/SafeStakeNetworkPricesInterface.sol";
 import "../../interface/dao/protocol/settings/SafeStakeDAOProtocolSettingsMinipoolInterface.sol";
 import "../../interface/dao/protocol/settings/SafeStakeDAOProtocolSettingsNodeInterface.sol";
 import "../../interface/dao/protocol/settings/SafeStakeDAOProtocolSettingsNodeInterface.sol";
@@ -220,8 +218,6 @@ contract SafeStakeMinipoolManager is SafeStakeBase, SafeStakeMinipoolManagerInte
         bytes32 totalKey = keccak256(abi.encodePacked("minipools.staking.count"));
         uint256 totalValue = getUint(totalKey);
         setUint(totalKey, totalValue.add(1));
-        // Update total effective stake
-        updateTotalEffectiveRPLStake(_nodeAddress, nodeValue, nodeValue.add(1));
         // Update node fee average
         addUint(keccak256(abi.encodePacked("node.average.fee.numerator", _nodeAddress)), minipool.getNodeFee());
     }
@@ -240,8 +236,6 @@ contract SafeStakeMinipoolManager is SafeStakeBase, SafeStakeMinipoolManagerInte
         bytes32 totalKey = keccak256(abi.encodePacked("minipools.staking.count"));
         uint256 totalValue = getUint(totalKey);
         setUint(totalKey, totalValue.sub(1));
-        // Update total effective stake
-        updateTotalEffectiveRPLStake(_nodeAddress, nodeValue, nodeValue.sub(1));
         // Update node fee average
         subUint(keccak256(abi.encodePacked("node.average.fee.numerator", _nodeAddress)), minipool.getNodeFee());
     }
@@ -274,13 +268,7 @@ contract SafeStakeMinipoolManager is SafeStakeBase, SafeStakeMinipoolManagerInte
     // Only accepts calls from the SafeStakeNodeDeposit contract
     function createMinipool(address _nodeAddress, MinipoolDeposit _depositType, uint256 _salt) override external onlyLatestContract("safeStakeMinipoolManager", address(this)) onlyLatestContract("safeStakeNodeDeposit", msg.sender) returns (SafeStakeMinipoolInterface) {
         // Load contracts
-        SafeStakeNodeStakingInterface safeStakeNodeStaking = SafeStakeNodeStakingInterface(getContractAddress("safeStakeNodeStaking"));
         AddressSetStorageInterface addressSetStorage = AddressSetStorageInterface(getContractAddress("addressSetStorage"));
-        // Check node minipool limit based on RPL stake
-        require(
-            getNodeActiveMinipoolCount(_nodeAddress) < safeStakeNodeStaking.getNodeMinipoolLimit(_nodeAddress),
-            "Minipool count after deposit exceeds limit based on node RPL stake"
-        );
         { // Local scope to prevent stack too deep error
           SafeStakeDAOProtocolSettingsMinipoolInterface safeStakeDAOProtocolSettingsMinipool = SafeStakeDAOProtocolSettingsMinipoolInterface(getContractAddress("safeStakeDAOProtocolSettingsMinipool"));
           // Check global minipool limit
@@ -328,51 +316,6 @@ contract SafeStakeMinipoolManager is SafeStakeBase, SafeStakeMinipoolManagerInte
         deleteAddress(keccak256(abi.encodePacked("validator.minipool", pubkey)));
         // Emit minipool destroyed event
         emit MinipoolDestroyed(msg.sender, nodeAddress, block.timestamp);
-    }
-
-    // Updates the stored total effective rate based on a node's changing minipool count
-    function updateTotalEffectiveRPLStake(address _nodeAddress, uint256 _oldCount, uint256 _newCount) private {
-        // Load contracts
-        SafeStakeNetworkPricesInterface safeStakeNetworkPrices = SafeStakeNetworkPricesInterface(getContractAddress("safeStakeNetworkPrices"));
-        SafeStakeDAOProtocolSettingsMinipoolInterface safeStakeDAOProtocolSettingsMinipool = SafeStakeDAOProtocolSettingsMinipoolInterface(getContractAddress("safeStakeDAOProtocolSettingsMinipool"));
-        SafeStakeDAOProtocolSettingsNodeInterface safeStakeDAOProtocolSettingsNode = SafeStakeDAOProtocolSettingsNodeInterface(getContractAddress("safeStakeDAOProtocolSettingsNode"));
-        SafeStakeNodeStakingInterface safeStakeNodeStaking = SafeStakeNodeStakingInterface(getContractAddress("safeStakeNodeStaking"));
-        // Require price consensus
-        require(safeStakeNetworkPrices.inConsensus(), "Network is not in consensus");
-        // Get node's RPL stake
-        uint256 rplStake = safeStakeNodeStaking.getNodeRPLStake(_nodeAddress);
-        // Get the node's maximum possible stake
-        uint256 maxRplStakePerMinipool = safeStakeDAOProtocolSettingsMinipool.getHalfDepositUserAmount()
-            .mul(safeStakeDAOProtocolSettingsNode.getMaximumPerMinipoolStake());
-        uint256 oldMaxRplStake = maxRplStakePerMinipool
-            .mul(_oldCount)
-            .div(safeStakeNetworkPrices.getRPLPrice());
-        uint256 newMaxRplStake = maxRplStakePerMinipool
-            .mul(_newCount)
-            .div(safeStakeNetworkPrices.getRPLPrice());
-        // Check if we have to decrease total
-        if (_oldCount > _newCount) {
-            if (rplStake <= newMaxRplStake) {
-                return;
-            }
-            uint256 decrease = oldMaxRplStake.sub(newMaxRplStake);
-            uint256 delta = rplStake.sub(newMaxRplStake);
-            if (delta > decrease) { delta = decrease; }
-            safeStakeNetworkPrices.decreaseEffectiveRPLStake(delta);
-            return;
-        }
-        // Check if we have to increase total
-        if (_newCount > _oldCount) {
-            if (rplStake <= oldMaxRplStake) {
-                return;
-            }
-            uint256 increase = newMaxRplStake.sub(oldMaxRplStake);
-            uint256 delta = rplStake.sub(oldMaxRplStake);
-            if (delta > increase) { delta = increase; }
-            safeStakeNetworkPrices.increaseEffectiveRPLStake(delta);
-            return;
-        }
-        // _oldCount == _newCount (do nothing but shouldn't happen)
     }
 
     // Set a minipool's validator pubkey

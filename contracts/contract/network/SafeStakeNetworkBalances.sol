@@ -17,8 +17,8 @@ contract SafeStakeNetworkBalances is SafeStakeBase, SafeStakeNetworkBalancesInte
     using SafeMath for uint;
 
     // Events
-    event BalancesSubmitted(address indexed from, uint256 block, uint256 totalEth, uint256 stakingEth, uint256 rethSupply, uint256 time);
-    event BalancesUpdated(uint256 block, uint256 totalEth, uint256 stakingEth, uint256 rethSupply, uint256 time);
+    event BalancesSubmitted(address indexed from, uint256 block, uint256 totalEth, uint256 stakingEth, uint256 sfethSupply, uint256 time);
+    event BalancesUpdated(uint256 block, uint256 totalEth, uint256 stakingEth, uint256 sfethSupply, uint256 time);
 
     // Construct
     constructor(SafeStakeStorageInterface _safeStakeStorageAddress) SafeStakeBase(_safeStakeStorageAddress) {
@@ -49,12 +49,12 @@ contract SafeStakeNetworkBalances is SafeStakeBase, SafeStakeNetworkBalancesInte
         setUint(keccak256("network.balance.staking"), _value);
     }
 
-    // The current RP network total rETH supply
-    function getTotalRETHSupply() override external view returns (uint256) {
-        return getUint(keccak256("network.balance.reth.supply"));
+    // The current RP network total sfETH supply
+    function getTotalSFETHSupply() override external view returns (uint256) {
+        return getUint(keccak256("network.balance.sfeth.supply"));
     }
-    function setTotalRETHSupply(uint256 _value) private {
-        setUint(keccak256("network.balance.reth.supply"), _value);
+    function setTotalSFETHSupply(uint256 _value) private {
+        setUint(keccak256("network.balance.sfeth.supply"), _value);
     }
 
     // Get the current RP network ETH utilization rate as a fraction of 1 ETH
@@ -68,7 +68,7 @@ contract SafeStakeNetworkBalances is SafeStakeBase, SafeStakeNetworkBalancesInte
 
     // Submit network balances for a block
     // Only accepts calls from trusted (oracle) nodes
-    function submitBalances(uint256 _block, uint256 _totalEth, uint256 _stakingEth, uint256 _rethSupply) override external onlyLatestContract("safeStakeNetworkBalances", address(this)) onlyTrustedNode(msg.sender) {
+    function submitBalances(uint256 _block, uint256 _totalEth, uint256 _stakingEth, uint256 _sfethSupply) override external onlyLatestContract("safeStakeNetworkBalances", address(this)) onlyTrustedNode(msg.sender) {
         // Check settings
         SafeStakeDAOProtocolSettingsNetworkInterface safeStakeDAOProtocolSettingsNetwork = SafeStakeDAOProtocolSettingsNetworkInterface(getContractAddress("safeStakeDAOProtocolSettingsNetwork"));
         require(safeStakeDAOProtocolSettingsNetwork.getSubmitBalancesEnabled(), "Submitting balances is currently disabled");
@@ -78,8 +78,8 @@ contract SafeStakeNetworkBalances is SafeStakeBase, SafeStakeNetworkBalancesInte
         // Check balances
         require(_stakingEth <= _totalEth, "Invalid network balances");
         // Get submission keys
-        bytes32 nodeSubmissionKey = keccak256(abi.encodePacked("network.balances.submitted.node", msg.sender, _block, _totalEth, _stakingEth, _rethSupply));
-        bytes32 submissionCountKey = keccak256(abi.encodePacked("network.balances.submitted.count", _block, _totalEth, _stakingEth, _rethSupply));
+        bytes32 nodeSubmissionKey = keccak256(abi.encodePacked("network.balances.submitted.node", msg.sender, _block, _totalEth, _stakingEth, _sfethSupply));
+        bytes32 submissionCountKey = keccak256(abi.encodePacked("network.balances.submitted.count", _block, _totalEth, _stakingEth, _sfethSupply));
         // Check & update node submission status
         require(!getBool(nodeSubmissionKey), "Duplicate submission from node");
         setBool(nodeSubmissionKey, true);
@@ -88,16 +88,16 @@ contract SafeStakeNetworkBalances is SafeStakeBase, SafeStakeNetworkBalancesInte
         uint256 submissionCount = getUint(submissionCountKey).add(1);
         setUint(submissionCountKey, submissionCount);
         // Emit balances submitted event
-        emit BalancesSubmitted(msg.sender, _block, _totalEth, _stakingEth, _rethSupply, block.timestamp);
+        emit BalancesSubmitted(msg.sender, _block, _totalEth, _stakingEth, _sfethSupply, block.timestamp);
         // Check submission count & update network balances
         SafeStakeDAONodeTrustedInterface safeStakeDAONodeTrusted = SafeStakeDAONodeTrustedInterface(getContractAddress("safeStakeDAONodeTrusted"));
         if (calcBase.mul(submissionCount).div(safeStakeDAONodeTrusted.getMemberCount()) >= safeStakeDAOProtocolSettingsNetwork.getNodeConsensusThreshold()) {
-            updateBalances(_block, _totalEth, _stakingEth, _rethSupply);
+            updateBalances(_block, _totalEth, _stakingEth, _sfethSupply);
         }
     }
 
     // Executes updateBalances if consensus threshold is reached
-    function executeUpdateBalances(uint256 _block, uint256 _totalEth, uint256 _stakingEth, uint256 _rethSupply) override external onlyLatestContract("safeStakeNetworkBalances", address(this)) {
+    function executeUpdateBalances(uint256 _block, uint256 _totalEth, uint256 _stakingEth, uint256 _sfethSupply) override external onlyLatestContract("safeStakeNetworkBalances", address(this)) {
         // Check settings
         SafeStakeDAOProtocolSettingsNetworkInterface safeStakeDAOProtocolSettingsNetwork = SafeStakeDAOProtocolSettingsNetworkInterface(getContractAddress("safeStakeDAOProtocolSettingsNetwork"));
         require(safeStakeDAOProtocolSettingsNetwork.getSubmitBalancesEnabled(), "Submitting balances is currently disabled");
@@ -107,24 +107,24 @@ contract SafeStakeNetworkBalances is SafeStakeBase, SafeStakeNetworkBalancesInte
         // Check balances
         require(_stakingEth <= _totalEth, "Invalid network balances");
         // Get submission keys
-        bytes32 submissionCountKey = keccak256(abi.encodePacked("network.balances.submitted.count", _block, _totalEth, _stakingEth, _rethSupply));
+        bytes32 submissionCountKey = keccak256(abi.encodePacked("network.balances.submitted.count", _block, _totalEth, _stakingEth, _sfethSupply));
         // Get submission count
         uint256 submissionCount = getUint(submissionCountKey);
         // Check submission count & update network balances
         SafeStakeDAONodeTrustedInterface safeStakeDAONodeTrusted = SafeStakeDAONodeTrustedInterface(getContractAddress("safeStakeDAONodeTrusted"));
         require(calcBase.mul(submissionCount).div(safeStakeDAONodeTrusted.getMemberCount()) >= safeStakeDAOProtocolSettingsNetwork.getNodeConsensusThreshold(), "Consensus has not been reached");
-        updateBalances(_block, _totalEth, _stakingEth, _rethSupply);
+        updateBalances(_block, _totalEth, _stakingEth, _sfethSupply);
     }
 
     // Update network balances
-    function updateBalances(uint256 _block, uint256 _totalEth, uint256 _stakingEth, uint256 _rethSupply) private {
+    function updateBalances(uint256 _block, uint256 _totalEth, uint256 _stakingEth, uint256 _sfethSupply) private {
         // Update balances
         setBalancesBlock(_block);
         setTotalETHBalance(_totalEth);
         setStakingETHBalance(_stakingEth);
-        setTotalRETHSupply(_rethSupply);
+        setTotalSFETHSupply(_sfethSupply);
         // Emit balances updated event
-        emit BalancesUpdated(_block, _totalEth, _stakingEth, _rethSupply, block.timestamp);
+        emit BalancesUpdated(_block, _totalEth, _stakingEth, _sfethSupply, block.timestamp);
     }
 
     // Returns the latest block number that oracles should be reporting balances for

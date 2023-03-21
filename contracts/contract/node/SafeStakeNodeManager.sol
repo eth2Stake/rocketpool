@@ -16,9 +16,7 @@ import "../../interface/util/AddressSetStorageInterface.sol";
 import "../../interface/node/SafeStakeNodeDistributorFactoryInterface.sol";
 import "../../interface/minipool/SafeStakeMinipoolManagerInterface.sol";
 import "../../interface/node/SafeStakeNodeDistributorInterface.sol";
-import "../../interface/dao/node/settings/SafeStakeDAONodeTrustedSettingsRewardsInterface.sol";
-import "../../interface/dao/protocol/settings/SafeStakeDAOProtocolSettingsRewardsInterface.sol";
-import "../../interface/node/SafeStakeNodeStakingInterface.sol";
+// import "../../interface/dao/protocol/settings/SafeStakeDAOProtocolSettingsRewardsInterface.sol";
 
 
 // Node registration and management 
@@ -31,7 +29,6 @@ contract SafeStakeNodeManager is SafeStakeBase, SafeStakeNodeManagerInterface {
     event NodeRegistered(address indexed node, uint256 time);
     event NodeTimezoneLocationSet(address indexed node, uint256 time);
     event NodeRewardNetworkChanged(address indexed node, uint256 network);
-    event NodeSmoothingPoolStateChanged(address indexed node, bool state);
 
     // Construct
     constructor(SafeStakeStorageInterface _safeStakeStorageAddress) SafeStakeBase(_safeStakeStorageAddress) {
@@ -207,87 +204,70 @@ contract SafeStakeNodeManager is SafeStakeBase, SafeStakeNodeManagerInterface {
         return numerator.div(denominator);
     }
 
-    // Designates which network a node would like their rewards relayed to
-    function setRewardNetwork(address _nodeAddress, uint256 _network) override external onlyLatestContract("safeStakeNodeManager", address(this)) {
-        // Confirm the transaction is from the node's current withdrawal address
-        address withdrawalAddress = safeStakeStorage.getNodeWithdrawalAddress(_nodeAddress);
-        require(withdrawalAddress == msg.sender, "Only a tx from a node's withdrawal address can change reward network");
-        // Check network is enabled
-        SafeStakeDAONodeTrustedSettingsRewardsInterface safeStakeDAONodeTrustedSettingsRewards = SafeStakeDAONodeTrustedSettingsRewardsInterface(getContractAddress("safeStakeDAONodeTrustedSettingsRewards"));
-        require(safeStakeDAONodeTrustedSettingsRewards.getNetworkEnabled(_network), "Network is not enabled");
-        // Set the network
-        setUint(keccak256(abi.encodePacked("node.reward.network", _nodeAddress)), _network);
-        // Emit event
-        emit NodeRewardNetworkChanged(_nodeAddress, _network);
-    }
-
     // Returns which network a node has designated as their desired reward network
     function getRewardNetwork(address _nodeAddress) override public view onlyLatestContract("safeStakeNodeManager", address(this)) returns (uint256) {
         return getUint(keccak256(abi.encodePacked("node.reward.network", _nodeAddress)));
     }
 
-    // Allows a node to register or deregister from the smoothing pool
-    function setSmoothingPoolRegistrationState(bool _state) override external onlyLatestContract("safeStakeNodeManager", address(this)) onlyRegisteredNode(msg.sender) {
-        // Ensure registration is enabled
-        SafeStakeDAOProtocolSettingsNodeInterface daoSettingsNode = SafeStakeDAOProtocolSettingsNodeInterface(getContractAddress("safeStakeDAOProtocolSettingsNode"));
-        require(daoSettingsNode.getSmoothingPoolRegistrationEnabled(), "Smoothing pool registrations are not active");
-        // Precompute storage keys
-        bytes32 changeKey = keccak256(abi.encodePacked("node.smoothing.pool.changed.time", msg.sender));
-        bytes32 stateKey = keccak256(abi.encodePacked("node.smoothing.pool.state", msg.sender));
-        // Get from the DAO settings
-        SafeStakeDAOProtocolSettingsRewardsInterface daoSettingsRewards = SafeStakeDAOProtocolSettingsRewardsInterface(getContractAddress("safeStakeDAOProtocolSettingsRewards"));
-        uint256 rewardInterval = daoSettingsRewards.getRewardsClaimIntervalTime();
-        // Ensure node operator has waited the required time
-        uint256 lastChange = getUint(changeKey);
-        require(block.timestamp >= lastChange.add(rewardInterval), "Not enough time has passed since changing state");
-        // Ensure state is actually changing
-        require(getBool(stateKey) != _state, "Invalid state change");
-        // Update registration state
-        setUint(changeKey, block.timestamp);
-        setBool(stateKey, _state);
-        // Emit state change event
-        emit NodeSmoothingPoolStateChanged(msg.sender, _state);
-    }
+    // // Allows a node to register or deregister from the smoothing pool
+    // function setSmoothingPoolRegistrationState(bool _state) override external onlyLatestContract("safeStakeNodeManager", address(this)) onlyRegisteredNode(msg.sender) {
+    //     // Ensure registration is enabled
+    //     SafeStakeDAOProtocolSettingsNodeInterface daoSettingsNode = SafeStakeDAOProtocolSettingsNodeInterface(getContractAddress("safeStakeDAOProtocolSettingsNode"));
+    //     require(daoSettingsNode.getSmoothingPoolRegistrationEnabled(), "Smoothing pool registrations are not active");
+    //     // Precompute storage keys
+    //     bytes32 changeKey = keccak256(abi.encodePacked("node.smoothing.pool.changed.time", msg.sender));
+    //     bytes32 stateKey = keccak256(abi.encodePacked("node.smoothing.pool.state", msg.sender));
+    //     // Get from the DAO settings
+    //     SafeStakeDAOProtocolSettingsRewardsInterface daoSettingsRewards = SafeStakeDAOProtocolSettingsRewardsInterface(getContractAddress("safeStakeDAOProtocolSettingsRewards"));
+    //     uint256 rewardInterval = daoSettingsRewards.getRewardsClaimIntervalTime();
+    //     // Ensure node operator has waited the required time
+    //     uint256 lastChange = getUint(changeKey);
+    //     require(block.timestamp >= lastChange.add(rewardInterval), "Not enough time has passed since changing state");
+    //     // Ensure state is actually changing
+    //     require(getBool(stateKey) != _state, "Invalid state change");
+    //     // Update registration state
+    //     setUint(changeKey, block.timestamp);
+    //     setBool(stateKey, _state);
+    //     // Emit state change event
+    //     emit NodeSmoothingPoolStateChanged(msg.sender, _state);
+    // }
 
     // Returns whether a node is registered or not from the smoothing pool
-    function getSmoothingPoolRegistrationState(address _nodeAddress) override public view returns (bool) {
-        return getBool(keccak256(abi.encodePacked("node.smoothing.pool.state", _nodeAddress)));
-    }
+    // function getSmoothingPoolRegistrationState(address _nodeAddress) override public view returns (bool) {
+    //     return getBool(keccak256(abi.encodePacked("node.smoothing.pool.state", _nodeAddress)));
+    // }
 
-    // Returns the timestamp of when the node last changed their smoothing pool registration state
-    function getSmoothingPoolRegistrationChanged(address _nodeAddress) override external view returns (uint256) {
-        return getUint(keccak256(abi.encodePacked("node.smoothing.pool.changed.time", _nodeAddress)));
-    }
+    // // Returns the timestamp of when the node last changed their smoothing pool registration state
+    // function getSmoothingPoolRegistrationChanged(address _nodeAddress) override external view returns (uint256) {
+    //     return getUint(keccak256(abi.encodePacked("node.smoothing.pool.changed.time", _nodeAddress)));
+    // }
 
-    // Returns the sum of nodes that are registered for the smoothing pool between _offset and (_offset + _limit)
-    function getSmoothingPoolRegisteredNodeCount(uint256 _offset, uint256 _limit) override external view returns (uint256) {
-        // Get contracts
-        AddressSetStorageInterface addressSetStorage = AddressSetStorageInterface(getContractAddress("addressSetStorage"));
-        // Precompute node key
-        bytes32 nodeKey = keccak256(abi.encodePacked("nodes.index"));
-        // Iterate over the requested minipool range
-        uint256 totalNodes = getNodeCount();
-        uint256 max = _offset.add(_limit);
-        if (max > totalNodes || _limit == 0) { max = totalNodes; }
-        uint256 count = 0;
-        for (uint256 i = _offset; i < max; i++) {
-            address nodeAddress = addressSetStorage.getItem(nodeKey, i);
-            if (getSmoothingPoolRegistrationState(nodeAddress)) {
-                count++;
-            }
-        }
-        return count;
-    }
+    // // Returns the sum of nodes that are registered for the smoothing pool between _offset and (_offset + _limit)
+    // function getSmoothingPoolRegisteredNodeCount(uint256 _offset, uint256 _limit) override external view returns (uint256) {
+    //     // Get contracts
+    //     AddressSetStorageInterface addressSetStorage = AddressSetStorageInterface(getContractAddress("addressSetStorage"));
+    //     // Precompute node key
+    //     bytes32 nodeKey = keccak256(abi.encodePacked("nodes.index"));
+    //     // Iterate over the requested minipool range
+    //     uint256 totalNodes = getNodeCount();
+    //     uint256 max = _offset.add(_limit);
+    //     if (max > totalNodes || _limit == 0) { max = totalNodes; }
+    //     uint256 count = 0;
+    //     for (uint256 i = _offset; i < max; i++) {
+    //         address nodeAddress = addressSetStorage.getItem(nodeKey, i);
+    //         if (getSmoothingPoolRegistrationState(nodeAddress)) {
+    //             count++;
+    //         }
+    //     }
+    //     return count;
+    // }
 
     // Convenience function to return all on-chain details about a given node
     function getNodeDetails(address _nodeAddress) override external view returns (NodeDetails memory nodeDetails) {
         // Get contracts
-        SafeStakeNodeStakingInterface safeStakeNodeStaking = SafeStakeNodeStakingInterface(getContractAddress("safeStakeNodeStaking"));
         SafeStakeNodeDistributorFactoryInterface safeStakeNodeDistributorFactory = SafeStakeNodeDistributorFactoryInterface(getContractAddress("safeStakeNodeDistributorFactory"));
         SafeStakeMinipoolManagerInterface safeStakeMinipoolManager = SafeStakeMinipoolManagerInterface(getContractAddress("safeStakeMinipoolManager"));
-        IERC20 safeStakeTokenRETH = IERC20(getContractAddress("safeStakeTokenRETH"));
-        IERC20 safeStakeTokenRPL = IERC20(getContractAddress("safeStakeTokenRPL"));
-        IERC20 safeStakeTokenRPLFixedSupply = IERC20(getContractAddress("safeStakeTokenRPLFixedSupply"));
+        IERC20 safeStakeTokenSFETH = IERC20(getContractAddress("safeStakeTokenSFETH"));
         // Node details
         nodeDetails.withdrawalAddress = safeStakeStorage.getNodeWithdrawalAddress(_nodeAddress);
         nodeDetails.pendingWithdrawalAddress = safeStakeStorage.getNodePendingWithdrawalAddress(_nodeAddress);
@@ -296,21 +276,13 @@ contract SafeStakeNodeManager is SafeStakeBase, SafeStakeNodeManagerInterface {
         nodeDetails.timezoneLocation = getNodeTimezoneLocation(_nodeAddress);
         nodeDetails.feeDistributorInitialised = getFeeDistributorInitialised(_nodeAddress);
         nodeDetails.rewardNetwork = getRewardNetwork(_nodeAddress);
-        // Staking details
-        nodeDetails.rplStake = safeStakeNodeStaking.getNodeRPLStake(_nodeAddress);
-        nodeDetails.effectiveRPLStake = safeStakeNodeStaking.getNodeEffectiveRPLStake(_nodeAddress);
-        nodeDetails.minimumRPLStake = safeStakeNodeStaking.getNodeMinimumRPLStake(_nodeAddress);
-        nodeDetails.maximumRPLStake = safeStakeNodeStaking.getNodeMaximumRPLStake(_nodeAddress);
-        nodeDetails.minipoolLimit = safeStakeNodeStaking.getNodeMinipoolLimit(_nodeAddress);
         // Distributor details
         nodeDetails.feeDistributorAddress = safeStakeNodeDistributorFactory.getProxyAddress(_nodeAddress);
         // Minipool details
         nodeDetails.minipoolCount = safeStakeMinipoolManager.getNodeMinipoolCount(_nodeAddress);
         // Balance details
         nodeDetails.balanceETH = _nodeAddress.balance;
-        nodeDetails.balanceRETH = safeStakeTokenRETH.balanceOf(_nodeAddress);
-        nodeDetails.balanceRPL = safeStakeTokenRPL.balanceOf(_nodeAddress);
-        nodeDetails.balanceOldRPL = safeStakeTokenRPLFixedSupply.balanceOf(_nodeAddress);
+        nodeDetails.balanceSFETH = safeStakeTokenSFETH.balanceOf(_nodeAddress);
     }
 
     // Returns a slice of the node operator address set

@@ -11,15 +11,13 @@ import "../../interface/minipool/SafeStakeMinipoolInterface.sol";
 import "../../interface/minipool/SafeStakeMinipoolManagerInterface.sol";
 import "../../interface/minipool/SafeStakeMinipoolQueueInterface.sol";
 import "../../interface/minipool/SafeStakeMinipoolPenaltyInterface.sol";
-import "../../interface/network/SafeStakeNetworkPricesInterface.sol";
 import "../../interface/node/SafeStakeNodeManagerInterface.sol";
-import "../../interface/node/SafeStakeNodeStakingInterface.sol";
 import "../../interface/dao/protocol/settings/SafeStakeDAOProtocolSettingsMinipoolInterface.sol";
 import "../../interface/dao/node/settings/SafeStakeDAONodeTrustedSettingsMinipoolInterface.sol";
 import "../../interface/dao/protocol/settings/SafeStakeDAOProtocolSettingsNodeInterface.sol";
 import "../../interface/dao/node/SafeStakeDAONodeTrustedInterface.sol";
 import "../../interface/network/SafeStakeNetworkFeesInterface.sol";
-import "../../interface/token/SafeStakeTokenRETHInterface.sol";
+import "../../interface/token/SafeStakeTokenSFETHInterface.sol";
 import "../../types/MinipoolDeposit.sol";
 import "../../types/MinipoolStatus.sol";
 
@@ -117,8 +115,8 @@ contract SafeStakeMinipoolDelegate is SafeStakeMinipoolStorageLayout, SafeStakeM
         depositType = _depositType;
         nodeAddress = _nodeAddress;
         nodeFee = safeStakeNetworkFees.getNodeFee();
-        // Set the rETH address
-        safeStakeTokenRETH = getContractAddress("safeStakeTokenRETH");
+        // Set the sfETH address
+        safeStakeTokenSFETH = getContractAddress("safeStakeTokenSFETH");
         // Set local copy of penalty contract
         safeStakeMinipoolPenalty = getContractAddress("safeStakeMinipoolPenalty");
         // set prelaunchAmount
@@ -177,15 +175,7 @@ contract SafeStakeMinipoolDelegate is SafeStakeMinipoolStorageLayout, SafeStakeM
         _refund();
     }
 
-    // Called to slash node operator's RPL balance if withdrawal balance was less than user deposit
-    function slash() external override onlyInitialised {
-        // Check there is a slash balance
-        require(nodeSlashBalance > 0, "No balance to slash");
-        // Perform slash
-        _slash();
-    }
-
-    // Called by node operator to finalise the pool and unlock their RPL stake
+    // Called by node operator to finalise the pool
     function finalise() external override onlyInitialised onlyMinipoolOwnerOrWithdrawalAddress(msg.sender) {
         // Can only call if withdrawable and can only be called once
         require(status == MinipoolStatus.Withdrawable, "Minipool must be withdrawable");
@@ -323,22 +313,17 @@ contract SafeStakeMinipoolDelegate is SafeStakeMinipoolStorageLayout, SafeStakeM
         SafeStakeMinipoolManagerInterface safeStakeMinipoolManager = SafeStakeMinipoolManagerInterface(getContractAddress("safeStakeMinipoolManager"));
         // Can only finalise the pool once
         require(!finalised, "Minipool has already been finalised");
-        // If slash is required then perform it
-        if (nodeSlashBalance > 0) {
-            _slash();
-        }
         // Refund node operator if required
         if (nodeRefundBalance > 0) {
             _refund();
         }
-        // Send any left over ETH to rETH contract
+        // Send any left over ETH to sfETH contract
         if (address(this).balance > 0) {
-            // Send user amount to rETH contract
-            payable(safeStakeTokenRETH).transfer(address(this).balance);
+            // Send user amount to sfETH contract
+            payable(safeStakeTokenSFETH).transfer(address(this).balance);
         }
-        // Trigger a deposit of excess collateral from rETH contract to deposit pool
-        SafeStakeTokenRETHInterface(safeStakeTokenRETH).depositExcessCollateral();
-        // Unlock node operator's RPL
+        // Trigger a deposit of excess collateral from sfETH contract to deposit pool
+        SafeStakeTokenSFETHInterface(safeStakeTokenSFETH).depositExcessCollateral();
         safeStakeMinipoolManager.incrementNodeFinalisedMinipoolCount(nodeAddress);
         // Update unbonded validator count if minipool is unbonded
         if (depositType == MinipoolDeposit.Empty) {
@@ -369,10 +354,10 @@ contract SafeStakeMinipoolDelegate is SafeStakeMinipoolStorageLayout, SafeStakeM
         uint256 userAmount = _balance.sub(nodeAmount);
         // Pay node operator via refund
         nodeRefundBalance = nodeRefundBalance.add(nodeAmount);
-        // Pay user amount to rETH contract
+        // Pay user amount to sfETH contract
         if (userAmount > 0) {
-            // Send user amount to rETH contract
-            payable(safeStakeTokenRETH).transfer(userAmount);
+            // Send user amount to sfETH contract
+            payable(safeStakeTokenSFETH).transfer(userAmount);
         }
         // Save block to prevent multiple withdrawals within a few blocks
         withdrawalBlock = block.number;
@@ -425,7 +410,7 @@ contract SafeStakeMinipoolDelegate is SafeStakeMinipoolStorageLayout, SafeStakeM
         return nodeAmount;
     }
 
-    // Given a validator balance, this function returns what portion of it belongs to rETH users taking into consideration
+    // Given a validator balance, this function returns what portion of it belongs to sfETH users taking into consideration
     // the minipool's commission rate and any penalties it may have attracted
     function calculateUserShare(uint256 _balance) override external view returns (uint256) {
         // User's share is just the balance minus node's share
@@ -476,7 +461,7 @@ contract SafeStakeMinipoolDelegate is SafeStakeMinipoolStorageLayout, SafeStakeM
         SafeStakeMinipoolManagerInterface safeStakeMinipoolManager = SafeStakeMinipoolManagerInterface(getContractAddress("safeStakeMinipoolManager"));
         safeStakeMinipoolManager.destroyMinipool();
         // Self destruct
-        selfdestruct(payable(safeStakeTokenRETH));
+        selfdestruct(payable(safeStakeTokenSFETH));
     }
 
     // Can be called by trusted nodes to scrub this minipool if it's withdrawal credentials are not set correctly
@@ -498,16 +483,6 @@ contract SafeStakeMinipoolDelegate is SafeStakeMinipoolStorageLayout, SafeStakeM
         if (totalScrubVotes.add(1) > quorum) {
             // Dissolve this minipool, recycling ETH back to deposit pool
             _dissolve();
-            // Slash RPL equal to minimum stake amount (if enabled)
-            if (safeStakeDAONodeTrustedSettingsMinipool.getScrubPenaltyEnabled()){
-                SafeStakeNodeStakingInterface safeStakeNodeStaking = SafeStakeNodeStakingInterface(getContractAddress("safeStakeNodeStaking"));
-                SafeStakeDAOProtocolSettingsNodeInterface safeStakeDAOProtocolSettingsNode = SafeStakeDAOProtocolSettingsNodeInterface(getContractAddress("safeStakeDAOProtocolSettingsNode"));
-                SafeStakeDAOProtocolSettingsMinipoolInterface safeStakeDAOProtocolSettingsMinipool = SafeStakeDAOProtocolSettingsMinipoolInterface(getContractAddress("safeStakeDAOProtocolSettingsMinipool"));
-                safeStakeNodeStaking.slashRPL(nodeAddress, safeStakeDAOProtocolSettingsMinipool.getHalfDepositUserAmount()
-                .mul(safeStakeDAOProtocolSettingsNode.getMinimumPerMinipoolStake())
-                .div(calcBase)
-                );
-            }
             // Emit event
             emit MinipoolScrubbed(block.timestamp);
         } else {
@@ -538,16 +513,6 @@ contract SafeStakeMinipoolDelegate is SafeStakeMinipoolStorageLayout, SafeStakeM
         require(success, "ETH refund amount was not successfully transferred to node operator");
         // Emit ether withdrawn event
         emit EtherWithdrawn(nodeWithdrawalAddress, refundAmount, block.timestamp);
-    }
-
-    // Slash node operator's RPL balance based on nodeSlashBalance
-    function _slash() private {
-        // Get contracts
-        SafeStakeNodeStakingInterface safeStakeNodeStaking = SafeStakeNodeStakingInterface(getContractAddress("safeStakeNodeStaking"));
-        // Slash required amount and reset storage value
-        uint256 slashAmount = nodeSlashBalance;
-        nodeSlashBalance = 0;
-        // safeStakeNodeStaking.slashRPL(nodeAddress, slashAmount);
     }
 
     // Dissolve this minipool

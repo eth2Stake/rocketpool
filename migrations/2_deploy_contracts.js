@@ -35,8 +35,6 @@ const safeStakeStorage =                       artifacts.require('SafeStakeStora
 const contracts = {
   // Vault
   safeStakeVault:                              artifacts.require('SafeStakeVault.sol'),
-  // Auction
-  safeStakeAuctionManager:                     artifacts.require('SafeStakeAuctionManager.sol'),
   // Deposit
   safeStakeDepositPool:                        artifacts.require('SafeStakeDepositPool.sol'),
   // Minipool
@@ -48,20 +46,15 @@ const contracts = {
   // Network
   safeStakeNetworkBalances:                    artifacts.require('SafeStakeNetworkBalances.sol'),
   safeStakeNetworkFees:                        artifacts.require('SafeStakeNetworkFees.sol'),
-  safeStakeNetworkPrices:                      artifacts.require('SafeStakeNetworkPrices.sol'),
   safeStakeNetworkPenalties:                   artifacts.require('SafeStakeNetworkPenalties.sol'),
-  // Rewards
-  safeStakeRewardsPool:                        artifacts.require('SafeStakeRewardsPool.sol'),
-  safeStakeClaimDAO:                           artifacts.require('SafeStakeClaimDAO.sol'),
   // Node
   safeStakeNodeDeposit:                        artifacts.require('SafeStakeNodeDeposit.sol'),
   safeStakeNodeManager:                        artifacts.require('SafeStakeNodeManager.sol'),
-  safeStakeNodeStaking:                        artifacts.require('SafeStakeNodeStaking.sol'),
   // DAOs
   safeStakeDAOProposal:                        artifacts.require('SafeStakeDAOProposal.sol'),
   safeStakeDAONodeTrusted:                     artifacts.require('SafeStakeDAONodeTrusted.sol'),
   safeStakeDAONodeTrustedProposals:            artifacts.require('SafeStakeDAONodeTrustedProposals.sol'),
-  safeStakeDAONodeTrustedActions:              artifacts.require('SafeStakeDAONodeTrustedActions.sol'),
+  // safeStakeDAONodeTrustedActions:              artifacts.require('SafeStakeDAONodeTrustedActions.sol'),
   safeStakeDAONodeTrustedUpgrade:              artifacts.require('SafeStakeDAONodeTrustedUpgrade.sol'),
   safeStakeDAONodeTrustedSettingsMembers:      artifacts.require('SafeStakeDAONodeTrustedSettingsMembers.sol'),
   safeStakeDAONodeTrustedSettingsProposals:    artifacts.require('SafeStakeDAONodeTrustedSettingsProposals.sol'),
@@ -69,21 +62,16 @@ const contracts = {
   safeStakeDAOProtocol:                        artifacts.require('SafeStakeDAOProtocol.sol'),
   safeStakeDAOProtocolProposals:               artifacts.require('SafeStakeDAOProtocolProposals.sol'),
   safeStakeDAOProtocolActions:                 artifacts.require('SafeStakeDAOProtocolActions.sol'),
-  safeStakeDAOProtocolSettingsInflation:       artifacts.require('SafeStakeDAOProtocolSettingsInflation.sol'),
-  safeStakeDAOProtocolSettingsRewards:         artifacts.require('SafeStakeDAOProtocolSettingsRewards.sol'),
-  safeStakeDAOProtocolSettingsAuction:         artifacts.require('SafeStakeDAOProtocolSettingsAuction.sol'),
+  // safeStakeDAOProtocolSettingsInflation:       artifacts.require('SafeStakeDAOProtocolSettingsInflation.sol'),
+  // safeStakeDAOProtocolSettingsRewards:         artifacts.require('SafeStakeDAOProtocolSettingsRewards.sol'),
   safeStakeDAOProtocolSettingsNode:            artifacts.require('SafeStakeDAOProtocolSettingsNode.sol'),
   safeStakeDAOProtocolSettingsNetwork:         artifacts.require('SafeStakeDAOProtocolSettingsNetwork.sol'),
   safeStakeDAOProtocolSettingsDeposit:         artifacts.require('SafeStakeDAOProtocolSettingsDeposit.sol'),
   safeStakeDAOProtocolSettingsMinipool:        artifacts.require('SafeStakeDAOProtocolSettingsMinipool.sol'),
   // Tokens
-  safeStakeTokenRPLFixedSupply:                artifacts.require('SafeStakeTokenDummyRPL.sol'),
-  safeStakeTokenRETH:                          artifacts.require('SafeStakeTokenRETH.sol'),
-  safeStakeTokenRPL:                           artifacts.require('SafeStakeTokenRPL.sol'),
+  safeStakeTokenSFETH:                          artifacts.require('SafeStakeTokenSFETH.sol'),
   // v1.1
-  safeStakeMerkleDistributorMainnet:           artifacts.require('SafeStakeMerkleDistributorMainnet.sol'),
-  safeStakeDAONodeTrustedSettingsRewards:      artifacts.require('SafeStakeDAONodeTrustedSettingsRewards.sol'),
-  safeStakeSmoothingPool:                      artifacts.require('SafeStakeSmoothingPool.sol'),
+  // safeStakeDAONodeTrustedSettingsRewards:      artifacts.require('SafeStakeDAONodeTrustedSettingsRewards.sol'),
   safeStakeNodeDistributorFactory:             artifacts.require('SafeStakeNodeDistributorFactory.sol'),
   safeStakeNodeDistributorDelegate:            artifacts.require('SafeStakeNodeDistributorDelegate.sol'),
   safeStakeMinipoolFactory:                    artifacts.require('SafeStakeMinipoolFactory.sol'),
@@ -130,8 +118,6 @@ module.exports = async (deployer, network) => {
               abi: casperDepositABI,
       precompiled: true
     };
-    // Add our live RPL token address in place
-    contracts.safeStakeTokenRPLFixedSupply.address = '0xb4efd85c19999d84251304bda99e90b92300bd93';
   }
 
   // Goerli test network
@@ -212,10 +198,6 @@ module.exports = async (deployer, network) => {
       if(!contracts[contract].hasOwnProperty('precompiled')) {
         switch (contract) {
 
-          // New RPL contract - pass storage address & existing RPL contract address
-          case 'safeStakeTokenRPL':
-            await deployer.deploy(contracts[contract], safeStakeStorage.address, contracts.safeStakeTokenRPLFixedSupply.address);
-          break;
 
           // Contracts with no constructor args
           case 'safeStakeMinipoolDelegate':
@@ -244,7 +226,7 @@ module.exports = async (deployer, network) => {
     contracts.safeStakeStorage = artifacts.require('SafeStakeStorage.sol');
     // Now process the rest
     for (let contract in contracts) {
-      if(contracts.hasOwnProperty(contract)) {c++
+      if(contracts.hasOwnProperty(contract)) {
         switch (contract) {
           default:
           // Log it

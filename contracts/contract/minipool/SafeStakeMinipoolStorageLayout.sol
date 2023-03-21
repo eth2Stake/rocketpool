@@ -53,8 +53,8 @@ abstract contract SafeStakeMinipoolStorageLayout {
     address internal safeStakeMinipoolDelegate;
     address internal safeStakeMinipoolDelegatePrev;
 
-    // Local copy of RETH address
-    address internal safeStakeTokenRETH;
+    // Local copy of SFETH address
+    address internal safeStakeTokenSFETH;
 
     // Local copy of penalty contract
     address internal safeStakeMinipoolPenalty;

@@ -7,13 +7,13 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "../SafeStakeBase.sol";
 import "../../interface/deposit/SafeStakeDepositPoolInterface.sol";
 import "../../interface/network/SafeStakeNetworkBalancesInterface.sol";
-import "../../interface/token/SafeStakeTokenRETHInterface.sol";
+import "../../interface/token/SafeStakeTokenSFETHInterface.sol";
 import "../../interface/dao/protocol/settings/SafeStakeDAOProtocolSettingsNetworkInterface.sol";
 
-// rETH is a tokenised stake in the SafeStake Pool network
-// rETH is backed by ETH (subject to liquidity) at a variable exchange rate
+// sfETH is a tokenised stake in the SafeStake Pool network
+// sfETH is backed by ETH (subject to liquidity) at a variable exchange rate
 
-contract SafeStakeTokenRETH is SafeStakeBase, ERC20, SafeStakeTokenRETHInterface {
+contract SafeStakeTokenSFETH is SafeStakeBase, ERC20, SafeStakeTokenSFETHInterface {
 
     // Libs
     using SafeMath for uint;
@@ -24,7 +24,7 @@ contract SafeStakeTokenRETH is SafeStakeBase, ERC20, SafeStakeTokenRETHInterface
     event TokensBurned(address indexed from, uint256 amount, uint256 ethAmount, uint256 time);
 
     // Construct with our token details
-    constructor(SafeStakeStorageInterface _safeStakeStorageAddress) SafeStakeBase(_safeStakeStorageAddress) ERC20("SafeStake Pool ETH", "rETH") {
+    constructor(SafeStakeStorageInterface _safeStakeStorageAddress) SafeStakeBase(_safeStakeStorageAddress) ERC20("SafeStake Pool ETH", "sfETH") {
         // Version
         version = 1;
     }
@@ -35,47 +35,47 @@ contract SafeStakeTokenRETH is SafeStakeBase, ERC20, SafeStakeTokenRETHInterface
         emit EtherDeposited(msg.sender, msg.value, block.timestamp);
     }
 
-    // Calculate the amount of ETH backing an amount of rETH
-    function getEthValue(uint256 _rethAmount) override public view returns (uint256) {
+    // Calculate the amount of ETH backing an amount of sfETH
+    function getEthValue(uint256 _sfethAmount) override public view returns (uint256) {
         // Get network balances
         SafeStakeNetworkBalancesInterface safeStakeNetworkBalances = SafeStakeNetworkBalancesInterface(getContractAddress("safeStakeNetworkBalances"));
         uint256 totalEthBalance = safeStakeNetworkBalances.getTotalETHBalance();
-        uint256 rethSupply = safeStakeNetworkBalances.getTotalRETHSupply();
-        // Use 1:1 ratio if no rETH is minted
-        if (rethSupply == 0) { return _rethAmount; }
+        uint256 sfethSupply = safeStakeNetworkBalances.getTotalSFETHSupply();
+        // Use 1:1 ratio if no sfETH is minted
+        if (sfethSupply == 0) { return _sfethAmount; }
         // Calculate and return
-        return _rethAmount.mul(totalEthBalance).div(rethSupply);
+        return _sfethAmount.mul(totalEthBalance).div(sfethSupply);
     }
 
-    // Calculate the amount of rETH backed by an amount of ETH
-    function getRethValue(uint256 _ethAmount) override public view returns (uint256) {
+    // Calculate the amount of sfETH backed by an amount of ETH
+    function getSfethValue(uint256 _ethAmount) override public view returns (uint256) {
         // Get network balances
         SafeStakeNetworkBalancesInterface safeStakeNetworkBalances = SafeStakeNetworkBalancesInterface(getContractAddress("safeStakeNetworkBalances"));
         uint256 totalEthBalance = safeStakeNetworkBalances.getTotalETHBalance();
-        uint256 rethSupply = safeStakeNetworkBalances.getTotalRETHSupply();
-        // Use 1:1 ratio if no rETH is minted
-        if (rethSupply == 0) { return _ethAmount; }
+        uint256 sfethSupply = safeStakeNetworkBalances.getTotalSFETHSupply();
+        // Use 1:1 ratio if no sfETH is minted
+        if (sfethSupply == 0) { return _ethAmount; }
         // Check network ETH balance
-        require(totalEthBalance > 0, "Cannot calculate rETH token amount while total network balance is zero");
+        require(totalEthBalance > 0, "Cannot calculate sfETH token amount while total network balance is zero");
         // Calculate and return
-        return _ethAmount.mul(rethSupply).div(totalEthBalance);
+        return _ethAmount.mul(sfethSupply).div(totalEthBalance);
     }
 
-    // Get the current ETH : rETH exchange rate
-    // Returns the amount of ETH backing 1 rETH
+    // Get the current ETH : sfETH exchange rate
+    // Returns the amount of ETH backing 1 sfETH
     function getExchangeRate() override external view returns (uint256) {
         return getEthValue(1 ether);
     }
 
     // Get the total amount of collateral available
-    // Includes rETH contract balance & excess deposit pool balance
+    // Includes sfETH contract balance & excess deposit pool balance
     function getTotalCollateral() override public view returns (uint256) {
         SafeStakeDepositPoolInterface safeStakeDepositPool = SafeStakeDepositPoolInterface(getContractAddress("safeStakeDepositPool"));
         return safeStakeDepositPool.getExcessBalance().add(address(this).balance);
     }
 
     // Get the current ETH collateral rate
-    // Returns the portion of rETH backed by ETH in the contract as a fraction of 1 ether
+    // Returns the portion of sfETH backed by ETH in the contract as a fraction of 1 ether
     function getCollateralRate() override public view returns (uint256) {
         uint256 totalEthValue = getEthValue(totalSupply());
         if (totalEthValue == 0) { return calcBase; }
@@ -89,42 +89,42 @@ contract SafeStakeTokenRETH is SafeStakeBase, ERC20, SafeStakeTokenRETHInterface
         emit EtherDeposited(msg.sender, msg.value, block.timestamp);
     }
 
-    // Mint rETH
+    // Mint sfETH
     // Only accepts calls from the SafeStakeDepositPool contract
     function mint(uint256 _ethAmount, address _to) override external onlyLatestContract("safeStakeDepositPool", msg.sender) {
-        // Get rETH amount
-        uint256 rethAmount = getRethValue(_ethAmount);
-        // Check rETH amount
-        require(rethAmount > 0, "Invalid token mint amount");
+        // Get sfETH amount
+        uint256 sfethAmount = getSfethValue(_ethAmount);
+        // Check sfETH amount
+        require(sfethAmount > 0, "Invalid token mint amount");
         // Update balance & supply
-        _mint(_to, rethAmount);
+        _mint(_to, sfethAmount);
         // Emit tokens minted event
-        emit TokensMinted(_to, rethAmount, _ethAmount, block.timestamp);
+        emit TokensMinted(_to, sfethAmount, _ethAmount, block.timestamp);
     }
 
-    // Burn rETH for ETH
-    function burn(uint256 _rethAmount) override external {
-        // Check rETH amount
-        require(_rethAmount > 0, "Invalid token burn amount");
-        require(balanceOf(msg.sender) >= _rethAmount, "Insufficient rETH balance");
+    // Burn sfETH for ETH
+    function burn(uint256 _sfethAmount) override external {
+        // Check sfETH amount
+        require(_sfethAmount > 0, "Invalid token burn amount");
+        require(balanceOf(msg.sender) >= _sfethAmount, "Insufficient sfETH balance");
         // Get ETH amount
-        uint256 ethAmount = getEthValue(_rethAmount);
+        uint256 ethAmount = getEthValue(_sfethAmount);
         // Get & check ETH balance
         uint256 ethBalance = getTotalCollateral();
         require(ethBalance >= ethAmount, "Insufficient ETH balance for exchange");
         // Update balance & supply
-        _burn(msg.sender, _rethAmount);
+        _burn(msg.sender, _sfethAmount);
         // Withdraw ETH from deposit pool if required
         withdrawDepositCollateral(ethAmount);
         // Transfer ETH to sender
         msg.sender.transfer(ethAmount);
         // Emit tokens burned event
-        emit TokensBurned(msg.sender, _rethAmount, ethAmount, block.timestamp);
+        emit TokensBurned(msg.sender, _sfethAmount, ethAmount, block.timestamp);
     }
 
     // Withdraw ETH from the deposit pool for collateral if required
     function withdrawDepositCollateral(uint256 _ethRequired) private {
-        // Check rETH contract balance
+        // Check sfETH contract balance
         uint256 ethBalance = address(this).balance;
         if (ethBalance >= _ethRequired) { return; }
         // Withdraw
@@ -139,7 +139,7 @@ contract SafeStakeTokenRETH is SafeStakeBase, ERC20, SafeStakeTokenRETHInterface
         SafeStakeDepositPoolInterface safeStakeDepositPool = SafeStakeDepositPoolInterface(getContractAddress("safeStakeDepositPool"));
         // Get collateral and target collateral rate
         uint256 collateralRate = getCollateralRate();
-        uint256 targetCollateralRate = safeStakeDAOProtocolSettingsNetwork.getTargetRethCollateralRate();
+        uint256 targetCollateralRate = safeStakeDAOProtocolSettingsNetwork.getTargetSfethCollateralRate();
         // Check if we are in excess
         if (collateralRate > targetCollateralRate) {
             // Calculate our target collateral in ETH
@@ -162,7 +162,7 @@ contract SafeStakeTokenRETH is SafeStakeBase, ERC20, SafeStakeTokenRETHInterface
             uint256 lastDepositBlock = getUint(key);
             if (lastDepositBlock > 0) {
                 // Ensure enough blocks have passed
-                uint256 depositDelay = getUint(keccak256(abi.encodePacked(keccak256("dao.protocol.setting.network"), "network.reth.deposit.delay")));
+                uint256 depositDelay = getUint(keccak256(abi.encodePacked(keccak256("dao.protocol.setting.network"), "network.sfeth.deposit.delay")));
                 uint256 blocksPassed = block.number.sub(lastDepositBlock);
                 require(blocksPassed > depositDelay, "Not enough time has passed since deposit");
                 // Clear the state as it's no longer necessary to check this until another deposit is made

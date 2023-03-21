@@ -17,7 +17,7 @@ contract SafeStakeDAONodeTrustedSettingsMembers is SafeStakeDAONodeTrustedSettin
         if(!getBool(keccak256(abi.encodePacked(settingNameSpace, "deployed")))) {
             // Init settings
             setSettingUint("members.quorum", 0.51 ether);                    // Member quorum threshold that must be met for proposals to pass (51%)
-            setSettingUint("members.rplbond", 1750 ether);                   // Bond amount required for a new member to join (in RPL)
+            // setSettingUint("members.rplbond", 1750 ether);                   // Bond amount required for a new member to join (in RPL)
             setSettingUint("members.minipool.unbonded.max", 30);             // The amount of unbonded minipool validators members can make (these validators are only used if no regular bonded validators are available)
             setSettingUint("members.minipool.unbonded.min.fee", 0.8 ether);  // Node fee must be over this percentage of the maximum fee before validator members are allowed to make unbonded pools (80%)
             setSettingUint("members.challenge.cooldown", 7 days);            // How long a member must wait before performing another challenge in seconds
@@ -46,10 +46,10 @@ contract SafeStakeDAONodeTrustedSettingsMembers is SafeStakeDAONodeTrustedSettin
         return getSettingUint("members.quorum");
     }
 
-    // Amount of RPL needed for a new member
-    function getRPLBond() override external view returns (uint256) {
-        return getSettingUint("members.rplbond");
-    }
+    // // Amount of RPL needed for a new member
+    // function getRPLBond() override external view returns (uint256) {
+    //     return getSettingUint("members.rplbond");
+    // }
 
     // The amount of unbonded minipool validators members can make (these validators are only used if no regular bonded validators are available)
     function getMinipoolUnbondedMax() override external view returns (uint256) {

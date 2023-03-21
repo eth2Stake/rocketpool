@@ -42,9 +42,9 @@ contract SafeStakeDAONodeTrustedUpgrade is SafeStakeBase, SafeStakeDAONodeTruste
         // Check contract being upgraded
         bytes32 nameHash = keccak256(abi.encodePacked(_name));
         require(nameHash != keccak256(abi.encodePacked("safeStakeVault")),               "Cannot upgrade the vault");
-        require(nameHash != keccak256(abi.encodePacked("safeStakeTokenRETH")),           "Cannot upgrade token contracts");
-        require(nameHash != keccak256(abi.encodePacked("safeStakeTokenRPL")),            "Cannot upgrade token contracts");
-        require(nameHash != keccak256(abi.encodePacked("safeStakeTokenRPLFixedSupply")), "Cannot upgrade token contracts");
+        require(nameHash != keccak256(abi.encodePacked("safeStakeTokenSFETH")),           "Cannot upgrade token contracts");
+        // require(nameHash != keccak256(abi.encodePacked("safeStakeTokenRPL")),            "Cannot upgrade token contracts");
+        // require(nameHash != keccak256(abi.encodePacked("safeStakeTokenRPLFixedSupply")), "Cannot upgrade token contracts");
         require(nameHash != keccak256(abi.encodePacked("casperDeposit")),             "Cannot upgrade the casper deposit contract");
         require(nameHash != keccak256(abi.encodePacked("safeStakeMinipoolPenalty")),      "Cannot upgrade minipool penalty contract");
         // Get old contract address & check contract exists

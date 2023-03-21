@@ -23,15 +23,14 @@ interface SafeStakeNodeManagerInterface {
     function registerNode(string calldata _timezoneLocation) external;
     function getNodeRegistrationTime(address _nodeAddress) external view returns (uint256);
     function setTimezoneLocation(string calldata _timezoneLocation) external;
-    function setRewardNetwork(address _nodeAddress, uint256 network) external;
     function getRewardNetwork(address _nodeAddress) external view returns (uint256);
     function getFeeDistributorInitialised(address _nodeAddress) external view returns (bool);
     function initialiseFeeDistributor() external;
     function getAverageNodeFee(address _nodeAddress) external view returns (uint256);
-    function setSmoothingPoolRegistrationState(bool _state) external;
-    function getSmoothingPoolRegistrationState(address _nodeAddress) external returns (bool);
-    function getSmoothingPoolRegistrationChanged(address _nodeAddress) external returns (uint256);
-    function getSmoothingPoolRegisteredNodeCount(uint256 _offset, uint256 _limit) external view returns (uint256);
+    // function setSmoothingPoolRegistrationState(bool _state) external;
+    // function getSmoothingPoolRegistrationState(address _nodeAddress) external returns (bool);
+    // function getSmoothingPoolRegistrationChanged(address _nodeAddress) external returns (uint256);
+    // function getSmoothingPoolRegisteredNodeCount(uint256 _offset, uint256 _limit) external view returns (uint256);
     function getNodeDetails(address _nodeAddress) external view returns (NodeDetails memory);
     function getNodeAddresses(uint256 _offset, uint256 _limit) external view returns (address[] memory);
 }

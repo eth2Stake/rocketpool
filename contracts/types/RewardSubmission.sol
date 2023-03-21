@@ -9,9 +9,6 @@ struct RewardSubmission {
     bytes32 merkleRoot;
     string merkleTreeCID;
     uint256 intervalsPassed;
-    uint256 treasuryRPL;
-    uint256[] trustedNodeRPL;
-    uint256[] nodeRPL;
     uint256[] nodeETH;
-    uint256 userETH;
+    uint256 usesfETH;
 }

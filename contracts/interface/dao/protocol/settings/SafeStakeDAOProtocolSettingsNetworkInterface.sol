@@ -14,7 +14,7 @@ interface SafeStakeDAOProtocolSettingsNetworkInterface {
     function getTargetNodeFee() external view returns (uint256);
     function getMaximumNodeFee() external view returns (uint256);
     function getNodeFeeDemandRange() external view returns (uint256);
-    function getTargetRethCollateralRate() external view returns (uint256);
-    function getRethDepositDelay() external view returns (uint256);
+    function getTargetSfethCollateralRate() external view returns (uint256);
+    function getSfethDepositDelay() external view returns (uint256);
     function getSubmitRewardsEnabled() external view returns (bool);
 }

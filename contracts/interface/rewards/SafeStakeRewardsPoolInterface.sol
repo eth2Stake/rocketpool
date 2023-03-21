@@ -7,8 +7,6 @@ import "../../types/RewardSubmission.sol";
 
 interface SafeStakeRewardsPoolInterface {
     function getRewardIndex() external view returns(uint256);
-    function getRPLBalance() external view returns(uint256);
-    function getPendingRPLRewards() external view returns (uint256);
     function getPendingETHRewards() external view returns (uint256);
     function getClaimIntervalTimeStart() external view returns(uint256);
     function getClaimIntervalTime() external view returns(uint256);

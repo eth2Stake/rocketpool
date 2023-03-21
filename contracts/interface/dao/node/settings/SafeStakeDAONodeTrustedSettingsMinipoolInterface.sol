@@ -5,5 +5,5 @@ pragma solidity >0.5.0 <0.9.0;
 interface SafeStakeDAONodeTrustedSettingsMinipoolInterface {
     function getScrubPeriod() external view returns(uint256);
     function getScrubQuorum() external view returns(uint256);
-    function getScrubPenaltyEnabled() external view returns(bool);
+    // function getScrubPenaltyEnabled() external view returns(bool);
 }

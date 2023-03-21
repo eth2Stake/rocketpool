@@ -6,7 +6,7 @@ import "../../SafeStakeBase.sol";
 import "../../../interface/SafeStakeVaultInterface.sol";
 import "../../../interface/dao/node/SafeStakeDAONodeTrustedInterface.sol";
 import "../../../interface/dao/node/SafeStakeDAONodeTrustedProposalsInterface.sol";
-import "../../../interface/dao/node/SafeStakeDAONodeTrustedActionsInterface.sol";
+// import "../../../interface/dao/node/SafeStakeDAONodeTrustedActionsInterface.sol";
 import "../../../interface/dao/node/settings/SafeStakeDAONodeTrustedSettingsMembersInterface.sol";
 import "../../../interface/dao/SafeStakeDAOProposalInterface.sol";
 import "../../../interface/util/AddressSetStorageInterface.sol";
@@ -116,10 +116,10 @@ contract SafeStakeDAONodeTrusted is SafeStakeBase, SafeStakeDAONodeTrustedInterf
         return getUint(keccak256(abi.encodePacked(daoNameSpace, "member.executed.time", _proposalType, _nodeAddress)));
     }
 
-    // Get the RPL bond amount the user deposited to join
-    function getMemberRPLBondAmount(address _nodeAddress) override external view returns (uint256) {
-        return getUint(keccak256(abi.encodePacked(daoNameSpace, "member.bond.rpl", _nodeAddress))); 
-    }
+    // // Get the RPL bond amount the user deposited to join
+    // function getMemberRPLBondAmount(address _nodeAddress) override external view returns (uint256) {
+    //     return getUint(keccak256(abi.encodePacked(daoNameSpace, "member.bond.rpl", _nodeAddress))); 
+    // }
 
     // Is this member currently being 'challenged' to see if their node is responding
     function getMemberIsChallenged(address _nodeAddress) override external view returns (bool) {
@@ -146,10 +146,10 @@ contract SafeStakeDAONodeTrusted is SafeStakeBase, SafeStakeDAONodeTrustedInterf
 
     
     // Bootstrap mode - In bootstrap mode, guardian can add members at will
-    function bootstrapMember(string memory _id, string memory _url, address _nodeAddress) override external onlyGuardian onlyBootstrapMode onlyRegisteredNode(_nodeAddress) onlyLatestContract("safeStakeDAONodeTrusted", address(this)) {
-        // Ok good to go, lets add them
-        SafeStakeDAONodeTrustedProposalsInterface(getContractAddress("safeStakeDAONodeTrustedProposals")).proposalInvite(_id, _url, _nodeAddress);
-    }
+    // function bootstrapMember(string memory _id, string memory _url, address _nodeAddress) override external onlyGuardian onlyBootstrapMode onlyRegisteredNode(_nodeAddress) onlyLatestContract("safeStakeDAONodeTrusted", address(this)) {
+    //     // Ok good to go, lets add them
+    //     SafeStakeDAONodeTrustedProposalsInterface(getContractAddress("safeStakeDAONodeTrustedProposals")).proposalInvite(_id, _url, _nodeAddress);
+    // }
 
 
     // Bootstrap mode - Uint Setting
@@ -178,15 +178,15 @@ contract SafeStakeDAONodeTrusted is SafeStakeBase, SafeStakeDAONodeTrustedInterf
     }
 
  
-    /**** Recovery ***************/
+    // /**** Recovery ***************/
         
-    // In an explicable black swan scenario where the DAO loses more than the min membership required (3), this method can be used by a regular node operator to join the DAO
-    // Must have their ID, URL, current RPL bond amount available and must be called by their current registered node account
-    function memberJoinRequired(string memory _id, string memory _url) override external onlyLowMemberMode onlyRegisteredNode(msg.sender) onlyLatestContract("safeStakeDAONodeTrusted", address(this)) {
-        // Ok good to go, lets update the settings 
-        SafeStakeDAONodeTrustedProposalsInterface(getContractAddress("safeStakeDAONodeTrustedProposals")).proposalInvite(_id, _url, msg.sender);
-        // Get the to automatically join as a member (by a regular proposal, they would have to manually accept, but this is no ordinary situation)
-        SafeStakeDAONodeTrustedActionsInterface(getContractAddress("safeStakeDAONodeTrustedActions")).actionJoinRequired(msg.sender);
-    }
+    // // In an explicable black swan scenario where the DAO loses more than the min membership required (3), this method can be used by a regular node operator to join the DAO
+    // // Must have their ID, URL, current RPL bond amount available and must be called by their current registered node account
+    // function memberJoinRequired(string memory _id, string memory _url) override external onlyLowMemberMode onlyRegisteredNode(msg.sender) onlyLatestContract("safeStakeDAONodeTrusted", address(this)) {
+    //     // Ok good to go, lets update the settings 
+    //     SafeStakeDAONodeTrustedProposalsInterface(getContractAddress("safeStakeDAONodeTrustedProposals")).proposalInvite(_id, _url, msg.sender);
+    //     // Get the to automatically join as a member (by a regular proposal, they would have to manually accept, but this is no ordinary situation)
+    //     SafeStakeDAONodeTrustedActionsInterface(getContractAddress("safeStakeDAONodeTrustedActions")).actionJoinRequired(msg.sender);
+    // }
 
 }

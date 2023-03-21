@@ -24,7 +24,7 @@ contract SafeStakeDAOProtocolSettingsNetwork is SafeStakeDAOProtocolSettings, Sa
             setSettingUint("network.node.fee.target", 0.15 ether);          // 15%
             setSettingUint("network.node.fee.maximum", 0.15 ether);         // 15%
             setSettingUint("network.node.fee.demand.range", 160 ether);
-            setSettingUint("network.reth.collateral.target", 0.1 ether);
+            setSettingUint("network.sfeth.collateral.target", 0.1 ether);
             setSettingUint("network.penalty.threshold", 0.51 ether);       // Consensus for penalties requires 51% vote
             setSettingUint("network.penalty.per.rate", 0.1 ether);         // 10% per penalty
             setSettingBool("network.submit.rewards.enabled", true);        // Enable reward submission
@@ -37,9 +37,9 @@ contract SafeStakeDAOProtocolSettingsNetwork is SafeStakeDAOProtocolSettings, Sa
     function setSettingUint(string memory _settingPath, uint256 _value) override public onlyDAOProtocolProposal {
         // Some safety guards for certain settings
         // Prevent DAO from setting the withdraw delay greater than ~24 hours
-        if(keccak256(bytes(_settingPath)) == keccak256(bytes("network.reth.deposit.delay"))) {
+        if(keccak256(bytes(_settingPath)) == keccak256(bytes("network.sfeth.deposit.delay"))) {
             // Must be a future timestamp
-            require(_value <= 5760, "rETH deposit delay cannot exceed 5760 blocks");
+            require(_value <= 5760, "sfETH deposit delay cannot exceed 5760 blocks");
         }
         // Update setting now
         setUint(keccak256(abi.encodePacked(settingNameSpace, _settingPath)), _value);
@@ -100,14 +100,14 @@ contract SafeStakeDAOProtocolSettingsNetwork is SafeStakeDAOProtocolSettings, Sa
         return getSettingUint("network.node.fee.demand.range");
     }
 
-    // Target rETH collateralization rate as a fraction of 1 ether
-    function getTargetRethCollateralRate() override external view returns (uint256) {
-        return getSettingUint("network.reth.collateral.target");
+    // Target sfETH collateralization rate as a fraction of 1 ether
+    function getTargetSfethCollateralRate() override external view returns (uint256) {
+        return getSettingUint("network.sfeth.collateral.target");
     }
 
-    // rETH withdraw delay in blocks
-    function getRethDepositDelay() override external view returns (uint256) {
-        return getSettingUint("network.reth.deposit.delay");
+    // sfETH withdraw delay in blocks
+    function getSfethDepositDelay() override external view returns (uint256) {
+        return getSettingUint("network.sfeth.deposit.delay");
     }
 
     // Submit reward snapshots currently enabled (trusted nodes only)

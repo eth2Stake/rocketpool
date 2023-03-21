@@ -7,8 +7,7 @@ import "../../SafeStakeBase.sol";
 import "../../../interface/dao/protocol/SafeStakeDAOProtocolInterface.sol";
 import "../../../interface/dao/protocol/SafeStakeDAOProtocolProposalsInterface.sol";
 import "../../../interface/dao/protocol/settings/SafeStakeDAOProtocolSettingsInterface.sol";
-import "../../../interface/dao/protocol/settings/SafeStakeDAOProtocolSettingsRewardsInterface.sol";
-import "../../../interface/rewards/claims/SafeStakeClaimDAOInterface.sol";
+// import "../../../interface/dao/protocol/settings/SafeStakeDAOProtocolSettingsRewardsInterface.sol";
 import "../../../interface/dao/SafeStakeDAOProposalInterface.sol";
 import "../../../types/SettingType.sol";
 
@@ -84,21 +83,13 @@ contract SafeStakeDAOProtocolProposals is SafeStakeBase, SafeStakeDAOProtocolPro
         safeStakeDAOProtocolSettings.setSettingAddress(_settingPath, _value);
     }
 
-    // Update a claimer for the rpl rewards, must specify a unique contract name that will be claiming from and a percentage of the rewards
-    function proposalSettingRewardsClaimer(string memory _contractName, uint256 _perc) override external onlyExecutingContracts() {
-        // Load contracts
-        SafeStakeDAOProtocolSettingsRewardsInterface safeStakeDAOProtocolSettingsRewards = SafeStakeDAOProtocolSettingsRewardsInterface(getContractAddress("safeStakeDAOProtocolSettingsRewards"));
-        // Update now
-        safeStakeDAOProtocolSettingsRewards.setSettingRewardsClaimer(_contractName, _perc);
-    }
-
-    // Spend RPL from the DAO's treasury
-    function proposalSpendTreasury(string memory _invoiceID, address _recipientAddress, uint256 _amount) override external onlyExecutingContracts() {
-        // Load contracts
-        SafeStakeClaimDAOInterface safeStakeDAOTreasury = SafeStakeClaimDAOInterface(getContractAddress("safeStakeClaimDAO"));
-        // Update now
-        safeStakeDAOTreasury.spend(_invoiceID, _recipientAddress, _amount);
-    }
+    // // Update a claimer for the rpl rewards, must specify a unique contract name that will be claiming from and a percentage of the rewards
+    // function proposalSettingRewardsClaimer(string memory _contractName, uint256 _perc) override external onlyExecutingContracts() {
+    //     // Load contracts
+    //     SafeStakeDAOProtocolSettingsRewardsInterface safeStakeDAOProtocolSettingsRewards = SafeStakeDAOProtocolSettingsRewardsInterface(getContractAddress("safeStakeDAOProtocolSettingsRewards"));
+    //     // Update now
+    //     safeStakeDAOProtocolSettingsRewards.setSettingRewardsClaimer(_contractName, _perc);
+    // }
 
 
 }

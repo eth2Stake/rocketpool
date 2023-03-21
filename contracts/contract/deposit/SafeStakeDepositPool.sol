@@ -13,11 +13,11 @@ import "../../interface/minipool/SafeStakeMinipoolQueueInterface.sol";
 import "../../interface/dao/protocol/settings/SafeStakeDAOProtocolSettingsDepositInterface.sol";
 import "../../interface/dao/protocol/settings/SafeStakeDAOProtocolSettingsMinipoolInterface.sol";
 import "../../interface/dao/protocol/settings/SafeStakeDAOProtocolSettingsNetworkInterface.sol";
-import "../../interface/token/SafeStakeTokenRETHInterface.sol";
+import "../../interface/token/SafeStakeTokenSFETHInterface.sol";
 import "../../types/MinipoolDeposit.sol";
 
 // The main entry point for deposits into the RP network
-// Accepts user deposits and mints rETH; handles assignment of deposited ETH to minipools
+// Accepts user deposits and mints sfETH; handles assignment of deposited ETH to minipools
 
 contract SafeStakeDepositPool is SafeStakeBase, SafeStakeDepositPoolInterface, SafeStakeVaultWithdrawerInterface {
 
@@ -81,9 +81,9 @@ contract SafeStakeDepositPool is SafeStakeBase, SafeStakeDepositPoolInterface, S
         // Calculate deposit fee
         uint256 depositFee = msg.value.mul(safeStakeDAOProtocolSettingsDeposit.getDepositFee()).div(calcBase);
         uint256 depositNet = msg.value.sub(depositFee);
-        // Mint rETH to user account
-        SafeStakeTokenRETHInterface safeStakeTokenRETH = SafeStakeTokenRETHInterface(getContractAddress("safeStakeTokenRETH"));
-        safeStakeTokenRETH.mint(depositNet, msg.sender);
+        // Mint sfETH to user account
+        SafeStakeTokenSFETHInterface safeStakeTokenSFETH = SafeStakeTokenSFETHInterface(getContractAddress("safeStakeTokenSFETH"));
+        safeStakeTokenSFETH.mint(depositNet, msg.sender);
         // Emit deposit received event
         emit DepositReceived(msg.sender, msg.value, block.timestamp);
         // Process deposit
@@ -101,19 +101,8 @@ contract SafeStakeDepositPool is SafeStakeBase, SafeStakeDepositPoolInterface, S
         processDeposit(safeStakeVault, safeStakeDAOProtocolSettingsDeposit);
     }
 
-    // Recycle excess ETH from the rETH token contract
-    function recycleExcessCollateral() override external payable onlyThisLatestContract onlyLatestContract("safeStakeTokenRETH", msg.sender) {
-        // Load contracts
-        SafeStakeVaultInterface safeStakeVault = SafeStakeVaultInterface(getContractAddress("safeStakeVault"));
-        SafeStakeDAOProtocolSettingsDepositInterface safeStakeDAOProtocolSettingsDeposit = SafeStakeDAOProtocolSettingsDepositInterface(getContractAddress("safeStakeDAOProtocolSettingsDeposit"));
-        // Recycle ETH
-        emit DepositRecycled(msg.sender, msg.value, block.timestamp);
-        processDeposit(safeStakeVault, safeStakeDAOProtocolSettingsDeposit);
-    }
-
-    // Recycle a liquidated RPL stake from a slashed minipool
-    // Only accepts calls from the SafeStakeAuctionManager contract
-    function recycleLiquidatedStake() override external payable onlyThisLatestContract onlyLatestContract("safeStakeAuctionManager", msg.sender) {
+    // Recycle excess ETH from the sfETH token contract
+    function recycleExcessCollateral() override external payable onlyThisLatestContract onlyLatestContract("safeStakeTokenSFETH", msg.sender) {
         // Load contracts
         SafeStakeVaultInterface safeStakeVault = SafeStakeVaultInterface(getContractAddress("safeStakeVault"));
         SafeStakeDAOProtocolSettingsDepositInterface safeStakeDAOProtocolSettingsDeposit = SafeStakeDAOProtocolSettingsDepositInterface(getContractAddress("safeStakeDAOProtocolSettingsDeposit"));
@@ -190,17 +179,17 @@ contract SafeStakeDepositPool is SafeStakeBase, SafeStakeDepositPoolInterface, S
         return true;
     }
 
-    // Withdraw excess deposit pool balance for rETH collateral
-    function withdrawExcessBalance(uint256 _amount) override external onlyThisLatestContract onlyLatestContract("safeStakeTokenRETH", msg.sender) {
+    // Withdraw excess deposit pool balance for sfETH collateral
+    function withdrawExcessBalance(uint256 _amount) override external onlyThisLatestContract onlyLatestContract("safeStakeTokenSFETH", msg.sender) {
         // Load contracts
-        SafeStakeTokenRETHInterface safeStakeTokenRETH = SafeStakeTokenRETHInterface(getContractAddress("safeStakeTokenRETH"));
+        SafeStakeTokenSFETHInterface safeStakeTokenSFETH = SafeStakeTokenSFETHInterface(getContractAddress("safeStakeTokenSFETH"));
         SafeStakeVaultInterface safeStakeVault = SafeStakeVaultInterface(getContractAddress("safeStakeVault"));
         // Check amount
         require(_amount <= getExcessBalance(), "Insufficient excess balance for withdrawal");
         // Withdraw ETH from vault
         safeStakeVault.withdrawEther(_amount);
-        // Transfer to rETH contract
-        safeStakeTokenRETH.depositExcess{value: _amount}();
+        // Transfer to sfETH contract
+        safeStakeTokenSFETH.depositExcess{value: _amount}();
         // Emit excess withdrawn event
         emit ExcessWithdrawn(msg.sender, _amount, block.timestamp);
     }

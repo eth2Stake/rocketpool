@@ -63,16 +63,16 @@ contract SafeStakeDAOProtocol is SafeStakeBase, SafeStakeDAOProtocolInterface {
         SafeStakeDAOProtocolProposalsInterface(getContractAddress("safeStakeDAOProtocolProposals")).proposalSettingAddress(_settingContractName, _settingPath, _value);
     }
 
-    // Bootstrap mode - Set a claiming contract to receive a % of RPL inflation rewards
-    function bootstrapSettingClaimer(string memory _contractName, uint256 _perc) override external onlyGuardian onlyBootstrapMode onlyLatestContract("safeStakeDAOProtocol", address(this)) {
-        // Ok good to go, lets update the rewards claiming contract amount 
-        SafeStakeDAOProtocolProposalsInterface(getContractAddress("safeStakeDAOProtocolProposals")).proposalSettingRewardsClaimer(_contractName, _perc);
-    }
+    // // Bootstrap mode - Set a claiming contract to receive a % of RPL inflation rewards
+    // function bootstrapSettingClaimer(string memory _contractName, uint256 _perc) override external onlyGuardian onlyBootstrapMode onlyLatestContract("safeStakeDAOProtocol", address(this)) {
+    //     // Ok good to go, lets update the rewards claiming contract amount 
+    //     SafeStakeDAOProtocolProposalsInterface(getContractAddress("safeStakeDAOProtocolProposals")).proposalSettingRewardsClaimer(_contractName, _perc);
+    // }
 
     // Bootstrap mode -Spend DAO treasury
-    function bootstrapSpendTreasury(string memory _invoiceID, address _recipientAddress, uint256 _amount) override external onlyGuardian onlyBootstrapMode onlyLatestContract("safeStakeDAOProtocol", address(this)) {
-        SafeStakeDAOProtocolProposalsInterface(getContractAddress("safeStakeDAOProtocolProposals")).proposalSpendTreasury(_invoiceID, _recipientAddress, _amount);
-    }
+    // function bootstrapSpendTreasury(string memory _invoiceID, address _recipientAddress, uint256 _amount) override external onlyGuardian onlyBootstrapMode onlyLatestContract("safeStakeDAOProtocol", address(this)) {
+    //     SafeStakeDAOProtocolProposalsInterface(getContractAddress("safeStakeDAOProtocolProposals")).proposalSpendTreasury(_invoiceID, _recipientAddress, _amount);
+    // }
 
     // Bootstrap mode - Disable RP Access (only RP can call this to hand over full control to the DAO)
     function bootstrapDisable(bool _confirmDisableBootstrapMode) override external onlyGuardian onlyBootstrapMode onlyLatestContract("safeStakeDAOProtocol", address(this)) {
