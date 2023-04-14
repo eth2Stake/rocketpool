@@ -19,7 +19,6 @@ import "../../interface/dao/node/settings/RocketDAONodeTrustedSettingsMembersInt
 import "../../types/MinipoolDeposit.sol";
 import "../../interface/node/RocketNodeManagerInterface.sol";
 import "../../interface/RocketVaultInterface.sol";
-import "../../interface/node/RocketNodeStakingInterface.sol";
 
 /// @dev NOT USED IN PRODUCTION - This contract only exists to test future functionality that may or may not be included
 /// in a future Rocket Pool release
@@ -128,8 +127,6 @@ contract RocketNodeDepositLEB4 is RocketBase, RocketNodeDepositInterface {
         }
         // Emit deposit received event
         emit DepositReceived(msg.sender, msg.value, block.timestamp);
-        // Increase ETH matched (used to calculate RPL collateral requirements)
-        _increaseEthMatched(msg.sender, launchAmount.sub(_bondAmount));
         // Create the minipool
         RocketMinipoolInterface minipool = createMinipool(_salt, _expectedMinipoolAddress);
         // Process node deposit
@@ -172,33 +169,8 @@ contract RocketNodeDepositLEB4 is RocketBase, RocketNodeDepositInterface {
         checkDistributorInitialised();
         checkNodeFee(_minimumNodeFee);
         require(isValidDepositAmount(_bondAmount), "Invalid deposit amount");
-        // Increase ETH matched (used to calculate RPL collateral requirements)
-        RocketDAOProtocolSettingsMinipoolInterface rocketDAOProtocolSettingsMinipool = RocketDAOProtocolSettingsMinipoolInterface(getContractAddress("rocketDAOProtocolSettingsMinipool"));
-        uint256 launchAmount = rocketDAOProtocolSettingsMinipool.getLaunchBalance();
-        _increaseEthMatched(msg.sender, launchAmount.sub(_bondAmount));
         // Create the minipool
         _createVacantMinipool(_salt, _validatorPubkey, _bondAmount, _expectedMinipoolAddress, _currentBalance);
-    }
-
-    /// @notice Called by minipools during bond reduction to increase the amount of ETH the node operator has
-    /// @param _nodeAddress The node operator's address to increase the ETH matched for
-    /// @param _amount The amount to increase the ETH matched
-    /// @dev Will revert if the new ETH matched amount exceeds the node operators limit
-    function increaseEthMatched(address _nodeAddress, uint256 _amount) override external onlyLatestContract("rocketNodeDeposit", address(this)) onlyLatestNetworkContract() {
-        _increaseEthMatched(_nodeAddress, _amount);
-    }
-
-    /// @dev Increases the amount of ETH that has been matched against a node operators bond. Reverts if it exceeds the
-    ///      collateralisation requirements of the network
-    function _increaseEthMatched(address _nodeAddress, uint256 _amount) private {
-        // Check amount doesn't exceed limits
-        RocketNodeStakingInterface rocketNodeStaking = RocketNodeStakingInterface(getContractAddress("rocketNodeStaking"));
-        uint256 ethMatched = rocketNodeStaking.getNodeETHMatched(_nodeAddress).add(_amount);
-        require(
-            ethMatched <= rocketNodeStaking.getNodeETHMatchedLimit(_nodeAddress),
-            "ETH matched after deposit exceeds limit based on node RPL stake"
-        );
-        setUint(keccak256(abi.encodePacked("eth.matched.node.amount", _nodeAddress)), ethMatched);
     }
 
     /// @dev Adds a minipool to the queue

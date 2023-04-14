@@ -62,18 +62,7 @@ contract RocketDAOProtocol is RocketBase, RocketDAOProtocolInterface {
         // Ok good to go, lets update the settings 
         RocketDAOProtocolProposalsInterface(getContractAddress("rocketDAOProtocolProposals")).proposalSettingAddress(_settingContractName, _settingPath, _value);
     }
-
-    // Bootstrap mode - Set a claiming contract to receive a % of RPL inflation rewards
-    function bootstrapSettingClaimer(string memory _contractName, uint256 _perc) override external onlyGuardian onlyBootstrapMode onlyLatestContract("rocketDAOProtocol", address(this)) {
-        // Ok good to go, lets update the rewards claiming contract amount 
-        RocketDAOProtocolProposalsInterface(getContractAddress("rocketDAOProtocolProposals")).proposalSettingRewardsClaimer(_contractName, _perc);
-    }
-
-    // Bootstrap mode -Spend DAO treasury
-    function bootstrapSpendTreasury(string memory _invoiceID, address _recipientAddress, uint256 _amount) override external onlyGuardian onlyBootstrapMode onlyLatestContract("rocketDAOProtocol", address(this)) {
-        RocketDAOProtocolProposalsInterface(getContractAddress("rocketDAOProtocolProposals")).proposalSpendTreasury(_invoiceID, _recipientAddress, _amount);
-    }
-
+    
     // Bootstrap mode - Disable RP Access (only RP can call this to hand over full control to the DAO)
     function bootstrapDisable(bool _confirmDisableBootstrapMode) override external onlyGuardian onlyBootstrapMode onlyLatestContract("rocketDAOProtocol", address(this)) {
         require(_confirmDisableBootstrapMode == true, "You must confirm disabling bootstrap mode, it can only be done once!");

@@ -7,8 +7,6 @@ import "../../RocketBase.sol";
 import "../../../interface/dao/protocol/RocketDAOProtocolInterface.sol";
 import "../../../interface/dao/protocol/RocketDAOProtocolProposalsInterface.sol";
 import "../../../interface/dao/protocol/settings/RocketDAOProtocolSettingsInterface.sol";
-import "../../../interface/dao/protocol/settings/RocketDAOProtocolSettingsRewardsInterface.sol";
-import "../../../interface/rewards/claims/RocketClaimDAOInterface.sol";
 import "../../../interface/dao/RocketDAOProposalInterface.sol";
 import "../../../types/SettingType.sol";
 
@@ -83,22 +81,5 @@ contract RocketDAOProtocolProposals is RocketBase, RocketDAOProtocolProposalsInt
         // Lets update
         rocketDAOProtocolSettings.setSettingAddress(_settingPath, _value);
     }
-
-    // Update a claimer for the rpl rewards, must specify a unique contract name that will be claiming from and a percentage of the rewards
-    function proposalSettingRewardsClaimer(string memory _contractName, uint256 _perc) override external onlyExecutingContracts() {
-        // Load contracts
-        RocketDAOProtocolSettingsRewardsInterface rocketDAOProtocolSettingsRewards = RocketDAOProtocolSettingsRewardsInterface(getContractAddress("rocketDAOProtocolSettingsRewards"));
-        // Update now
-        rocketDAOProtocolSettingsRewards.setSettingRewardsClaimer(_contractName, _perc);
-    }
-
-    // Spend RPL from the DAO's treasury
-    function proposalSpendTreasury(string memory _invoiceID, address _recipientAddress, uint256 _amount) override external onlyExecutingContracts() {
-        // Load contracts
-        RocketClaimDAOInterface rocketDAOTreasury = RocketClaimDAOInterface(getContractAddress("rocketClaimDAO"));
-        // Update now
-        rocketDAOTreasury.spend(_invoiceID, _recipientAddress, _amount);
-    }
-
 
 }

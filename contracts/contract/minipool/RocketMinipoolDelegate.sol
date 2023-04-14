@@ -10,7 +10,6 @@ import "../../interface/minipool/RocketMinipoolInterface.sol";
 import "../../interface/minipool/RocketMinipoolManagerInterface.sol";
 import "../../interface/minipool/RocketMinipoolQueueInterface.sol";
 import "../../interface/minipool/RocketMinipoolPenaltyInterface.sol";
-import "../../interface/node/RocketNodeStakingInterface.sol";
 import "../../interface/dao/protocol/settings/RocketDAOProtocolSettingsMinipoolInterface.sol";
 import "../../interface/dao/node/settings/RocketDAONodeTrustedSettingsMinipoolInterface.sol";
 import "../../interface/dao/protocol/settings/RocketDAOProtocolSettingsNodeInterface.sol";
@@ -467,7 +466,7 @@ contract RocketMinipoolDelegate is RocketMinipoolStorageLayout, RocketMinipoolIn
         }
         // Trigger a deposit of excess collateral from rETH contract to deposit pool
         RocketTokenRETHInterface(rocketTokenRETH).depositExcessCollateral();
-        // Unlock node operator's RPL
+
         rocketMinipoolManager.incrementNodeFinalisedMinipoolCount(nodeAddress);
         rocketMinipoolManager.decrementNodeStakingMinipoolCount(nodeAddress);
     }
@@ -613,21 +612,6 @@ contract RocketMinipoolDelegate is RocketMinipoolStorageLayout, RocketMinipoolIn
         // Check if required quorum has voted
         uint256 quorum = rocketDAONode.getMemberCount().mul(rocketDAONodeTrustedSettingsMinipool.getScrubQuorum()).div(calcBase);
         if (totalScrubVotes.add(1) > quorum) {
-            // Slash RPL equal to minimum stake amount (if enabled)
-            if (!vacant && rocketDAONodeTrustedSettingsMinipool.getScrubPenaltyEnabled()){
-                RocketNodeStakingInterface rocketNodeStaking = RocketNodeStakingInterface(getContractAddress("rocketNodeStaking"));
-                RocketDAOProtocolSettingsNodeInterface rocketDAOProtocolSettingsNode = RocketDAOProtocolSettingsNodeInterface(getContractAddress("rocketDAOProtocolSettingsNode"));
-                RocketDAOProtocolSettingsMinipoolInterface rocketDAOProtocolSettingsMinipool = RocketDAOProtocolSettingsMinipoolInterface(getContractAddress("rocketDAOProtocolSettingsMinipool"));
-                uint256 launchAmount = rocketDAOProtocolSettingsMinipool.getLaunchBalance();
-                // Slash amount is minRplStake * userCapital
-                // In prelaunch userDepositBalance hasn't been set so we calculate it as 32 ETH - bond amount
-                rocketNodeStaking.slashRPL(
-                    nodeAddress,
-                        launchAmount.sub(nodeDepositBalance)
-                        .mul(rocketDAOProtocolSettingsNode.getMinimumPerMinipoolStake())
-                        .div(calcBase)
-                );
-            }
             // Dissolve this minipool, recycling ETH back to deposit pool
             _dissolve();
             // Emit event

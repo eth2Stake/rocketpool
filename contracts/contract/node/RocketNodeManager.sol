@@ -16,8 +16,6 @@ import "../../interface/node/RocketNodeDistributorFactoryInterface.sol";
 import "../../interface/minipool/RocketMinipoolManagerInterface.sol";
 import "../../interface/node/RocketNodeDistributorInterface.sol";
 import "../../interface/dao/node/settings/RocketDAONodeTrustedSettingsRewardsInterface.sol";
-import "../../interface/dao/protocol/settings/RocketDAOProtocolSettingsRewardsInterface.sol";
-import "../../interface/node/RocketNodeStakingInterface.sol";
 import "../../interface/node/RocketNodeDepositInterface.sol";
 import "../../interface/dao/protocol/settings/RocketDAOProtocolSettingsMinipoolInterface.sol";
 
@@ -32,7 +30,6 @@ contract RocketNodeManager is RocketBase, RocketNodeManagerInterface {
     event NodeRegistered(address indexed node, uint256 time);
     event NodeTimezoneLocationSet(address indexed node, uint256 time);
     event NodeRewardNetworkChanged(address indexed node, uint256 network);
-    event NodeSmoothingPoolStateChanged(address indexed node, bool state);
 
     // Construct
     constructor(RocketStorageInterface _rocketStorageAddress) RocketBase(_rocketStorageAddress) {
@@ -129,14 +126,14 @@ contract RocketNodeManager is RocketBase, RocketNodeManagerInterface {
         // Initialise fee distributor for this node
         _initialiseFeeDistributor(msg.sender);
         // Set node registration time (uses old storage key name for backwards compatibility)
-        setUint(keccak256(abi.encodePacked("rewards.pool.claim.contract.registered.time", "rocketClaimNode", msg.sender)), block.timestamp);
+        setUint(keccak256(abi.encodePacked("node.registered.time", msg.sender)), block.timestamp);
         // Emit node registered event
         emit NodeRegistered(msg.sender, block.timestamp);
     }
 
     // Get's the timestamp of when a node was registered
     function getNodeRegistrationTime(address _nodeAddress) onlyRegisteredNode(_nodeAddress) override public view returns (uint256) {
-        return getUint(keccak256(abi.encodePacked("rewards.pool.claim.contract.registered.time", "rocketClaimNode", _nodeAddress)));
+        return getUint(keccak256(abi.encodePacked("node.registered.time", _nodeAddress)));
     }
 
     // Set a node's timezone location
@@ -261,70 +258,14 @@ contract RocketNodeManager is RocketBase, RocketNodeManagerInterface {
         return getUint(keccak256(abi.encodePacked("node.reward.network", _nodeAddress)));
     }
 
-    // Allows a node to register or deregister from the smoothing pool
-    function setSmoothingPoolRegistrationState(bool _state) override external onlyLatestContract("rocketNodeManager", address(this)) onlyRegisteredNode(msg.sender) {
-        // Ensure registration is enabled
-        RocketDAOProtocolSettingsNodeInterface daoSettingsNode = RocketDAOProtocolSettingsNodeInterface(getContractAddress("rocketDAOProtocolSettingsNode"));
-        require(daoSettingsNode.getSmoothingPoolRegistrationEnabled(), "Smoothing pool registrations are not active");
-        // Precompute storage keys
-        bytes32 changeKey = keccak256(abi.encodePacked("node.smoothing.pool.changed.time", msg.sender));
-        bytes32 stateKey = keccak256(abi.encodePacked("node.smoothing.pool.state", msg.sender));
-        // Get from the DAO settings
-        RocketDAOProtocolSettingsRewardsInterface daoSettingsRewards = RocketDAOProtocolSettingsRewardsInterface(getContractAddress("rocketDAOProtocolSettingsRewards"));
-        uint256 rewardInterval = daoSettingsRewards.getRewardsClaimIntervalTime();
-        // Ensure node operator has waited the required time
-        uint256 lastChange = getUint(changeKey);
-        require(block.timestamp >= lastChange.add(rewardInterval), "Not enough time has passed since changing state");
-        // Ensure state is actually changing
-        require(getBool(stateKey) != _state, "Invalid state change");
-        // Update registration state
-        setUint(changeKey, block.timestamp);
-        setBool(stateKey, _state);
-        // Emit state change event
-        emit NodeSmoothingPoolStateChanged(msg.sender, _state);
-    }
-
-    // Returns whether a node is registered or not from the smoothing pool
-    function getSmoothingPoolRegistrationState(address _nodeAddress) override public view returns (bool) {
-        return getBool(keccak256(abi.encodePacked("node.smoothing.pool.state", _nodeAddress)));
-    }
-
-    // Returns the timestamp of when the node last changed their smoothing pool registration state
-    function getSmoothingPoolRegistrationChanged(address _nodeAddress) override external view returns (uint256) {
-        return getUint(keccak256(abi.encodePacked("node.smoothing.pool.changed.time", _nodeAddress)));
-    }
-
-    // Returns the sum of nodes that are registered for the smoothing pool between _offset and (_offset + _limit)
-    function getSmoothingPoolRegisteredNodeCount(uint256 _offset, uint256 _limit) override external view returns (uint256) {
-        // Get contracts
-        AddressSetStorageInterface addressSetStorage = AddressSetStorageInterface(getContractAddress("addressSetStorage"));
-        // Precompute node key
-        bytes32 nodeKey = keccak256(abi.encodePacked("nodes.index"));
-        // Iterate over the requested minipool range
-        uint256 totalNodes = getNodeCount();
-        uint256 max = _offset.add(_limit);
-        if (max > totalNodes || _limit == 0) { max = totalNodes; }
-        uint256 count = 0;
-        for (uint256 i = _offset; i < max; i++) {
-            address nodeAddress = addressSetStorage.getItem(nodeKey, i);
-            if (getSmoothingPoolRegistrationState(nodeAddress)) {
-                count++;
-            }
-        }
-        return count;
-    }
-
     /// @notice Convenience function to return all on-chain details about a given node
     /// @param _nodeAddress Address of the node to query details for
     function getNodeDetails(address _nodeAddress) override public view returns (NodeDetails memory nodeDetails) {
         // Get contracts
-        RocketNodeStakingInterface rocketNodeStaking = RocketNodeStakingInterface(getContractAddress("rocketNodeStaking"));
         RocketNodeDepositInterface rocketNodeDeposit = RocketNodeDepositInterface(getContractAddress("rocketNodeDeposit"));
         RocketNodeDistributorFactoryInterface rocketNodeDistributorFactory = RocketNodeDistributorFactoryInterface(getContractAddress("rocketNodeDistributorFactory"));
         RocketMinipoolManagerInterface rocketMinipoolManager = RocketMinipoolManagerInterface(getContractAddress("rocketMinipoolManager"));
         IERC20 rocketTokenRETH = IERC20(getContractAddress("rocketTokenRETH"));
-        IERC20 rocketTokenRPL = IERC20(getContractAddress("rocketTokenRPL"));
-        IERC20 rocketTokenRPLFixedSupply = IERC20(getContractAddress("rocketTokenRPLFixedSupply"));
         // Node details
         nodeDetails.nodeAddress = _nodeAddress;
         nodeDetails.withdrawalAddress = rocketStorage.getNodeWithdrawalAddress(_nodeAddress);
@@ -334,13 +275,6 @@ contract RocketNodeManager is RocketBase, RocketNodeManagerInterface {
         nodeDetails.timezoneLocation = getNodeTimezoneLocation(_nodeAddress);
         nodeDetails.feeDistributorInitialised = getFeeDistributorInitialised(_nodeAddress);
         nodeDetails.rewardNetwork = getRewardNetwork(_nodeAddress);
-        // Staking details
-        nodeDetails.rplStake = rocketNodeStaking.getNodeRPLStake(_nodeAddress);
-        nodeDetails.effectiveRPLStake = rocketNodeStaking.getNodeEffectiveRPLStake(_nodeAddress);
-        nodeDetails.minimumRPLStake = rocketNodeStaking.getNodeMinimumRPLStake(_nodeAddress);
-        nodeDetails.maximumRPLStake = rocketNodeStaking.getNodeMaximumRPLStake(_nodeAddress);
-        nodeDetails.ethMatched = rocketNodeStaking.getNodeETHMatched(_nodeAddress);
-        nodeDetails.ethMatchedLimit = rocketNodeStaking.getNodeETHMatchedLimit(_nodeAddress);
         // Distributor details
         nodeDetails.feeDistributorAddress = rocketNodeDistributorFactory.getProxyAddress(_nodeAddress);
         uint256 distributorBalance = nodeDetails.feeDistributorAddress.balance;
@@ -352,8 +286,6 @@ contract RocketNodeManager is RocketBase, RocketNodeManagerInterface {
         // Balance details
         nodeDetails.balanceETH = _nodeAddress.balance;
         nodeDetails.balanceRETH = rocketTokenRETH.balanceOf(_nodeAddress);
-        nodeDetails.balanceRPL = rocketTokenRPL.balanceOf(_nodeAddress);
-        nodeDetails.balanceOldRPL = rocketTokenRPLFixedSupply.balanceOf(_nodeAddress);
         nodeDetails.depositCreditBalance = rocketNodeDeposit.getNodeDepositCredit(_nodeAddress);
         // Return
         return nodeDetails;

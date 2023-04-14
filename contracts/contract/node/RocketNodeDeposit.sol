@@ -19,7 +19,6 @@ import "../../interface/dao/node/settings/RocketDAONodeTrustedSettingsMembersInt
 import "../../types/MinipoolDeposit.sol";
 import "../../interface/node/RocketNodeManagerInterface.sol";
 import "../../interface/RocketVaultInterface.sol";
-import "../../interface/node/RocketNodeStakingInterface.sol";
 
 /// @notice Handles node deposits and minipool creation
 contract RocketNodeDeposit is RocketBase, RocketNodeDepositInterface {
@@ -126,7 +125,7 @@ contract RocketNodeDeposit is RocketBase, RocketNodeDepositInterface {
         }
         // Emit deposit received event
         emit DepositReceived(msg.sender, msg.value, block.timestamp);
-        // Increase ETH matched (used to calculate RPL collateral requirements)
+        // Increase ETH matched
         _increaseEthMatched(msg.sender, launchAmount.sub(_bondAmount));
         // Create the minipool
         RocketMinipoolInterface minipool = createMinipool(_salt, _expectedMinipoolAddress);
@@ -170,7 +169,7 @@ contract RocketNodeDeposit is RocketBase, RocketNodeDepositInterface {
         checkDistributorInitialised();
         checkNodeFee(_minimumNodeFee);
         require(isValidDepositAmount(_bondAmount), "Invalid deposit amount");
-        // Increase ETH matched (used to calculate RPL collateral requirements)
+        // Increase ETH matched
         RocketDAOProtocolSettingsMinipoolInterface rocketDAOProtocolSettingsMinipool = RocketDAOProtocolSettingsMinipoolInterface(getContractAddress("rocketDAOProtocolSettingsMinipool"));
         uint256 launchAmount = rocketDAOProtocolSettingsMinipool.getLaunchBalance();
         _increaseEthMatched(msg.sender, launchAmount.sub(_bondAmount));
@@ -190,12 +189,13 @@ contract RocketNodeDeposit is RocketBase, RocketNodeDepositInterface {
     ///      collateralisation requirements of the network
     function _increaseEthMatched(address _nodeAddress, uint256 _amount) private {
         // Check amount doesn't exceed limits
-        RocketNodeStakingInterface rocketNodeStaking = RocketNodeStakingInterface(getContractAddress("rocketNodeStaking"));
-        uint256 ethMatched = rocketNodeStaking.getNodeETHMatched(_nodeAddress).add(_amount);
-        require(
-            ethMatched <= rocketNodeStaking.getNodeETHMatchedLimit(_nodeAddress),
-            "ETH matched after deposit exceeds limit based on node RPL stake"
-        );
+        uint256 ethMatched = getUint(keccak256(abi.encodePacked("eth.matched.node.amount", _nodeAddress)));
+
+        if (ethMatched == 0) {
+            // Fallback for backwards compatibility before ETH matched was recorded (all minipools matched 16 ETH from protocol)
+            RocketMinipoolManagerInterface rocketMinipoolManager = RocketMinipoolManagerInterface(getContractAddress("rocketMinipoolManager"));
+            ethMatched = rocketMinipoolManager.getNodeActiveMinipoolCount(_nodeAddress).mul(16 ether);
+        }
         setUint(keccak256(abi.encodePacked("eth.matched.node.amount", _nodeAddress)), ethMatched);
     }
 
@@ -277,5 +277,19 @@ contract RocketNodeDeposit is RocketBase, RocketNodeDepositInterface {
     function assignDeposits() private {
         RocketDepositPoolInterface rocketDepositPool = RocketDepositPoolInterface(getContractAddress("rocketDepositPool"));
         rocketDepositPool.maybeAssignDeposits();
+    }
+
+    function getNodeETHCollateralisationRatio(address _nodeAddress) override public view returns (uint256) {
+        uint256 ethMatched = getUint(keccak256(abi.encodePacked("eth.matched.node.amount", _nodeAddress)));
+        if (ethMatched == 0) {
+            // Node operator only has legacy minipools and all legacy minipools had a 1:1 ratio
+            return calcBase.mul(2);
+        } else {
+            RocketDAOProtocolSettingsMinipoolInterface rocketDAOProtocolSettingsMinipool = RocketDAOProtocolSettingsMinipoolInterface(getContractAddress("rocketDAOProtocolSettingsMinipool"));
+            uint256 launchAmount = rocketDAOProtocolSettingsMinipool.getLaunchBalance();
+            RocketMinipoolManagerInterface rocketMinipoolManager = RocketMinipoolManagerInterface(getContractAddress("rocketMinipoolManager"));
+            uint256 totalEthStaked = rocketMinipoolManager.getNodeActiveMinipoolCount(_nodeAddress).mul(launchAmount);
+            return totalEthStaked.mul(calcBase).div(totalEthStaked.sub(ethMatched));
+        }
     }
 }

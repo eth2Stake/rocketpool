@@ -23,9 +23,9 @@ contract RocketDAONodeTrustedSettingsMinipool is RocketDAONodeTrustedSettings, R
             setSettingUint("minipool.scrub.period", 12 hours);
             setSettingUint("minipool.promotion.scrub.period", 3 days);
             setSettingUint("minipool.scrub.quorum", 0.51 ether);
-            setSettingBool("minipool.scrub.penalty.enabled", false);
             setSettingUint("minipool.bond.reduction.window.start", 2 days);
             setSettingUint("minipool.bond.reduction.window.length", 2 days);
+            setSettingUint("minipool.bond.reduction.clamdown", 28 days);      
             setSettingUint("minipool.cancel.bond.reduction.quorum", 0.51 ether);
             // Settings initialised
             setBool(keccak256(abi.encodePacked(settingNameSpace, "deployed")), true);
@@ -69,11 +69,6 @@ contract RocketDAONodeTrustedSettingsMinipool is RocketDAONodeTrustedSettings, R
         return getSettingUint("minipool.cancel.bond.reduction.quorum");
     }
 
-    /// @notice Returns true if scrubbing results in an RPL penalty for the node operator
-    function getScrubPenaltyEnabled() override external view returns (bool) {
-        return getSettingBool("minipool.scrub.penalty.enabled");
-    }
-
     /// @notice Returns true if the given time is within the bond reduction window
     function isWithinBondReductionWindow(uint256 _time) override external view returns (bool) {
         uint256 start = getBondReductionWindowStart();
@@ -89,5 +84,10 @@ contract RocketDAONodeTrustedSettingsMinipool is RocketDAONodeTrustedSettings, R
     /// @notice Returns the length of the bond reduction window
     function getBondReductionWindowLength() override public view returns (uint256) {
         return getSettingUint("minipool.bond.reduction.window.length");
+    }
+
+    /// @notice Returns the length of the bond reduction window
+    function getBondReductionClamDown() override public view returns (uint256) {
+        return getSettingUint("minipool.bond.reduction.clamdown");
     }
 }

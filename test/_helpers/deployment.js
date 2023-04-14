@@ -39,7 +39,7 @@ const contracts = {
     rocketTokenRETH:                          artifacts.require('RocketTokenRETH.sol'),
     rocketTokenRPL:                           artifacts.require('RocketTokenRPL.sol'),
     // Auction
-    rocketAuctionManager:                     artifacts.require('RocketAuctionManager.sol'),
+    // rocketAuctionManager:                     artifacts.require('RocketAuctionManager.sol'),
     // Deposit
     rocketDepositPool:                        artifacts.require('RocketDepositPoolOld.sol'),
     // Minipool

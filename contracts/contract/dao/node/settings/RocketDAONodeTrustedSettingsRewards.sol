@@ -6,7 +6,6 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 
 import "./RocketDAONodeTrustedSettings.sol";
 import "../../../../interface/dao/node/settings/RocketDAONodeTrustedSettingsRewardsInterface.sol";
-import "../../../../interface/dao/protocol/settings/RocketDAOProtocolSettingsRewardsInterface.sol";
 
 
 // The Trusted Node DAO Rewards settings

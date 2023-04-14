@@ -10,9 +10,7 @@ import "../../../interface/deposit/RocketDepositPoolInterface.sol";
 import "../../../interface/minipool/RocketMinipoolManagerInterface.sol";
 import "../../../interface/minipool/RocketMinipoolQueueInterface.sol";
 import "../../../interface/minipool/RocketMinipoolPenaltyInterface.sol";
-import "../../../interface/network/RocketNetworkPricesInterface.sol";
 import "../../../interface/node/RocketNodeManagerInterface.sol";
-import "../../../interface/node/RocketNodeStakingInterface.sol";
 import "../../../interface/dao/protocol/settings/RocketDAOProtocolSettingsMinipoolInterface.sol";
 import "../../../interface/dao/node/settings/RocketDAONodeTrustedSettingsMinipoolInterface.sol";
 import "../../../interface/dao/protocol/settings/RocketDAOProtocolSettingsNodeInterface.sol";
@@ -172,15 +170,7 @@ contract RocketMinipoolDelegateOld is RocketMinipoolStorageLayoutOld, RocketMini
         _refund();
     }
 
-    // Called to slash node operator's RPL balance if withdrawal balance was less than user deposit
-    function slash() external override onlyInitialised {
-        // Check there is a slash balance
-        require(nodeSlashBalance > 0, "No balance to slash");
-        // Perform slash
-        _slash();
-    }
-
-    // Called by node operator to finalise the pool and unlock their RPL stake
+    // Called by node operator to finalise the pool
     function finalise() external override onlyInitialised onlyMinipoolOwnerOrWithdrawalAddress(msg.sender) {
         // Can only call if withdrawable and can only be called once
         require(status == MinipoolStatus.Withdrawable, "Minipool must be withdrawable");
@@ -329,7 +319,7 @@ contract RocketMinipoolDelegateOld is RocketMinipoolStorageLayoutOld, RocketMini
         }
         // Trigger a deposit of excess collateral from rETH contract to deposit pool
         RocketTokenRETHInterface(rocketTokenRETH).depositExcessCollateral();
-        // Unlock node operator's RPL
+        // Increment the node operator's finalised minipool count
         rocketMinipoolManager.incrementNodeFinalisedMinipoolCount(nodeAddress);
         // Update unbonded validator count if minipool is unbonded
         if (depositType == MinipoolDeposit.Empty) {
@@ -485,16 +475,6 @@ contract RocketMinipoolDelegateOld is RocketMinipoolStorageLayoutOld, RocketMini
         if (totalScrubVotes.add(1) > quorum) {
             // Dissolve this minipool, recycling ETH back to deposit pool
             _dissolve();
-            // Slash RPL equal to minimum stake amount (if enabled)
-            if (rocketDAONodeTrustedSettingsMinipool.getScrubPenaltyEnabled()){
-                RocketNodeStakingInterface rocketNodeStaking = RocketNodeStakingInterface(getContractAddress("rocketNodeStaking"));
-                RocketDAOProtocolSettingsNodeInterface rocketDAOProtocolSettingsNode = RocketDAOProtocolSettingsNodeInterface(getContractAddress("rocketDAOProtocolSettingsNode"));
-                RocketDAOProtocolSettingsMinipoolInterface rocketDAOProtocolSettingsMinipool = RocketDAOProtocolSettingsMinipoolInterface(getContractAddress("rocketDAOProtocolSettingsMinipool"));
-                rocketNodeStaking.slashRPL(nodeAddress, rocketDAOProtocolSettingsMinipool.getHalfDepositUserAmount()
-                .mul(rocketDAOProtocolSettingsNode.getMinimumPerMinipoolStake())
-                .div(calcBase)
-                );
-            }
             // Emit event
             emit MinipoolScrubbed(block.timestamp);
         } else {
@@ -525,16 +505,6 @@ contract RocketMinipoolDelegateOld is RocketMinipoolStorageLayoutOld, RocketMini
         require(success, "ETH refund amount was not successfully transferred to node operator");
         // Emit ether withdrawn event
         emit EtherWithdrawn(nodeWithdrawalAddress, refundAmount, block.timestamp);
-    }
-
-    // Slash node operator's RPL balance based on nodeSlashBalance
-    function _slash() private {
-        // Get contracts
-        RocketNodeStakingInterface rocketNodeStaking = RocketNodeStakingInterface(getContractAddress("rocketNodeStaking"));
-        // Slash required amount and reset storage value
-        uint256 slashAmount = nodeSlashBalance;
-        nodeSlashBalance = 0;
-        rocketNodeStaking.slashRPL(nodeAddress, slashAmount);
     }
 
     // Dissolve this minipool

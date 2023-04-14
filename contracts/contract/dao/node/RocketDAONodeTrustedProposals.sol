@@ -97,7 +97,7 @@ contract RocketDAONodeTrustedProposals is RocketBase, RocketDAONodeTrustedPropos
     }
 
 
-    // A current member proposes leaving the trusted node DAO, when successful they will be allowed to collect their RPL bond
+    // A current member proposes leaving the trusted node DAO
     function proposalLeave(address _nodeAddress) override external onlyExecutingContracts onlyTrustedNode(_nodeAddress) {
         // Load contracts
         RocketDAONodeTrustedInterface daoNodeTrusted = RocketDAONodeTrustedInterface(getContractAddress("rocketDAONodeTrusted"));
@@ -108,19 +108,13 @@ contract RocketDAONodeTrustedProposals is RocketBase, RocketDAONodeTrustedPropos
     }
 
 
-    // Propose to kick a current member from the DAO with an optional RPL bond fine
-    function proposalKick(address _nodeAddress, uint256 _rplFine) override external onlyExecutingContracts onlyTrustedNode(_nodeAddress) {
+    // Propose to kick a current member from the DAO
+    function proposalKick(address _nodeAddress) override external onlyExecutingContracts onlyTrustedNode(_nodeAddress) {
         // Load contracts
         RocketDAONodeTrustedInterface daoNodeTrusted = RocketDAONodeTrustedInterface(getContractAddress("rocketDAONodeTrusted"));
         RocketDAONodeTrustedActionsInterface daoActionsContract = RocketDAONodeTrustedActionsInterface(getContractAddress("rocketDAONodeTrustedActions"));
-        // How much is their RPL bond?
-        uint256 rplBondAmount = daoNodeTrusted.getMemberRPLBondAmount(_nodeAddress);
-        // Check fine amount can be covered
-        require(_rplFine <= rplBondAmount, "RPL Fine must be lower or equal to the RPL bond amount of the node being kicked");
-        // Set their bond amount minus the fine
-        setUint(keccak256(abi.encodePacked(daoNameSpace, "member.bond.rpl", _nodeAddress)), rplBondAmount.sub(_rplFine));
         // Kick them now
-        daoActionsContract.actionKick(_nodeAddress, _rplFine);
+        daoActionsContract.actionKick(_nodeAddress);
     }
 
 
@@ -171,7 +165,6 @@ contract RocketDAONodeTrustedProposals is RocketBase, RocketDAONodeTrustedPropos
         setAddress(keccak256(abi.encodePacked(daoNameSpace, "member.address", _nodeAddress)), _nodeAddress);
         setString(keccak256(abi.encodePacked(daoNameSpace, "member.id", _nodeAddress)), _id);
         setString(keccak256(abi.encodePacked(daoNameSpace, "member.url", _nodeAddress)), _url);
-        setUint(keccak256(abi.encodePacked(daoNameSpace, "member.bond.rpl", _nodeAddress)), 0);
         setUint(keccak256(abi.encodePacked(daoNameSpace, "member.joined.time", _nodeAddress)), 0);
     }
         

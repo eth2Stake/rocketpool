@@ -9,7 +9,6 @@ import "../../interface/old/RocketMinipoolInterfaceOld.sol";
 import "../../interface/minipool/RocketMinipoolManagerInterface.sol";
 import "../../interface/minipool/RocketMinipoolStatusInterface.sol";
 import "../../interface/dao/node/RocketDAONodeTrustedInterface.sol";
-import "../../interface/node/RocketNodeStakingInterface.sol";
 import "../../interface/dao/protocol/settings/RocketDAOProtocolSettingsMinipoolInterface.sol";
 import "../../interface/dao/protocol/settings/RocketDAOProtocolSettingsNetworkInterface.sol";
 import "../../types/MinipoolStatus.sol";

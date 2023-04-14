@@ -12,10 +12,8 @@ import "../../types/MinipoolDetails.sol";
 import "../../interface/dao/node/RocketDAONodeTrustedInterface.sol";
 import "../../interface/minipool/RocketMinipoolInterface.sol";
 import "../../interface/minipool/RocketMinipoolManagerInterface.sol";
-import "../../interface/node/RocketNodeStakingInterface.sol";
 import "../../interface/util/AddressSetStorageInterface.sol";
 import "../../interface/node/RocketNodeManagerInterface.sol";
-import "../../interface/network/RocketNetworkPricesInterface.sol";
 import "../../interface/dao/protocol/settings/RocketDAOProtocolSettingsMinipoolInterface.sol";
 import "../../interface/dao/protocol/settings/RocketDAOProtocolSettingsNodeInterface.sol";
 import "../../interface/dao/protocol/settings/RocketDAOProtocolSettingsNodeInterface.sol";
@@ -66,11 +64,6 @@ contract RocketMinipoolManager is RocketBase, RocketMinipoolManagerInterface {
         uint256 total = addressSetStorage.getCount(keccak256(bytes("minipools.index")));
         uint256 finalised = getUint(keccak256(bytes("minipools.finalised.count")));
         return total.sub(finalised);
-    }
-
-    /// @notice Returns true if a minipool has had an RPL slashing
-    function getMinipoolRPLSlashed(address _minipoolAddress) override external view returns (bool) {
-        return getBool(keccak256(abi.encodePacked("minipool.rpl.slashed", _minipoolAddress)));
     }
 
     /// @notice Get the number of minipools in each status.
@@ -390,7 +383,7 @@ contract RocketMinipoolManager is RocketBase, RocketMinipoolManagerInterface {
     function createMinipool(address _nodeAddress, uint256 _salt) override public onlyLatestContract("rocketMinipoolManager", address(this)) onlyLatestContract("rocketNodeDeposit", msg.sender) returns (RocketMinipoolInterface) {
         // Load contracts
         AddressSetStorageInterface addressSetStorage = AddressSetStorageInterface(getContractAddress("addressSetStorage"));
-        // Check node minipool limit based on RPL stake
+        // Check node minipool limit
         { // Local scope to prevent stack too deep error
           RocketDAOProtocolSettingsMinipoolInterface rocketDAOProtocolSettingsMinipool = RocketDAOProtocolSettingsMinipoolInterface(getContractAddress("rocketDAOProtocolSettingsMinipool"));
           // Check global minipool limit

@@ -32,13 +32,6 @@ contract RocketDAONodeTrusted is RocketBase, RocketDAONodeTrustedInterface {
         _;
     }
 
-    // Only when the DAO needs new members due to being below the required min
-    modifier onlyLowMemberMode() {
-        require(getMemberCount() < daoMemberMinCount, "Low member mode not engaged");
-        _;
-    }
-    
-
     // Construct
     constructor(RocketStorageInterface _rocketStorageAddress) RocketBase(_rocketStorageAddress) {
         // Version
@@ -116,11 +109,6 @@ contract RocketDAONodeTrusted is RocketBase, RocketDAONodeTrustedInterface {
         return getUint(keccak256(abi.encodePacked(daoNameSpace, "member.executed.time", _proposalType, _nodeAddress)));
     }
 
-    // Get the RPL bond amount the user deposited to join
-    function getMemberRPLBondAmount(address _nodeAddress) override external view returns (uint256) {
-        return getUint(keccak256(abi.encodePacked(daoNameSpace, "member.bond.rpl", _nodeAddress))); 
-    }
-
     // Is this member currently being 'challenged' to see if their node is responding
     function getMemberIsChallenged(address _nodeAddress) override external view returns (bool) {
         // Has this member been challenged recently and still within the challenge window to respond? If there is a challenge block recorded against them, they are actively being challenged.
@@ -175,18 +163,6 @@ contract RocketDAONodeTrusted is RocketBase, RocketDAONodeTrustedInterface {
     function bootstrapDisable(bool _confirmDisableBootstrapMode) override external onlyGuardian onlyBootstrapMode onlyLatestContract("rocketDAONodeTrusted", address(this)) {
         require(_confirmDisableBootstrapMode == true, "You must confirm disabling bootstrap mode, it can only be done once!");
         setBool(keccak256(abi.encodePacked(daoNameSpace, "bootstrapmode.disabled")), true); 
-    }
-
- 
-    /**** Recovery ***************/
-        
-    // In an explicable black swan scenario where the DAO loses more than the min membership required (3), this method can be used by a regular node operator to join the DAO
-    // Must have their ID, URL, current RPL bond amount available and must be called by their current registered node account
-    function memberJoinRequired(string memory _id, string memory _url) override external onlyLowMemberMode onlyRegisteredNode(msg.sender) onlyLatestContract("rocketDAONodeTrusted", address(this)) {
-        // Ok good to go, lets update the settings 
-        RocketDAONodeTrustedProposalsInterface(getContractAddress("rocketDAONodeTrustedProposals")).proposalInvite(_id, _url, msg.sender);
-        // Get the to automatically join as a member (by a regular proposal, they would have to manually accept, but this is no ordinary situation)
-        RocketDAONodeTrustedActionsInterface(getContractAddress("rocketDAONodeTrustedActions")).actionJoinRequired(msg.sender);
     }
 
 }

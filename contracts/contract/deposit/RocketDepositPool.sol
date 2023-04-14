@@ -186,15 +186,6 @@ contract RocketDepositPool is RocketBase, RocketDepositPoolInterface, RocketVaul
         processDeposit(rocketDAOProtocolSettingsDeposit);
     }
 
-    /// @dev Recycle a liquidated RPL stake from a slashed minipool
-    function recycleLiquidatedStake() override external payable onlyThisLatestContract onlyLatestContract("rocketAuctionManager", msg.sender) {
-        // Load contracts
-        RocketDAOProtocolSettingsDepositInterface rocketDAOProtocolSettingsDeposit = RocketDAOProtocolSettingsDepositInterface(getContractAddress("rocketDAOProtocolSettingsDeposit"));
-        // Recycle ETH
-        emit DepositRecycled(msg.sender, msg.value, block.timestamp);
-        processDeposit(rocketDAOProtocolSettingsDeposit);
-    }
-
     /// @dev Process a deposit
     function processDeposit(RocketDAOProtocolSettingsDepositInterface _rocketDAOProtocolSettingsDeposit) private {
         // Transfer ETH to vault
