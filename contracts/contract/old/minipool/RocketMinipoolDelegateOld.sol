@@ -298,16 +298,12 @@ contract RocketMinipoolDelegateOld is RocketMinipoolStorageLayoutOld, RocketMini
         _distributeBalance(totalBalance);
     }
 
-    // Perform any slashings, refunds, and unlock NO's stake
+    // Perform refunds, and unlock NO's stake
     function _finalise() private {
         // Get contracts
         RocketMinipoolManagerInterface rocketMinipoolManager = RocketMinipoolManagerInterface(getContractAddress("rocketMinipoolManager"));
         // Can only finalise the pool once
         require(!finalised, "Minipool has already been finalised");
-        // If slash is required then perform it
-        if (nodeSlashBalance > 0) {
-            _slash();
-        }
         // Refund node operator if required
         if (nodeRefundBalance > 0) {
             _refund();
@@ -333,19 +329,8 @@ contract RocketMinipoolDelegateOld is RocketMinipoolStorageLayoutOld, RocketMini
     function _distributeBalance(uint256 _balance) private {
         // Rate limit this method to prevent front running
         require(block.number > withdrawalBlock + distributionCooldown, "Distribution of this minipool's balance is on cooldown");
-        // Deposit amounts
-        uint256 nodeAmount = 0;
-        // Check if node operator was slashed
-        if (_balance < userDepositBalance) {
-            // Only slash on first call to distribute
-            if (withdrawalBlock == 0) {
-                // Record shortfall for slashing
-                nodeSlashBalance = userDepositBalance.sub(_balance);
-            }
-        } else {
-            // Calculate node's share of the balance
-            nodeAmount = calculateNodeShare(_balance);
-        }
+        // Calculate node's share of the balance
+        uint256  nodeAmount = calculateNodeShare(_balance);
         // User amount is what's left over from node's share
         uint256 userAmount = _balance.sub(nodeAmount);
         // Pay node operator via refund

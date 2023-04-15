@@ -207,14 +207,6 @@ contract RocketMinipoolDelegate is RocketMinipoolStorageLayout, RocketMinipoolIn
         }
     }
 
-    /// @notice Called to slash node operator's RPL balance if withdrawal balance was less than user deposit
-    function slash() external override onlyInitialised {
-        // Check there is a slash balance
-        require(nodeSlashBalance > 0, "No balance to slash");
-        // Perform slash
-        _slash();
-    }
-
     /// @notice Returns true when `stake()` can be called by node operator taking into consideration the scrub period
     function canStake() override external view onlyInitialised returns (bool) {
         // Check status
@@ -443,7 +435,7 @@ contract RocketMinipoolDelegate is RocketMinipoolStorageLayout, RocketMinipoolIn
         _finalise();
     }
 
-    /// @dev Perform any slashings, refunds, and unlock NO's stake
+    /// @dev Perform refunds, and unlock NO's stake
     function _finalise() private {
         // Get contracts
         RocketMinipoolManagerInterface rocketMinipoolManager = RocketMinipoolManagerInterface(getContractAddress("rocketMinipoolManager"));
@@ -451,10 +443,6 @@ contract RocketMinipoolDelegate is RocketMinipoolStorageLayout, RocketMinipoolIn
         require(!finalised, "Minipool has already been finalised");
         // Set finalised flag
         finalised = true;
-        // If slash is required then perform it
-        if (nodeSlashBalance > 0) {
-            _slash();
-        }
         // Refund node operator if required
         if (nodeRefundBalance > 0) {
             _refund();
@@ -474,20 +462,8 @@ contract RocketMinipoolDelegate is RocketMinipoolStorageLayout, RocketMinipoolIn
     /// @dev Distributes balance to user and node operator
     /// @param _balance The amount to distribute
     function _distributeBalance(uint256 _balance) private {
-        // Deposit amounts
-        uint256 nodeAmount = 0;
-        uint256 userCapital = getUserDepositBalance();
-        // Check if node operator was slashed
-        if (_balance < userCapital) {
-            // Only slash on first call to distribute
-            if (withdrawalBlock == 0) {
-                // Record shortfall for slashing
-                nodeSlashBalance = userCapital.sub(_balance);
-            }
-        } else {
-            // Calculate node's share of the balance
-            nodeAmount = _calculateNodeShare(_balance);
-        }
+        // Calculate node's share of the balance
+        uint256 nodeAmount = _calculateNodeShare(_balance);
         // User amount is what's left over from node's share
         uint256 userAmount = _balance.sub(nodeAmount);
         // Pay node operator via refund
@@ -689,16 +665,6 @@ contract RocketMinipoolDelegate is RocketMinipoolStorageLayout, RocketMinipoolIn
         require(success, "ETH refund amount was not successfully transferred to node operator");
         // Emit ether withdrawn event
         emit EtherWithdrawn(nodeWithdrawalAddress, refundAmount, block.timestamp);
-    }
-
-    /// @dev Slash node operator's RPL balance based on nodeSlashBalance
-    function _slash() private {
-        // Get contracts
-        RocketNodeStakingInterface rocketNodeStaking = RocketNodeStakingInterface(getContractAddress("rocketNodeStaking"));
-        // Slash required amount and reset storage value
-        uint256 slashAmount = nodeSlashBalance;
-        nodeSlashBalance = 0;
-        rocketNodeStaking.slashRPL(nodeAddress, slashAmount);
     }
 
     /// @dev Dissolve this minipool

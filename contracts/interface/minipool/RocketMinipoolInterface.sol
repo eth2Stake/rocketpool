@@ -38,7 +38,6 @@ interface RocketMinipoolInterface {
     function beginUserDistribute() external;
     function userDistributeAllowed() external view returns (bool);
     function refund() external;
-    function slash() external;
     function finalise() external;
     function canStake() external view returns (bool);
     function canPromote() external view returns (bool);

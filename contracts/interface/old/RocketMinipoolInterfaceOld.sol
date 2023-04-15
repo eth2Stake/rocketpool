@@ -30,7 +30,6 @@ interface RocketMinipoolInterfaceOld {
     function distributeBalance() external;
     function distributeBalanceAndFinalise() external;
     function refund() external;
-    function slash() external;
     function finalise() external;
     function canStake() external view returns (bool);
     function stake(bytes calldata _validatorSignature, bytes32 _depositDataRoot) external;

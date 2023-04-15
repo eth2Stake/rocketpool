@@ -40,7 +40,6 @@ abstract contract RocketMinipoolStorageLayout {
     uint256 internal nodeDepositBalance;
     bool internal nodeDepositAssigned;          // NO LONGER IN USE
     uint256 internal nodeRefundBalance;
-    uint256 internal nodeSlashBalance;
 
     // User deposit details
     uint256 internal userDepositBalanceLegacy;
