@@ -14,4 +14,5 @@ interface RocketNodeDepositInterface {
     function createVacantMinipool(uint256 _bondAmount, uint256 _minimumNodeFee, bytes calldata _validatorPubkey, uint256 _salt, address _expectedMinipoolAddress, uint256 _currentBalance) external;
     function increaseEthMatched(address _nodeAddress, uint256 _amount) external;
     function getNodeETHCollateralisationRatio(address _nodeAddress) external view returns (uint256);
+    function getNodeETHMatched(address _nodeAddress) external view returns (uint256);
 }

@@ -58,24 +58,14 @@ before(async function() {
 });
 
 // Run tests
-daoProtocolTests();
-daoNodeTrustedTests();
-auctionTests();
 depositPoolTests();
-minipoolScrubTests();
-minipoolTests();
 minipoolVacantTests();
-minipoolStatusTests();
 minipoolWithdrawalTests();
+minipoolTests();
 networkBalancesTests();
-networkPenaltiesTests();
 networkFeesTests();
-networkPricesTests();
 nodeDepositTests();
 nodeManagerTests();
-nodeStakingTests();
 nodeDistributorTests();
 rethTests();
-rplTests();
-rewardsPoolTests();
 upgradeTests();

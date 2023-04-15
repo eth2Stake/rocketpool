@@ -61,12 +61,6 @@ export default function() {
 
 
         it(printTitle('node operator', 'can make a deposit to create a minipool'), async () => {
-            // Stake RPL to cover minipools
-            let minipoolRplStake = await getMinipoolMinimumRPLStake();
-            let rplStake = minipoolRplStake.mul('3'.BN);
-            await mintRPL(owner, node, rplStake);
-            await nodeStakeRPL(rplStake, {from: node});
-
             // Deposit
             await depositV2(noMinimumNodeFee, lebDepositNodeAmount, {
                 from: node,
@@ -76,10 +70,6 @@ export default function() {
 
 
         it(printTitle('node operator', 'cannot make a deposit while deposits are disabled'), async () => {
-            // Stake RPL to cover minipool
-            let rplStake = await getMinipoolMinimumRPLStake();
-            await mintRPL(owner, node, rplStake);
-            await nodeStakeRPL(rplStake, {from: node});
 
             // Disable deposits
             await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsNode, 'node.deposit.enabled', false, {from: owner});
@@ -99,10 +89,6 @@ export default function() {
 
 
         it(printTitle('node operator', 'cannot make a deposit with a minimum node fee exceeding the current network node fee'), async () => {
-            // Stake RPL to cover minipool
-            let rplStake = await getMinipoolMinimumRPLStake();
-            await mintRPL(owner, node, rplStake);
-            await nodeStakeRPL(rplStake, {from: node});
 
             // Settings
             let nodeFee = await getNodeFee();
@@ -123,10 +109,6 @@ export default function() {
 
 
         it(printTitle('node operator', 'cannot make a deposit with an invalid amount'), async () => {
-            // Stake RPL to cover minipool
-            let rplStake = await getMinipoolMinimumRPLStake();
-            await mintRPL(owner, node, rplStake);
-            await nodeStakeRPL(rplStake, {from: node});
 
             // Get deposit amount
             let depositAmount = '10'.ether;
@@ -140,26 +122,6 @@ export default function() {
             }), 'Made a deposit with an invalid deposit amount');
         });
 
-
-        it(printTitle('node operator', 'cannot make a deposit with insufficient RPL staked'), async () => {
-            // Attempt deposit with no RPL staked
-            await shouldRevert(depositV2(noMinimumNodeFee, lebDepositNodeAmount, {
-                from: node,
-                value: lebDepositNodeAmount,
-            }), 'Made a deposit with insufficient RPL staked');
-
-            // Stake insufficient RPL amount
-            let minipoolRplStake = await getMinipoolMinimumRPLStake();
-            let rplStake = minipoolRplStake.div('2'.BN);
-            await mintRPL(owner, node, rplStake);
-            await nodeStakeRPL(rplStake, {from: node});
-
-            // Attempt deposit with insufficient RPL staked
-            await shouldRevert(depositV2(noMinimumNodeFee, lebDepositNodeAmount, {
-                from: node,
-                value: lebDepositNodeAmount,
-            }), 'Made a deposit with insufficient RPL staked');
-        });
 
 
         it(printTitle('random address', 'cannot make a deposit'), async () => {
@@ -178,11 +140,6 @@ export default function() {
 
 
         it(printTitle('node operator', 'can make a deposit to create a minipool using deposit credit'), async () => {
-            // Stake RPL to cover minipools
-            let minipoolRplStake = await getMinipoolMinimumRPLStake();
-            let rplStake = minipoolRplStake.mul('3'.BN);
-            await mintRPL(owner, node, rplStake);
-            await nodeStakeRPL(rplStake, {from: node});
 
             // Create a 16 ETH minipool
             await userDeposit({ from: random, value: '24'.ether, });
@@ -212,11 +169,6 @@ export default function() {
         });
 
         it(printTitle('node operator', 'can not send ETH with a deposit when using credit balance'), async () => {
-            // Stake RPL to cover minipools
-            let minipoolRplStake = await getMinipoolMinimumRPLStake();
-            let rplStake = minipoolRplStake.mul('3'.BN);
-            await mintRPL(owner, node, rplStake);
-            await nodeStakeRPL(rplStake, {from: node});
 
             // Create a 16 ETH minipool
             await userDeposit({ from: random, value: '24'.ether, });

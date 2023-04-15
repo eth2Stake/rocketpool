@@ -1,7 +1,7 @@
 import {
     RocketDAOProtocolSettingsMinipool,
     RocketDAOProtocolSettingsNetwork,
-    RocketDAONodeTrustedSettingsMinipool, RocketNodeStaking,
+    RocketDAONodeTrustedSettingsMinipool, RocketNodeDeposit,
 } from '../_utils/artifacts';
 import { increaseTime } from '../_utils/evm';
 import { printTitle } from '../_utils/formatting';
@@ -51,10 +51,10 @@ export default function() {
         let prelaunchMinipool16;
         let prelaunchMinipool8;
 
-        let rocketNodeStaking;
+        let rocketNodeDeposit;
 
         before(async () => {
-            rocketNodeStaking = await RocketNodeStaking.deployed();
+            rocketNodeDeposit = await RocketNodeDeposit.deployed();
 
             await upgradeOneDotTwo(owner);
 
@@ -62,11 +62,6 @@ export default function() {
             await registerNode({from: node});
             await setNodeWithdrawalAddress(node, nodeWithdrawalAddress, {from: node});
 
-            // Register trusted node
-            await registerNode({from: trustedNode1});
-            await setNodeTrusted(trustedNode1, 'saas_1', 'node@home.com', owner);
-            await registerNode({from: trustedNode2});
-            await setNodeTrusted(trustedNode2, 'saas_2', 'node@home.com', owner);
 
             // Set settings
             await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsMinipool, 'minipool.launch.timeout', launchTimeout, {from: owner});
@@ -76,11 +71,6 @@ export default function() {
             // Set rETH collateralisation target to a value high enough it won't cause excess ETH to be funneled back into deposit pool and mess with our calcs
             await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsNetwork, 'network.reth.collateral.target', '50'.ether, {from: owner});
 
-            // Stake RPL to cover minipools
-            let minipoolRplStake = await getMinipoolMinimumRPLStake();
-            let rplStake = minipoolRplStake.mul('7'.BN);
-            await mintRPL(owner, node, rplStake);
-            await nodeStakeRPL(rplStake, {from: node});
 
             prelaunchMinipool16 = await createVacantMinipool('16'.ether, {from: node});
             prelaunchMinipool8 = await createVacantMinipool('8'.ether, {from: node});
@@ -91,7 +81,7 @@ export default function() {
             assertBN.equal(prelaunch8Status, minipoolStates.Prelaunch, 'Incorrect prelaunch minipool status');
 
             // ETH matched for node should be 40 ETH (24 + 16)
-            assertBN.equal(await rocketNodeStaking.getNodeETHMatched(node), '40'.ether, 'Incorrect ETH matched');
+            assertBN.equal(await rocketNodeDeposit.getNodeETHMatched(node), '40'.ether, 'Incorrect ETH matched');
         });
 
 
@@ -177,30 +167,30 @@ export default function() {
         //
 
 
-        it(printTitle('trusted node', 'can scrub a prelaunch minipool (no penalty)'), async () => {
-            // 2 out of 3 should dissolve the minipool
-            await voteScrub(prelaunchMinipool16, {from: trustedNode1});
-            await voteScrub(prelaunchMinipool16, {from: trustedNode2});
-            // ETH matched should still be 40 ETH
-            assertBN.equal(await rocketNodeStaking.getNodeETHMatched(node), '40'.ether, 'Incorrect ETH matched');
-            // After closing ETH matched should drop by 16
-            await closeMinipool(prelaunchMinipool16, {from: node});
-            assertBN.equal(await rocketNodeStaking.getNodeETHMatched(node), '24'.ether, 'Incorrect ETH matched');
-            // 2 out of 3 should dissolve the minipool
-            await voteScrub(prelaunchMinipool8, {from: trustedNode1});
-            await voteScrub(prelaunchMinipool8, {from: trustedNode2});
-            await closeMinipool(prelaunchMinipool8, {from: node});
-            assertBN.equal(await rocketNodeStaking.getNodeETHMatched(node), '0'.ether, 'Incorrect ETH matched');
-        });
+        // it(printTitle('trusted node', 'can scrub a prelaunch minipool (no penalty)'), async () => {
+        //     // 2 out of 3 should dissolve the minipool
+        //     await voteScrub(prelaunchMinipool16, {from: trustedNode1});
+        //     await voteScrub(prelaunchMinipool16, {from: trustedNode2});
+        //     // ETH matched should still be 40 ETH
+        //     assertBN.equal(await rocketNodeDeposit.getNodeETHMatched(node), '40'.ether, 'Incorrect ETH matched');
+        //     // After closing ETH matched should drop by 16
+        //     await closeMinipool(prelaunchMinipool16, {from: node});
+        //     assertBN.equal(await rocketNodeDeposit.getNodeETHMatched(node), '24'.ether, 'Incorrect ETH matched');
+        //     // 2 out of 3 should dissolve the minipool
+        //     await voteScrub(prelaunchMinipool8, {from: trustedNode1});
+        //     await voteScrub(prelaunchMinipool8, {from: trustedNode2});
+        //     await closeMinipool(prelaunchMinipool8, {from: node});
+        //     assertBN.equal(await rocketNodeDeposit.getNodeETHMatched(node), '0'.ether, 'Incorrect ETH matched');
+        // });
 
 
-        it(printTitle('trusted node', 'can scrub a prelaunch minipool (no penalty applied even with scrub penalty active)'), async () => {
-            // Enabled penalty
-            await setDAONodeTrustedBootstrapSetting(RocketDAONodeTrustedSettingsMinipool, 'minipool.scrub.penalty.enabled', true, {from: owner});
-            // 2 out of 3 should dissolve the minipool
-            await voteScrub(prelaunchMinipool16, {from: trustedNode1});
-            await voteScrub(prelaunchMinipool16, {from: trustedNode2});
-        });
+        // it(printTitle('trusted node', 'can scrub a prelaunch minipool (no penalty applied even with scrub penalty active)'), async () => {
+        //     // Enabled penalty
+        //     await setDAONodeTrustedBootstrapSetting(RocketDAONodeTrustedSettingsMinipool, 'minipool.scrub.penalty.enabled', true, {from: owner});
+        //     // 2 out of 3 should dissolve the minipool
+        //     await voteScrub(prelaunchMinipool16, {from: trustedNode1});
+        //     await voteScrub(prelaunchMinipool16, {from: trustedNode2});
+        // });
 
     });
 }

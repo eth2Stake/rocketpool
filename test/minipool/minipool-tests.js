@@ -75,12 +75,13 @@ export default function() {
         let dissolvedMinipool;
         let withdrawalBalance = '36'.ether;
         let newDelegateAddress = '0x0000000000000000000000000000000000000001';
-        let oldDelegateAddress = (await RocketMinipoolDelegate.deployed()).address;
+        let oldDelegateAddress;
 
         const lebDepositNodeAmount = '8'.ether;
         const halfDepositNodeAmount = '16'.ether;
 
         before(async () => {
+            oldDelegateAddress =  (await RocketMinipoolDelegate.deployed()).address;
             await upgradeOneDotTwo(owner);
 
             // Register node & set withdrawal address
@@ -90,26 +91,15 @@ export default function() {
             // Register empty node
             await registerNode({from: emptyNode});
 
-            // Register trusted node
-            await registerNode({from: trustedNode});
-            await setNodeTrusted(trustedNode, 'saas_1', 'node@home.com', owner);
-
             // Set settings
             await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsMinipool, 'minipool.launch.timeout', launchTimeout, {from: owner});
             await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsMinipool, 'minipool.withdrawal.delay', withdrawalDelay, {from: owner});
             await setDAONodeTrustedBootstrapSetting(RocketDAONodeTrustedSettingsMinipool, 'minipool.scrub.period', scrubPeriod, {from: owner});
             await setDAONodeTrustedBootstrapSetting(RocketDAONodeTrustedSettingsMinipool, 'minipool.bond.reduction.window.start', bondReductionWindowStart, {from: owner});
             await setDAONodeTrustedBootstrapSetting(RocketDAONodeTrustedSettingsMinipool, 'minipool.bond.reduction.window.length', bondReductionWindowLength, {from: owner});
-            await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsRewards, 'rpl.rewards.claim.period.time', rewardClaimPeriodTime, {from: owner});
 
             // Set rETH collateralisation target to a value high enough it won't cause excess ETH to be funneled back into deposit pool and mess with our calcs
             await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsNetwork, 'network.reth.collateral.target', '50'.ether, {from: owner});
-
-            // Stake RPL to cover minipools
-            let minipoolRplStake = await getMinipoolMinimumRPLStake();
-            let rplStake = minipoolRplStake.mul('7'.BN);
-            await mintRPL(owner, node, rplStake);
-            await nodeStakeRPL(rplStake, {from: node});
 
             // Create a dissolved minipool
             await userDeposit({ from: random, value: '16'.ether, });
@@ -309,56 +299,6 @@ export default function() {
           // Finalise
           await shouldRevert(stakingMinipool.finalise({ from: random }), 'Minipool was finalised by random', 'Invalid minipool owner');
         });
-
-
-        //
-        // Slash
-        //
-
-
-        it(printTitle('random address', 'can slash node operator if withdrawal balance is less than 16 ETH'), async () => {
-            // Stake the prelaunch minipool (it has 16 ETH user funds)
-            await stakeMinipool(prelaunchMinipool, {from: node});
-            // Send enough ETH to allow distribution
-            await web3.eth.sendTransaction({
-                from: owner,
-                to: prelaunchMinipool.address,
-                value: '8'.ether
-            });
-            // Begin user distribution process
-            await beginUserDistribute(prelaunchMinipool, {from: random});
-            // Wait 14 days
-            await increaseTime(web3, 60 * 60 * 24 * 14 + 1)
-            // Post an 8 ETH balance which should result in 8 ETH worth of RPL slashing
-            await withdrawValidatorBalance(prelaunchMinipool, '0'.ether, random);
-            // Call slash method
-            await prelaunchMinipool.slash({ from: random });
-            // Check slashed flag
-            const slashed = await (await RocketMinipoolManager.deployed()).getMinipoolRPLSlashed(prelaunchMinipool.address);
-            assert(slashed, "Slashed flag not set");
-            // Auction house should now have slashed 8 ETH worth of RPL (which is 800 RPL at starting price)
-            const rocketVault = await RocketVault.deployed();
-            const rocketTokenRPL = await RocketTokenRPL.deployed();
-            const balance = await rocketVault.balanceOfToken('rocketAuctionManager', rocketTokenRPL.address);
-            assertBN.equal(balance, '800'.ether);
-        });
-
-
-        it(printTitle('node operator', 'is slashed if withdraw is processed when balance is less than 16 ETH'), async () => {
-            // Stake the prelaunch minipool (it has 16 ETH user funds)
-            await stakeMinipool(prelaunchMinipool, {from: node});
-            // Post an 8 ETH balance which should result in 8 ETH worth of RPL slashing
-            await withdrawValidatorBalance(prelaunchMinipool, '8'.ether, nodeWithdrawalAddress, true);
-            // Check slashed flag
-            const slashed = await (await RocketMinipoolManager.deployed()).getMinipoolRPLSlashed(prelaunchMinipool.address);
-            assert(slashed, "Slashed flag not set");
-            // Auction house should now have slashed 8 ETH worth of RPL (which is 800 RPL at starting price)
-            const rocketVault = await RocketVault.deployed();
-            const rocketTokenRPL = await RocketTokenRPL.deployed();
-            const balance = await rocketVault.balanceOfToken('rocketAuctionManager', rocketTokenRPL.address);
-            assertBN.equal(balance, '800'.ether);
-        });
-
 
         //
         // Dissolve
@@ -859,7 +799,7 @@ export default function() {
             // Get contracts
             const rocketMinipoolBondReducer = await RocketMinipoolBondReducer.deployed();
             // Vote to cancel
-            await rocketMinipoolBondReducer.voteCancelReduction(stakingMinipool.address, {from: trustedNode});
+            await rocketMinipoolBondReducer.voteCancelReduction(stakingMinipool.address, {from: owner});
             // Signal wanting to reduce and wait 7 days
             await shouldRevert(rocketMinipoolBondReducer.beginReduceBondAmount(stakingMinipool.address, '8'.ether, {from: node}), 'Was able to begin to reduce bond', 'This minipool is not allowed to reduce bond');
         });
@@ -872,7 +812,7 @@ export default function() {
             await rocketMinipoolBondReducer.beginReduceBondAmount(stakingMinipool.address, '8'.ether, {from: node});
             await increaseTime(web3, bondReductionWindowStart + 1);
             // Vote to cancel
-            await rocketMinipoolBondReducer.voteCancelReduction(stakingMinipool.address, {from: trustedNode});
+            await rocketMinipoolBondReducer.voteCancelReduction(stakingMinipool.address, {from: owner});
             // Wait and try to reduce
             await shouldRevert(reduceBond(stakingMinipool, {from: node}), 'Was able to reduce bond after it was cancelled', 'This minipool is not allowed to reduce bond');
         });

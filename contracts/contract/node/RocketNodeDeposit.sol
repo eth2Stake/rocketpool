@@ -189,13 +189,7 @@ contract RocketNodeDeposit is RocketBase, RocketNodeDepositInterface {
     ///      collateralisation requirements of the network
     function _increaseEthMatched(address _nodeAddress, uint256 _amount) private {
         // Check amount doesn't exceed limits
-        uint256 ethMatched = getUint(keccak256(abi.encodePacked("eth.matched.node.amount", _nodeAddress)));
-
-        if (ethMatched == 0) {
-            // Fallback for backwards compatibility before ETH matched was recorded (all minipools matched 16 ETH from protocol)
-            RocketMinipoolManagerInterface rocketMinipoolManager = RocketMinipoolManagerInterface(getContractAddress("rocketMinipoolManager"));
-            ethMatched = rocketMinipoolManager.getNodeActiveMinipoolCount(_nodeAddress).mul(16 ether);
-        }
+        uint256 ethMatched = getNodeETHMatched(_nodeAddress);
         ethMatched = ethMatched.add(_amount);
         setUint(keccak256(abi.encodePacked("eth.matched.node.amount", _nodeAddress)), ethMatched);
     }
@@ -291,6 +285,20 @@ contract RocketNodeDeposit is RocketBase, RocketNodeDepositInterface {
             RocketMinipoolManagerInterface rocketMinipoolManager = RocketMinipoolManagerInterface(getContractAddress("rocketMinipoolManager"));
             uint256 totalEthStaked = rocketMinipoolManager.getNodeActiveMinipoolCount(_nodeAddress).mul(launchAmount);
             return totalEthStaked.mul(calcBase).div(totalEthStaked.sub(ethMatched));
+        }
+    }
+
+    /// @notice Returns a node's matched ETH amount (amount taken from protocol to stake)
+    /// @param _nodeAddress The address of the node operator to query
+    function getNodeETHMatched(address _nodeAddress) override public view returns (uint256) {
+        uint256 ethMatched = getUint(keccak256(abi.encodePacked("eth.matched.node.amount", _nodeAddress)));
+
+        if (ethMatched > 0) {
+            return ethMatched;
+        } else {
+            // Fallback for backwards compatibility before ETH matched was recorded (all minipools matched 16 ETH from protocol)
+            RocketMinipoolManagerInterface rocketMinipoolManager = RocketMinipoolManagerInterface(getContractAddress("rocketMinipoolManager"));
+            return rocketMinipoolManager.getNodeActiveMinipoolCount(_nodeAddress).mul(16 ether);
         }
     }
 }

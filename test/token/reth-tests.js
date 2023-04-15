@@ -67,11 +67,6 @@ export default function() {
             await setDAONodeTrustedBootstrapSetting(RocketDAONodeTrustedSettingsMinipool, 'minipool.scrub.period', scrubPeriod, {from: owner});
             await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsMinipool, 'minipool.user.distribute.window.start', userDistributeStartTime, {from: owner});
 
-            // Stake RPL to cover minipools
-            let rplStake = await getMinipoolMinimumRPLStake();
-            await mintRPL(owner, node, rplStake);
-            await nodeStakeRPL(rplStake, {from: node});
-
             // Create withdrawable minipool
             minipool = await createMinipool({from: node, value: '16'.ether});
             await increaseTime(web3, scrubPeriod + 1);

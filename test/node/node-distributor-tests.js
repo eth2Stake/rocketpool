@@ -34,7 +34,7 @@ export default function() {
         // Setup
         let scrubPeriod = (60 * 60 * 24); // 24 hours
         let distributorAddress;
-        let rplStake;
+
 
         before(async () => {
             await upgradeOneDotTwo(owner);
@@ -49,19 +49,12 @@ export default function() {
             // Register trusted node
             await registerNode({from: trustedNode});
             await setNodeTrusted(trustedNode, 'saas_1', 'node@home.com', owner);
-            // Stake RPL to cover minipools
-            let minipoolRplStake = await getMinipoolMinimumRPLStake();
-            rplStake = minipoolRplStake.mul('7'.BN);
-            await mintRPL(owner, node1, rplStake);
-            await nodeStakeRPL(rplStake, {from: node1}, true);
-            await mintRPL(owner, node2, rplStake);
         });
 
 
         it(printTitle('node operator', 'can not initialise fee distributor if registered after upgrade'), async () => {
             // Register node
             await registerNode({from: node2});
-            await nodeStakeRPL(rplStake, {from: node2});
             // Get contracts
             const rocketNodeManager = await RocketNodeManager.deployed();
             // Attempt to initialise
@@ -88,7 +81,6 @@ export default function() {
             const rocketNodeDistributorFactory = await RocketNodeDistributorFactory.deployed();
             // Register node
             await registerNode({from: node2});
-            await nodeStakeRPL(rplStake, {from: node2});
             const distributorAddress2 = await rocketNodeDistributorFactory.getProxyAddress(node2);
             // Create and stake a minipool
             await userDeposit({from: random, value: '16'.ether})
@@ -106,7 +98,6 @@ export default function() {
             const rocketNodeDistributorFactory = await RocketNodeDistributorFactory.deployed();
             // Register node
             await registerNode({from: node2});
-            await nodeStakeRPL(rplStake, {from: node2});
             const distributorAddress2 = await rocketNodeDistributorFactory.getProxyAddress(node2);
             // Create and stake a minipool
             await userDeposit({from: random, value: '32'.ether})
@@ -126,7 +117,6 @@ export default function() {
             const rocketNodeDistributorFactory = await RocketNodeDistributorFactory.deployed();
             // Register node
             await registerNode({from: node2});
-            await nodeStakeRPL(rplStake, {from: node2});
             const distributorAddress2 = await rocketNodeDistributorFactory.getProxyAddress(node2);
             // Create and stake a minipool
             await userDeposit({from: random, value: '32'.ether})

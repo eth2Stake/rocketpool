@@ -67,10 +67,6 @@ export default function() {
             // Set rETH collateralisation target to a value high enough it won't cause excess ETH to be funneled back into deposit pool and mess with our calcs
             await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsNetwork, 'network.reth.collateral.target', '50'.ether, {from: owner});
 
-            // Set RPL price
-            let block = await web3.eth.getBlockNumber();
-            await submitPrices(block, '1'.ether, {from: trustedNode});
-
             // Add penalty helper contract
             const rocketStorage = await RocketStorage.deployed();
             penaltyTestContract = await PenaltyTest.new(rocketStorage.address, {from: owner});
@@ -91,14 +87,6 @@ export default function() {
             // Deposit some user funds to assign to pools
             let userDepositAmount = '16'.ether;
             await userDeposit({from: random, value: userDepositAmount});
-
-            // Stake RPL to cover minipools
-            let minipoolRplStake = await getMinipoolMinimumRPLStake();
-            let rplStake = minipoolRplStake.mul('3'.BN);
-            await mintRPL(owner, node, rplStake);
-            await nodeStakeRPL(rplStake, {from: node});
-            await mintRPL(owner, trustedNode, rplStake);
-            await nodeStakeRPL(rplStake, {from: trustedNode});
 
             // Create minipools
             minipool = await createMinipool({from: node, value: '16'.ether});
@@ -139,17 +127,6 @@ export default function() {
             // Check results
             assertBN.equal(expectedUserBN, result.rethBalanceChange, "User balance was incorrect");
             assertBN.equal(expectedNodeBN, result.nodeBalanceChange, "Node balance was incorrect");
-        }
-
-
-        async function slashAndCheck(from, expectedSlash) {
-            // Get contracts
-            const rocketNodeStaking = await RocketNodeStaking.deployed()
-            const rplStake1 = await rocketNodeStaking.getNodeRPLStake(node)
-            await minipool.slash({from: from})
-            const rplStake2 = await rocketNodeStaking.getNodeRPLStake(node)
-            const slashedAmount = rplStake1.sub(rplStake2)
-            assertBN.equal(expectedSlash, slashedAmount, 'Slashed amount was incorrect')
         }
 
 
@@ -219,18 +196,6 @@ export default function() {
         it(printTitle('node operator withdrawal address', 'can process withdrawal when balance is less than 16 ETH'), async () => {
             // Process withdraw
             await withdrawAndCheck(minipool, '15', nodeWithdrawalAddress, true, '15', '0');
-        });
-
-
-        it(printTitle('random address', 'cannot slash a node operator by sending 4 ETH and distribute after 14 days'), async () => {
-            // Process withdraw
-            await withdrawAndCheck(minipool, '28', nodeWithdrawalAddress, true, '16', '12');
-            // Wait 14 days and mine enough blocks to pass cooldown
-            await increaseTime(web3, 60 * 60 * 24 * 14 + 1)
-            await mineBlocks(web3, 101)
-            // Process withdraw and attempt to slash
-            await withdrawAndCheck(minipool, '8', random, false, '8', '0', true);
-            await shouldRevert(minipool.slash(), 'Was able to slash minipool', 'No balance to slash')
         });
 
 

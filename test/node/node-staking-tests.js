@@ -57,10 +57,6 @@ export default function() {
             await registerNode({from: trustedNode});
             await setNodeTrusted(trustedNode, 'saas_1', 'node1@home.com', owner);
 
-            // Mint RPL to accounts
-            const rplAmount = '10000'.ether;
-            await mintRPL(owner, node, rplAmount);
-            await mintRPL(owner, random, rplAmount);
 
         });
 

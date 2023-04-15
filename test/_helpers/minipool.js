@@ -10,8 +10,6 @@ import {
     RocketNodeDepositOld,
     RocketMinipoolFactoryOld,
     RocketMinipoolManagerOld,
-    RocketNodeStaking,
-    RocketNodeStakingOld,
 } from '../_utils/artifacts';
 import { getValidatorPubkey, getValidatorSignature, getDepositDataRoot } from '../_utils/beacon';
 import { upgradeExecuted } from '../_utils/upgrade';
@@ -87,12 +85,10 @@ export async function createMinipoolWithBondAmount(bondAmount, txOptions, salt =
     const [
         rocketMinipoolFactory,
         rocketNodeDeposit,
-        rocketNodeStaking,
         rocketStorage,
     ] = await Promise.all([
         preUpdate ? RocketMinipoolFactoryOld.deployed() : RocketMinipoolFactory.deployed(),
         preUpdate ? RocketNodeDepositOld.deployed() : RocketNodeDeposit.deployed(),
-        preUpdate ? RocketNodeStakingOld.deployed() : RocketNodeStaking.deployed(),
         RocketStorage.deployed()
     ]);
 
@@ -155,7 +151,7 @@ export async function createMinipoolWithBondAmount(bondAmount, txOptions, salt =
 
         await rocketNodeDeposit.deposit('0'.ether, depositData.pubkey, depositData.signature, depositDataRoot, salt, '0x' + minipoolAddress, txOptions);
     } else {
-        const ethMatched1 = await rocketNodeStaking.getNodeETHMatched(txOptions.from);
+        const ethMatched1 = await rocketNodeDeposit.getNodeETHMatched(txOptions.from);
 
         // Get validator deposit data
         let depositData = {
@@ -173,7 +169,7 @@ export async function createMinipoolWithBondAmount(bondAmount, txOptions, salt =
             await rocketNodeDeposit.depositWithCredit(bondAmount, '0'.ether, depositData.pubkey, depositData.signature, depositDataRoot, salt, '0x' + minipoolAddress, txOptions);
         }
 
-        const ethMatched2 = await rocketNodeStaking.getNodeETHMatched(txOptions.from);
+        const ethMatched2 = await rocketNodeDeposit.getNodeETHMatched(txOptions.from);
 
         // Expect node's ETH matched to be increased by (32 - bondAmount)
         assertBN.equal(ethMatched2.sub(ethMatched1), '32'.ether.sub(bondAmount), 'Incorrect ETH matched');
@@ -189,12 +185,10 @@ export async function createVacantMinipool(bondAmount, txOptions, salt = null, c
     const [
         rocketMinipoolFactory,
         rocketNodeDeposit,
-        rocketNodeStaking,
         rocketStorage,
     ] = await Promise.all([
         RocketMinipoolFactory.deployed(),
         RocketNodeDeposit.deployed(),
-        RocketNodeStaking.deployed(),
         RocketStorage.deployed()
     ]);
 
@@ -208,9 +202,9 @@ export async function createVacantMinipool(bondAmount, txOptions, salt = null, c
 
     const minipoolAddress = (await rocketMinipoolFactory.getExpectedAddress(txOptions.from, salt)).substr(2);
 
-    const ethMatched1 = await rocketNodeStaking.getNodeETHMatched(txOptions.from);
+    const ethMatched1 = await rocketNodeDeposit.getNodeETHMatched(txOptions.from);
     await rocketNodeDeposit.createVacantMinipool(bondAmount, '0'.ether, pubkey, salt, '0x' + minipoolAddress, currentBalance, txOptions);
-    const ethMatched2 = await rocketNodeStaking.getNodeETHMatched(txOptions.from);
+    const ethMatched2 = await rocketNodeDeposit.getNodeETHMatched(txOptions.from);
 
     // Expect node's ETH matched to be increased by (32 - bondAmount)
     assertBN.equal(ethMatched2.sub(ethMatched1), '32'.ether.sub(bondAmount), 'Incorrect ETH matched');

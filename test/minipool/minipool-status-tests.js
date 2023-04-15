@@ -52,13 +52,6 @@ export default function() {
             await setNodeTrusted(trustedNode1, 'saas_1', 'node1@home.com', owner);
             await setNodeTrusted(trustedNode2, 'saas_2', 'node2@home.com', owner);
             await setNodeTrusted(trustedNode3, 'saas_3', 'node3@home.com', owner);
-     
-
-            // Stake RPL to cover minipools
-            let minipoolRplStake = await getMinipoolMinimumRPLStake();
-            let rplStake = minipoolRplStake.mul('3'.BN);
-            await mintRPL(owner, node, rplStake);
-            await nodeStakeRPL(rplStake, {from: node});
 
             // Create minipools
             stakingMinipool1 = await createMinipool({from: node, value: '16'.ether});

@@ -35,9 +35,7 @@ const contracts = {
     // Vault
     rocketVault:                              artifacts.require('RocketVault.sol'),
     // Tokens
-    rocketTokenRPLFixedSupply:                artifacts.require('RocketTokenDummyRPL.sol'),
     rocketTokenRETH:                          artifacts.require('RocketTokenRETH.sol'),
-    rocketTokenRPL:                           artifacts.require('RocketTokenRPL.sol'),
     // Auction
     // rocketAuctionManager:                     artifacts.require('RocketAuctionManager.sol'),
     // Deposit
@@ -51,15 +49,10 @@ const contracts = {
     // Network
     rocketNetworkBalances:                    artifacts.require('RocketNetworkBalancesOld.sol'),
     rocketNetworkFees:                        artifacts.require('RocketNetworkFeesOld.sol'),
-    rocketNetworkPrices:                      artifacts.require('RocketNetworkPricesOld.sol'),
     rocketNetworkPenalties:                   artifacts.require('RocketNetworkPenalties.sol'),
-    // Rewards
-    rocketRewardsPool:                        artifacts.require('RocketRewardsPoolOld.sol'),
-    rocketClaimDAO:                           artifacts.require('RocketClaimDAO.sol'),
     // Node
     rocketNodeDeposit:                        artifacts.require('RocketNodeDepositOld.sol'),
     rocketNodeManager:                        artifacts.require('RocketNodeManagerOld.sol'),
-    rocketNodeStaking:                        artifacts.require('RocketNodeStakingOld.sol'),
     // DAOs
     rocketDAOProposal:                        artifacts.require('RocketDAOProposal.sol'),
     rocketDAONodeTrusted:                     artifacts.require('RocketDAONodeTrusted.sol'),
@@ -72,17 +65,11 @@ const contracts = {
     rocketDAOProtocol:                        artifacts.require('RocketDAOProtocol.sol'),
     rocketDAOProtocolProposals:               artifacts.require('RocketDAOProtocolProposals.sol'),
     rocketDAOProtocolActions:                 artifacts.require('RocketDAOProtocolActions.sol'),
-    rocketDAOProtocolSettingsInflation:       artifacts.require('RocketDAOProtocolSettingsInflation.sol'),
-    rocketDAOProtocolSettingsRewards:         artifacts.require('RocketDAOProtocolSettingsRewards.sol'),
-    rocketDAOProtocolSettingsAuction:         artifacts.require('RocketDAOProtocolSettingsAuction.sol'),
     rocketDAOProtocolSettingsNode:            artifacts.require('RocketDAOProtocolSettingsNodeOld.sol'),
     rocketDAOProtocolSettingsNetwork:         artifacts.require('RocketDAOProtocolSettingsNetwork.sol'),
     rocketDAOProtocolSettingsDeposit:         artifacts.require('RocketDAOProtocolSettingsDepositOld.sol'),
     rocketDAOProtocolSettingsMinipool:        artifacts.require('RocketDAOProtocolSettingsMinipoolOld.sol'),
     // v1.1
-    rocketMerkleDistributorMainnet:           artifacts.require('RocketMerkleDistributorMainnet.sol'),
-    rocketDAONodeTrustedSettingsRewards:      artifacts.require('RocketDAONodeTrustedSettingsRewards.sol'),
-    rocketSmoothingPool:                      artifacts.require('RocketSmoothingPool.sol'),
     rocketNodeDistributorFactory:             artifacts.require('RocketNodeDistributorFactory.sol'),
     rocketNodeDistributorDelegate:            artifacts.require('RocketNodeDistributorDelegateOld.sol'),
     rocketMinipoolFactory:                    artifacts.require('RocketMinipoolFactoryOld.sol'),
@@ -94,16 +81,13 @@ const contracts = {
     rocketDepositPoolNew:                     artifacts.require('RocketDepositPool.sol'),
     rocketDAOProtocolSettingsDepositNew:      artifacts.require('RocketDAOProtocolSettingsDeposit.sol'),
     rocketMinipoolManagerNew:                 artifacts.require('RocketMinipoolManager.sol'),
-    rocketNodeStakingNew:                     artifacts.require('RocketNodeStaking.sol'),
     rocketNodeDistributorDelegateNew:         artifacts.require('RocketNodeDistributorDelegate.sol'),
     rocketMinipoolFactoryNew:                 artifacts.require('RocketMinipoolFactory.sol'),
     rocketNetworkFeesNew:                     artifacts.require('RocketNetworkFees.sol'),
-    rocketNetworkPricesNew:                   artifacts.require('RocketNetworkPrices.sol'),
     rocketMinipoolBase:                       artifacts.require('RocketMinipoolBase.sol'),
     rocketDAONodeTrustedSettingsMinipoolNew:  artifacts.require('RocketDAONodeTrustedSettingsMinipool.sol'),
     rocketNodeManagerNew:                     artifacts.require('RocketNodeManager.sol'),
     rocketDAOProtocolSettingsNodeNew:         artifacts.require('RocketDAOProtocolSettingsNode.sol'),
-    rocketRewardsPoolNew:                     artifacts.require('RocketRewardsPool.sol'),
     rocketMinipoolBondReducer:                artifacts.require('RocketMinipoolBondReducer.sol'),
     rocketNetworkBalancesNew:                 artifacts.require('RocketNetworkBalances.sol'),
     rocketUpgradeOneDotTwo:                   artifacts.require('RocketUpgradeOneDotTwo.sol'),
@@ -164,8 +148,6 @@ export async function deployRocketPool() {
             abi: casperDepositABI,
             precompiled: true
         };
-        // Add our live RPL token address in place
-        contracts.rocketTokenRPLFixedSupply.address = '0xb4efd85c19999d84251304bda99e90b92300bd93';
     }
 
     // Goerli test network
@@ -225,12 +207,6 @@ export async function deployRocketPool() {
             if(!contracts[contract].hasOwnProperty('precompiled')) {
                 switch (contract) {
 
-                    // New RPL contract - pass storage address & existing RPL contract address
-                    case 'rocketTokenRPL':
-                        instance = await contracts[contract].new(rocketStorageInstance.address, (await contracts.rocketTokenRPLFixedSupply.deployed()).address);
-                        contracts[contract].setAsDeployed(instance);
-                        break;
-
                     // Contracts with no constructor args
                     case 'rocketMinipoolDelegate':
                     case 'rocketNodeDistributorDelegate':
@@ -254,16 +230,13 @@ export async function deployRocketPool() {
                                 (await contracts.rocketDepositPoolNew.deployed()).address,
                                 (await contracts.rocketDAOProtocolSettingsDepositNew.deployed()).address,
                                 (await contracts.rocketMinipoolManagerNew.deployed()).address,
-                                (await contracts.rocketNodeStakingNew.deployed()).address,
                                 (await contracts.rocketNodeDistributorDelegateNew.deployed()).address,
                                 (await contracts.rocketMinipoolFactoryNew.deployed()).address,
                                 (await contracts.rocketNetworkFeesNew.deployed()).address,
-                                (await contracts.rocketNetworkPricesNew.deployed()).address,
                                 (await contracts.rocketDAONodeTrustedSettingsMinipoolNew.deployed()).address,
                                 (await contracts.rocketNodeManagerNew.deployed()).address,
                                 (await contracts.rocketDAOProtocolSettingsNodeNew.deployed()).address,
                                 (await contracts.rocketNetworkBalancesNew.deployed()).address,
-                                (await contracts.rocketRewardsPoolNew.deployed()).address,
                                 (await contracts.rocketMinipoolBase.deployed()).address,
                                 (await contracts.rocketMinipoolBondReducer.deployed()).address,
                             ],
@@ -276,16 +249,13 @@ export async function deployRocketPool() {
                                 compressABI(contracts.rocketDepositPoolNew.abi),
                                 compressABI(contracts.rocketDAOProtocolSettingsDepositNew.abi),
                                 compressABI(contracts.rocketMinipoolManagerNew.abi),
-                                compressABI(contracts.rocketNodeStakingNew.abi),
                                 compressABI(contracts.rocketNodeDistributorDelegateNew.abi),
                                 compressABI(contracts.rocketMinipoolFactoryNew.abi),
                                 compressABI(contracts.rocketNetworkFeesNew.abi),
-                                compressABI(contracts.rocketNetworkPricesNew.abi),
                                 compressABI(contracts.rocketDAONodeTrustedSettingsMinipoolNew.abi),
                                 compressABI(contracts.rocketNodeManagerNew.abi),
                                 compressABI(contracts.rocketDAOProtocolSettingsNodeNew.abi),
                                 compressABI(contracts.rocketNetworkBalancesNew.abi),
-                                compressABI(contracts.rocketRewardsPoolNew.abi),
                                 compressABI(contracts.rocketMinipoolBase.abi),
                                 compressABI(contracts.rocketMinipoolBondReducer.abi),
                                 compressABI(rocketMinipoolAbi),
@@ -333,16 +303,13 @@ export async function deployRocketPool() {
                     case 'rocketDepositPoolNew':
                     case 'rocketDAOProtocolSettingsDepositNew':
                     case 'rocketMinipoolManagerNew':
-                    case 'rocketNodeStakingNew':
                     case 'rocketNodeDistributorDelegateNew':
                     case 'rocketMinipoolFactoryNew':
                     case 'rocketNetworkFeesNew':
-                    case 'rocketNetworkPricesNew':
                     case 'rocketDAONodeTrustedSettingsMinipoolNew':
                     case 'rocketNodeManagerNew':
                     case 'rocketDAOProtocolSettingsNodeNew':
                     case 'rocketNetworkBalancesNew':
-                    case 'rocketRewardsPoolNew':
                     case 'rocketMinipoolBase':
                     case 'rocketMinipoolBondReducer':
                         break;

@@ -87,7 +87,7 @@ export default function() {
             // Proposal should be successful, lets execute it
             await daoNodeTrustedExecute(proposalId, { from: trustedNode1 });
             // Member can now leave and collect any RPL bond
-            await daoNodeTrustedMemberLeave(trustedNode4, { from: trustedNode4 });
+            await daoNodeTrustedMemberLeave( { from: trustedNode4 });
         }
 
 

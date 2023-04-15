@@ -39,8 +39,8 @@ export default function() {
             await registerNode({from: node});
 
             // Register trusted node
-            await registerNode({from: trustedNode});
-            await setNodeTrusted(trustedNode, 'saas_1', 'node@home.com', owner);
+            await registerNode({from: owner});
+            await setNodeTrusted(owner, 'saas_1', 'node@home.com', owner);
         });
 
 
@@ -62,7 +62,7 @@ export default function() {
             // Update network ETH total to 130% to alter rETH exchange rate
             let totalBalance = '13'.ether;
             let rethSupply = await getRethTotalSupply();
-            await submitBalances(1, totalBalance, 0, rethSupply, {from: trustedNode});
+            await submitBalances(1, totalBalance, 0, rethSupply, {from: owner});
 
             // Get & check updated rETH exchange rate
             let exchangeRate2 = await getRethExchangeRate();
@@ -126,10 +126,6 @@ export default function() {
                 value: '16'.ether,
             }), 'Made a deposit which exceeds the maximum deposit pool size');
 
-            // Create a minipool to add to the queue
-            let minipoolRplStake = await getMinipoolMinimumRPLStake();
-            await mintRPL(owner, node, minipoolRplStake);
-            await nodeStakeRPL(minipoolRplStake, {from: node});
             await createMinipool({from: node, value: '16'.ether});
 
             // Attempt deposit
@@ -143,43 +139,6 @@ export default function() {
         //
         // Assign deposits
         //
-
-
-        it(printTitle('random address', 'can assign deposits'), async () => {
-            // Assign deposits with no assignable deposits
-            await assignDepositsV2({
-                from: staker,
-            });
-
-            // Disable deposit assignment
-            await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsDeposit, 'deposit.assign.enabled', false, {from: owner});
-
-            // Disable minimum unbonded commission threshold
-            await setDAONodeTrustedBootstrapSetting(RocketDAONodeTrustedSettingsMembers, 'members.minipool.unbonded.min.fee', '0', {from: owner});
-
-            // Stake RPL to cover minipools
-            let minipoolRplStake = await getMinipoolMinimumRPLStake();
-            let rplStake = minipoolRplStake.mul('3'.BN);
-            await mintRPL(owner, trustedNode, rplStake);
-            await nodeStakeRPL(rplStake, {from: trustedNode});
-
-            // Make user & node deposits
-            await userDeposit({from: staker, value: '100'.ether});
-            await nodeDeposit({from: trustedNode, value: '16'.ether});
-            await nodeDeposit({from: trustedNode, value: '16'.ether});
-            await nodeDeposit({from: trustedNode, value: '16'.ether});
-
-            // Re-enable deposit assignment & set limit
-            await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsDeposit, 'deposit.assign.enabled', true, {from: owner});
-            await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsDeposit, 'deposit.assign.maximum', 3, {from: owner});
-            await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsDeposit, 'deposit.assign.socialised.maximum', 3, {from: owner});
-
-            // Assign deposits with assignable deposits
-            await assignDepositsV2({
-                from: staker,
-            });
-        });
-
 
         it(printTitle('random address', 'cannot assign deposits while deposit assignment is disabled'), async () => {
             // Disable deposit assignment
@@ -210,11 +169,6 @@ export default function() {
             await setDAOProtocolBootstrapSetting(RocketDAOProtocolSettingsDeposit, 'deposit.pool.maximum', depositPoolMaximum, {from: owner});
             assertBN.equal(await rocketDepositPool.getMaximumDepositAmount(), depositPoolMaximum, 'Invalid maximum deposit amount');
 
-            // Create a 16 ETH minipool
-            let minipoolRplStake = await getMinipoolMinimumRPLStake();
-            let rplStake = minipoolRplStake.mul('1'.BN);
-            await mintRPL(owner, node, rplStake);
-            await nodeStakeRPL(rplStake, {from: node});
             const minipoolBondAmount = '16'.ether;
             await createMinipool({from: node, value: minipoolBondAmount});
             assertBN.equal(await rocketDepositPool.getMaximumDepositAmount(), depositPoolMaximum.add(minipoolBondAmount), 'Invalid maximum deposit amount');

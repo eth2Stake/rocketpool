@@ -95,15 +95,15 @@ contract RocketUpgradeOneDotTwo is RocketBase {
         newRocketDepositPool = _addresses[4];
         newRocketDAOProtocolSettingsDeposit = _addresses[5];
         newRocketMinipoolManager = _addresses[6];
-        newRocketNodeDistributorDelegate = _addresses[8];
-        newRocketMinipoolFactory = _addresses[9];
-        newRocketNetworkFees = _addresses[10];
-        newRocketDAONodeTrustedSettingsMinipool = _addresses[12];
-        newRocketNodeManager = _addresses[13];
-        newRocketDAOProtocolSettingsNode = _addresses[14];
-        newRocketNetworkBalances = _addresses[15];
-        rocketMinipoolBase = _addresses[17];
-        rocketMinipoolBondReducer = _addresses[18];
+        newRocketNodeDistributorDelegate = _addresses[7];
+        newRocketMinipoolFactory = _addresses[8];
+        newRocketNetworkFees = _addresses[9];
+        newRocketDAONodeTrustedSettingsMinipool = _addresses[10];
+        newRocketNodeManager = _addresses[11];
+        newRocketDAOProtocolSettingsNode = _addresses[12];
+        newRocketNetworkBalances = _addresses[13];
+        rocketMinipoolBase = _addresses[14];
+        rocketMinipoolBondReducer = _addresses[15];
 
         // Set ABIs
         newRocketNodeDepositAbi = _abis[0];
@@ -113,17 +113,17 @@ contract RocketUpgradeOneDotTwo is RocketBase {
         newRocketDepositPoolAbi = _abis[4];
         newRocketDAOProtocolSettingsDepositAbi = _abis[5];
         newRocketMinipoolManagerAbi = _abis[6];
-        newRocketNodeDistributorDelegateAbi = _abis[8];
-        newRocketMinipoolFactoryAbi = _abis[9];
-        newRocketNetworkFeesAbi = _abis[10];
-        newRocketDAONodeTrustedSettingsMinipoolAbi = _abis[12];
-        newRocketNodeManagerAbi = _abis[13];
-        newRocketDAOProtocolSettingsNodeAbi = _abis[14];
-        newRocketNetworkBalancesAbi = _abis[15];
-        rocketMinipoolBaseAbi = _abis[17];
-        rocketMinipoolBondReducerAbi = _abis[18];
+        newRocketNodeDistributorDelegateAbi = _abis[7];
+        newRocketMinipoolFactoryAbi = _abis[8];
+        newRocketNetworkFeesAbi = _abis[9];
+        newRocketDAONodeTrustedSettingsMinipoolAbi = _abis[10];
+        newRocketNodeManagerAbi = _abis[11];
+        newRocketDAOProtocolSettingsNodeAbi = _abis[12];
+        newRocketNetworkBalancesAbi = _abis[13];
+        rocketMinipoolBaseAbi = _abis[14];
+        rocketMinipoolBondReducerAbi = _abis[15];
 
-        newRocketMinipoolAbi = _abis[19];
+        newRocketMinipoolAbi = _abis[16];
     }
 
     function setInterval(uint256 _interval, uint256 _block) external {
@@ -188,7 +188,7 @@ contract RocketUpgradeOneDotTwo is RocketBase {
         setUint(keccak256(abi.encodePacked(settingNameSpace, "minipool.cancel.bond.reduction.quorum")), 0.51 ether);
         setUint(keccak256(abi.encodePacked(settingNameSpace, "minipool.promotion.scrub.period")), 3 days);
         settingNameSpace = keccak256(abi.encodePacked("dao.protocol.setting.", "minipool"));
-        setUint(keccak256(abi.encodePacked(settingNameSpace, "minipool.user.distribute.window.start")), 90 days);
+        setUint(keccak256(abi.encodePacked(settingNameSpace, "minipool.user.distribute.window.start")), 14 days);
         setUint(keccak256(abi.encodePacked(settingNameSpace, "minipool.user.distribute.window.length")), 2 days);
         setBool(keccak256(abi.encodePacked(settingNameSpace, "minipool.bond.reduction.enabled")), true);
         settingNameSpace = keccak256(abi.encodePacked("dao.protocol.setting.", "node"));
