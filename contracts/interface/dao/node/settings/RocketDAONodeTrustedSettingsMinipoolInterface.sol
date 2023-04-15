@@ -10,4 +10,5 @@ interface RocketDAONodeTrustedSettingsMinipoolInterface {
     function isWithinBondReductionWindow(uint256 _time) external view returns (bool);
     function getBondReductionWindowStart() external view returns (uint256);
     function getBondReductionWindowLength() external view returns (uint256);
+    function getBondReductionClamDown() external view returns (uint256);
 }

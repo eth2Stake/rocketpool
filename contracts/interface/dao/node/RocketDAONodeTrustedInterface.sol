@@ -23,5 +23,4 @@ interface RocketDAONodeTrustedInterface {
     function bootstrapSettingBool(string memory _settingContractName, string memory _settingPath, bool _value) external;
     function bootstrapUpgrade(string memory _type, string memory _name, string memory _contractAbi, address _contractAddress) external;
     function bootstrapDisable(bool _confirmDisableBootstrapMode) external;
-    function memberJoinRequired(string memory _id, string memory _url) external;
 }

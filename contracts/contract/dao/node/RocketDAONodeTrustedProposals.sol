@@ -111,7 +111,6 @@ contract RocketDAONodeTrustedProposals is RocketBase, RocketDAONodeTrustedPropos
     // Propose to kick a current member from the DAO
     function proposalKick(address _nodeAddress) override external onlyExecutingContracts onlyTrustedNode(_nodeAddress) {
         // Load contracts
-        RocketDAONodeTrustedInterface daoNodeTrusted = RocketDAONodeTrustedInterface(getContractAddress("rocketDAONodeTrusted"));
         RocketDAONodeTrustedActionsInterface daoActionsContract = RocketDAONodeTrustedActionsInterface(getContractAddress("rocketDAONodeTrustedActions"));
         // Kick them now
         daoActionsContract.actionKick(_nodeAddress);

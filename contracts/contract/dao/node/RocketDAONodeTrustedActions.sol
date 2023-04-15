@@ -77,7 +77,6 @@ contract RocketDAONodeTrustedActions is RocketBase, RocketDAONodeTrustedActionsI
     function _memberJoin(address _nodeAddress) private {
         // Load contracts
         RocketDAONodeTrustedInterface rocketDAONode = RocketDAONodeTrustedInterface(getContractAddress("rocketDAONodeTrusted"));
-        RocketDAONodeTrustedSettingsMembersInterface rocketDAONodeTrustedSettingsMembers = RocketDAONodeTrustedSettingsMembersInterface(getContractAddress("rocketDAONodeTrustedSettingsMembers"));
         RocketDAONodeTrustedSettingsProposalsInterface rocketDAONodeTrustedSettingsProposals = RocketDAONodeTrustedSettingsProposalsInterface(getContractAddress("rocketDAONodeTrustedSettingsProposals"));
         // The time that the member was successfully invited to join the DAO
         uint256 memberInvitedTime = rocketDAONode.getMemberProposalExecutedTime("invited", _nodeAddress);
@@ -108,7 +107,6 @@ contract RocketDAONodeTrustedActions is RocketBase, RocketDAONodeTrustedActionsI
     // When a new member has successfully requested to leave with a proposal, they must call this method to leave officially
     function actionLeave() override external onlyTrustedNode(msg.sender) onlyLatestContract("rocketDAONodeTrustedActions", address(this)) {
         // Load contracts
-        RocketVaultInterface rocketVault = RocketVaultInterface(getContractAddress("rocketVault"));
         RocketDAONodeTrustedInterface rocketDAONode = RocketDAONodeTrustedInterface(getContractAddress("rocketDAONodeTrusted"));
         RocketDAONodeTrustedSettingsProposalsInterface rocketDAONodeTrustedSettingsProposals = RocketDAONodeTrustedSettingsProposalsInterface(getContractAddress("rocketDAONodeTrustedSettingsProposals"));
         // Check this wouldn't dip below the min required trusted nodes
@@ -127,9 +125,6 @@ contract RocketDAONodeTrustedActions is RocketBase, RocketDAONodeTrustedActionsI
     // A member can be evicted from the DAO by proposal and remove from the DAO
     // Is run via the main DAO contract when the proposal passes and is executed
     function actionKick(address _nodeAddress) override external onlyTrustedNode(_nodeAddress) onlyLatestContract("rocketDAONodeTrustedProposals", msg.sender) {
-        // Load contracts
-        RocketVaultInterface rocketVault = RocketVaultInterface(getContractAddress("rocketVault"));
-        RocketDAONodeTrustedInterface rocketDAONode = RocketDAONodeTrustedInterface(getContractAddress("rocketDAONodeTrusted"));
         // Remove the member now
         _memberRemove(_nodeAddress);
         // Log it

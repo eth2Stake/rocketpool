@@ -196,6 +196,7 @@ contract RocketNodeDeposit is RocketBase, RocketNodeDepositInterface {
             RocketMinipoolManagerInterface rocketMinipoolManager = RocketMinipoolManagerInterface(getContractAddress("rocketMinipoolManager"));
             ethMatched = rocketMinipoolManager.getNodeActiveMinipoolCount(_nodeAddress).mul(16 ether);
         }
+        ethMatched = ethMatched.add(_amount);
         setUint(keccak256(abi.encodePacked("eth.matched.node.amount", _nodeAddress)), ethMatched);
     }
 
