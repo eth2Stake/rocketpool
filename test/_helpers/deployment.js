@@ -1,10 +1,35 @@
 /*** Dependencies ********************/
-import { RocketStorage } from '../_utils/artifacts';
+const deploy_log = "deploy.log";
+const readline = require("readline")
+
 
 const hre = require('hardhat');
 const pako = require('pako');
 const fs = require('fs');
 const Web3 = require('web3');
+
+
+async function readLogFile() {
+    return new Promise(async (r, j) => {
+        try {
+            const readInterface = readline.createInterface({
+                input: fs.createReadStream(deploy_log),
+                crlfDelay: Infinity
+            });
+            const deployed_contracts = {};
+            for await (const line of readInterface) {
+                const contract = JSON.parse(line);
+                deployed_contracts[contract.name] = { ...deployed_contracts[contract.name], ...contract };
+            }
+            readInterface.close();
+            r(deployed_contracts);
+        } catch (e) {
+            r({})
+        }
+
+    })
+
+}
 
 
 /*** Utility Methods *****************/
@@ -15,7 +40,7 @@ function compressABI(abi) {
     return Buffer.from(pako.deflate(JSON.stringify(abi))).toString('base64');
 }
 function decompressABI(abi) {
-    return JSON.parse(pako.inflate(Buffer.from(abi, 'base64'), {to: 'string'}));
+    return JSON.parse(pako.inflate(Buffer.from(abi, 'base64'), { to: 'string' }));
 }
 
 // Load ABI files and parse
@@ -28,72 +53,55 @@ function loadABI(abiFilePath) {
 
 
 // Storage
-const rocketStorage =                       artifacts.require('RocketStorage.sol');
+const rocketStorage = artifacts.require('RocketStorage.sol');
 
 // Network contracts
 const contracts = {
     // Vault
-    rocketVault:                              artifacts.require('RocketVault.sol'),
+    rocketVault: artifacts.require('RocketVault.sol'),
     // Tokens
-    rocketTokenRETH:                          artifacts.require('RocketTokenRETH.sol'),
-    // Auction
-    // rocketAuctionManager:                     artifacts.require('RocketAuctionManager.sol'),
+    rocketTokenRETH: artifacts.require('RocketTokenRETH.sol'),
     // Deposit
-    rocketDepositPool:                        artifacts.require('RocketDepositPoolOld.sol'),
     // Minipool
-    rocketMinipoolDelegate:                   artifacts.require('RocketMinipoolDelegateOld.sol'),
-    rocketMinipoolManager:                    artifacts.require('RocketMinipoolManagerOld.sol'),
-    rocketMinipoolQueue:                      artifacts.require('RocketMinipoolQueueOld.sol'),
-    rocketMinipoolStatus:                     artifacts.require('RocketMinipoolStatus.sol'),
-    rocketMinipoolPenalty:                    artifacts.require('RocketMinipoolPenalty.sol'),
+    rocketMinipoolStatus: artifacts.require('RocketMinipoolStatus.sol'),
+    rocketMinipoolPenalty: artifacts.require('RocketMinipoolPenalty.sol'),
     // Network
-    rocketNetworkBalances:                    artifacts.require('RocketNetworkBalancesOld.sol'),
-    rocketNetworkFees:                        artifacts.require('RocketNetworkFeesOld.sol'),
-    rocketNetworkPenalties:                   artifacts.require('RocketNetworkPenalties.sol'),
+    rocketNetworkPenalties: artifacts.require('RocketNetworkPenalties.sol'),
     // Node
-    rocketNodeDeposit:                        artifacts.require('RocketNodeDepositOld.sol'),
-    rocketNodeManager:                        artifacts.require('RocketNodeManagerOld.sol'),
     // DAOs
-    rocketDAOProposal:                        artifacts.require('RocketDAOProposal.sol'),
-    rocketDAONodeTrusted:                     artifacts.require('RocketDAONodeTrusted.sol'),
-    rocketDAONodeTrustedProposals:            artifacts.require('RocketDAONodeTrustedProposals.sol'),
-    rocketDAONodeTrustedActions:              artifacts.require('RocketDAONodeTrustedActions.sol'),
-    rocketDAONodeTrustedUpgrade:              artifacts.require('RocketDAONodeTrustedUpgrade.sol'),
-    rocketDAONodeTrustedSettingsMembers:      artifacts.require('RocketDAONodeTrustedSettingsMembers.sol'),
-    rocketDAONodeTrustedSettingsProposals:    artifacts.require('RocketDAONodeTrustedSettingsProposals.sol'),
-    rocketDAONodeTrustedSettingsMinipool:     artifacts.require('RocketDAONodeTrustedSettingsMinipoolOld.sol'),
-    rocketDAOProtocol:                        artifacts.require('RocketDAOProtocol.sol'),
-    rocketDAOProtocolProposals:               artifacts.require('RocketDAOProtocolProposals.sol'),
-    rocketDAOProtocolActions:                 artifacts.require('RocketDAOProtocolActions.sol'),
-    rocketDAOProtocolSettingsNode:            artifacts.require('RocketDAOProtocolSettingsNodeOld.sol'),
-    rocketDAOProtocolSettingsNetwork:         artifacts.require('RocketDAOProtocolSettingsNetwork.sol'),
-    rocketDAOProtocolSettingsDeposit:         artifacts.require('RocketDAOProtocolSettingsDepositOld.sol'),
-    rocketDAOProtocolSettingsMinipool:        artifacts.require('RocketDAOProtocolSettingsMinipoolOld.sol'),
+    rocketDAOProposal: artifacts.require('RocketDAOProposal.sol'),
+    rocketDAONodeTrusted: artifacts.require('RocketDAONodeTrusted.sol'),
+    rocketDAONodeTrustedProposals: artifacts.require('RocketDAONodeTrustedProposals.sol'),
+    rocketDAONodeTrustedActions: artifacts.require('RocketDAONodeTrustedActions.sol'),
+    rocketDAONodeTrustedUpgrade: artifacts.require('RocketDAONodeTrustedUpgrade.sol'),
+    rocketDAONodeTrustedSettingsMembers: artifacts.require('RocketDAONodeTrustedSettingsMembers.sol'),
+    rocketDAONodeTrustedSettingsProposals: artifacts.require('RocketDAONodeTrustedSettingsProposals.sol'),
+    rocketDAOProtocol: artifacts.require('RocketDAOProtocol.sol'),
+    rocketDAOProtocolProposals: artifacts.require('RocketDAOProtocolProposals.sol'),
+    rocketDAOProtocolActions: artifacts.require('RocketDAOProtocolActions.sol'),
+    rocketDAOProtocolSettingsNetwork: artifacts.require('RocketDAOProtocolSettingsNetwork.sol'),
     // v1.1
-    rocketNodeDistributorFactory:             artifacts.require('RocketNodeDistributorFactory.sol'),
-    rocketNodeDistributorDelegate:            artifacts.require('RocketNodeDistributorDelegateOld.sol'),
-    rocketMinipoolFactory:                    artifacts.require('RocketMinipoolFactoryOld.sol'),
+    rocketNodeDistributorFactory: artifacts.require('RocketNodeDistributorFactory.sol'),
     // v1.2
-    rocketNodeDepositNew:                     artifacts.require('RocketNodeDeposit.sol'),
-    rocketMinipoolDelegateNew:                artifacts.require('RocketMinipoolDelegate.sol'),
-    rocketDAOProtocolSettingsMinipoolNew:     artifacts.require('RocketDAOProtocolSettingsMinipool.sol'),
-    rocketMinipoolQueueNew:                   artifacts.require('RocketMinipoolQueue.sol'),
-    rocketDepositPoolNew:                     artifacts.require('RocketDepositPool.sol'),
-    rocketDAOProtocolSettingsDepositNew:      artifacts.require('RocketDAOProtocolSettingsDeposit.sol'),
-    rocketMinipoolManagerNew:                 artifacts.require('RocketMinipoolManager.sol'),
-    rocketNodeDistributorDelegateNew:         artifacts.require('RocketNodeDistributorDelegate.sol'),
-    rocketMinipoolFactoryNew:                 artifacts.require('RocketMinipoolFactory.sol'),
-    rocketNetworkFeesNew:                     artifacts.require('RocketNetworkFees.sol'),
-    rocketMinipoolBase:                       artifacts.require('RocketMinipoolBase.sol'),
-    rocketDAONodeTrustedSettingsMinipoolNew:  artifacts.require('RocketDAONodeTrustedSettingsMinipool.sol'),
-    rocketNodeManagerNew:                     artifacts.require('RocketNodeManager.sol'),
-    rocketDAOProtocolSettingsNodeNew:         artifacts.require('RocketDAOProtocolSettingsNode.sol'),
-    rocketMinipoolBondReducer:                artifacts.require('RocketMinipoolBondReducer.sol'),
-    rocketNetworkBalancesNew:                 artifacts.require('RocketNetworkBalances.sol'),
-    rocketUpgradeOneDotTwo:                   artifacts.require('RocketUpgradeOneDotTwo.sol'),
+    rocketNodeDeposit: artifacts.require('RocketNodeDeposit.sol'),
+    rocketMinipoolDelegate: artifacts.require('RocketMinipoolDelegate.sol'),
+    rocketDAOProtocolSettingsMinipool: artifacts.require('RocketDAOProtocolSettingsMinipool.sol'),
+    rocketMinipoolQueue: artifacts.require('RocketMinipoolQueue.sol'),
+    rocketDepositPool: artifacts.require('RocketDepositPool.sol'),
+    rocketDAOProtocolSettingsDeposit: artifacts.require('RocketDAOProtocolSettingsDeposit.sol'),
+    rocketMinipoolManager: artifacts.require('RocketMinipoolManager.sol'),
+    rocketNodeDistributorDelegate: artifacts.require('RocketNodeDistributorDelegate.sol'),
+    rocketMinipoolFactory: artifacts.require('RocketMinipoolFactory.sol'),
+    rocketNetworkFees: artifacts.require('RocketNetworkFees.sol'),
+    rocketMinipoolBase: artifacts.require('RocketMinipoolBase.sol'),
+    rocketDAONodeTrustedSettingsMinipool: artifacts.require('RocketDAONodeTrustedSettingsMinipool.sol'),
+    rocketNodeManager: artifacts.require('RocketNodeManager.sol'),
+    rocketDAOProtocolSettingsNode: artifacts.require('RocketDAOProtocolSettingsNode.sol'),
+    rocketMinipoolBondReducer: artifacts.require('RocketMinipoolBondReducer.sol'),
+    rocketNetworkBalances: artifacts.require('RocketNetworkBalances.sol'),
     // Utils
-    addressQueueStorage:                      artifacts.require('AddressQueueStorage.sol'),
-    addressSetStorage:                        artifacts.require('AddressSetStorage.sol'),
+    addressQueueStorage: artifacts.require('AddressQueueStorage.sol'),
+    addressSetStorage: artifacts.require('AddressSetStorage.sol'),
 };
 
 // Development helper contracts
@@ -103,7 +111,7 @@ const rocketNodeDepositLEB4 = artifacts.require('RocketNodeDepositLEB4.sol');
 // Instance contract ABIs
 const abis = {
     // Minipool
-    rocketMinipool:                           [artifacts.require('RocketMinipoolDelegateOld.sol'), artifacts.require('RocketMinipoolOld.sol')],
+    rocketMinipool: [artifacts.require('RocketMinipoolDelegateOld.sol'), artifacts.require('RocketMinipoolOld.sol')],
 };
 
 // Construct ABI for rocketMinipool
@@ -112,21 +120,28 @@ const rocketMinipoolAbi = []
     .concat(artifacts.require('RocketMinipoolBase.sol').abi)
     .filter(i => i.type !== 'fallback' && i.type !== 'receive');
 
-rocketMinipoolAbi.push({ stateMutability: 'payable', type: 'fallback'});
-rocketMinipoolAbi.push({ stateMutability: 'payable', type: 'receive'});
+rocketMinipoolAbi.push({ stateMutability: 'payable', type: 'fallback' });
+rocketMinipoolAbi.push({ stateMutability: 'payable', type: 'receive' });
 
 /*** Deployment **********************/
 
 
 // Deploy Rocket Pool
 export async function deployRocketPool() {
+
+    let deployed_contracts = {};
+    await readLogFile().then(res => {
+        deployed_contracts = res;
+    })
+    // Compress / decompress ABIs
+    const writeInterface = fs.createWriteStream(deploy_log, { flags: 'a' }); // 使用追加模式
     // Set our web3 provider
     const network = hre.network;
     let $web3 = new Web3(network.provider);
 
     // Accounts
-    let accounts = await $web3.eth.getAccounts(function(error, result) {
-        if(error != null) {
+    let accounts = await $web3.eth.getAccounts(function (error, result) {
+        if (error != null) {
             console.log(error);
             console.log("Error retrieving accounts.'");
         }
@@ -140,7 +155,7 @@ export async function deployRocketPool() {
     const casperDepositABI = loadABI('./contracts/contract/casper/compiled/Deposit.abi');
 
     // Live deployment
-    if ( network.name === 'live' ) {
+    if (network.name === 'live') {
         // Casper live contract address
         let casperDepositAddress = '0x00000000219ab540356cBB839Cbe05303d7705Fa';
         contracts.casperDeposit = {
@@ -175,10 +190,10 @@ export async function deployRocketPool() {
             {
                 data: fs.readFileSync('./contracts/contract/casper/compiled/Deposit.bin').toString()
             }).send({
-            from: accounts[0],
-            gas: 8000000,
-            gasPrice: '20000000000'
-        });
+                from: accounts[0],
+                gas: 8000000,
+                gasPrice: '20000000000'
+            });
 
         // Set the Casper deposit address
         let casperDepositAddress = casperDepositContract._address;
@@ -192,76 +207,40 @@ export async function deployRocketPool() {
     }
 
     // Deploy rocketStorage first - has to be done in this order so that the following contracts already know the storage address
-    const rs = await rocketStorage.new();
-    rocketStorage.setAsDeployed(rs);
-    const rsTx = await $web3.eth.getTransactionReceipt(rs.transactionHash);
-    const deployBlock = rsTx.blockNumber;
-    // Update the storage with the new addresses
-    let rocketStorageInstance = await rocketStorage.deployed();
+    let rocketStorageInstance;
+    let deployBlock;
+    if (deployed_contracts.hasOwnProperty('rocketStorage')) {
+        rocketStorageInstance = await rocketStorage.at(deployed_contracts["rocketStorage"].address);
+        rocketStorage.setAsDeployed(rocketStorageInstance);
+        deployBlock = deployed_contracts["rocketStorage"].blockNumber;
+    } else {
+        const rs = await rocketStorage.new();
+        rocketStorage.setAsDeployed(rs);
+        const rsTx = await $web3.eth.getTransactionReceipt(rs.transactionHash);
+        deployBlock = rsTx.blockNumber;
+        // Update the storage with the new addresses
+        rocketStorageInstance = await rocketStorage.deployed();
+        writeInterface.write(JSON.stringify({ name: "rocketStorage", address: rocketStorageInstance.address, blockNumber: deployBlock }) + '\n');
+    }
 
     // Deploy other contracts - have to be inside an async loop
-    const deployContracts = async function() {
+    const deployContracts = async function () {
         for (let contract in contracts) {
             // Only deploy if it hasn't been deployed already like a precompiled
             let instance
-            if(!contracts[contract].hasOwnProperty('precompiled')) {
+            if (!contracts[contract].hasOwnProperty('precompiled')) {
+                if (deployed_contracts.hasOwnProperty(contract)) {
+                    instance = await contracts[contract].at(deployed_contracts[contract].address);
+                    contracts[contract].setAsDeployed(instance);
+                    continue;
+                }
                 switch (contract) {
-
                     // Contracts with no constructor args
                     case 'rocketMinipoolDelegate':
                     case 'rocketNodeDistributorDelegate':
-                    case 'rocketNodeDistributorDelegateNew':
                     case 'rocketMinipoolBase':
                         instance = await contracts[contract].new();
                         contracts[contract].setAsDeployed(instance);
-                        break;
-
-                    // Upgrade rewards
-                    case 'rocketUpgradeOneDotTwo':
-                        const upgrader = await contracts[contract].new(rocketStorageInstance.address);
-                        contracts[contract].setAsDeployed(upgrader);
-                        const args = [
-                            [
-                                // compressABI(contracts.rocketContract.abi),
-                                (await contracts.rocketNodeDepositNew.deployed()).address,
-                                (await contracts.rocketMinipoolDelegateNew.deployed()).address,
-                                (await contracts.rocketDAOProtocolSettingsMinipoolNew.deployed()).address,
-                                (await contracts.rocketMinipoolQueueNew.deployed()).address,
-                                (await contracts.rocketDepositPoolNew.deployed()).address,
-                                (await contracts.rocketDAOProtocolSettingsDepositNew.deployed()).address,
-                                (await contracts.rocketMinipoolManagerNew.deployed()).address,
-                                (await contracts.rocketNodeDistributorDelegateNew.deployed()).address,
-                                (await contracts.rocketMinipoolFactoryNew.deployed()).address,
-                                (await contracts.rocketNetworkFeesNew.deployed()).address,
-                                (await contracts.rocketDAONodeTrustedSettingsMinipoolNew.deployed()).address,
-                                (await contracts.rocketNodeManagerNew.deployed()).address,
-                                (await contracts.rocketDAOProtocolSettingsNodeNew.deployed()).address,
-                                (await contracts.rocketNetworkBalancesNew.deployed()).address,
-                                (await contracts.rocketMinipoolBase.deployed()).address,
-                                (await contracts.rocketMinipoolBondReducer.deployed()).address,
-                            ],
-                            [
-                                // compressABI(contracts.rocketContract.abi),
-                                compressABI(contracts.rocketNodeDepositNew.abi),
-                                compressABI(contracts.rocketMinipoolDelegateNew.abi),
-                                compressABI(contracts.rocketDAOProtocolSettingsMinipoolNew.abi),
-                                compressABI(contracts.rocketMinipoolQueueNew.abi),
-                                compressABI(contracts.rocketDepositPoolNew.abi),
-                                compressABI(contracts.rocketDAOProtocolSettingsDepositNew.abi),
-                                compressABI(contracts.rocketMinipoolManagerNew.abi),
-                                compressABI(contracts.rocketNodeDistributorDelegateNew.abi),
-                                compressABI(contracts.rocketMinipoolFactoryNew.abi),
-                                compressABI(contracts.rocketNetworkFeesNew.abi),
-                                compressABI(contracts.rocketDAONodeTrustedSettingsMinipoolNew.abi),
-                                compressABI(contracts.rocketNodeManagerNew.abi),
-                                compressABI(contracts.rocketDAOProtocolSettingsNodeNew.abi),
-                                compressABI(contracts.rocketNetworkBalancesNew.abi),
-                                compressABI(contracts.rocketMinipoolBase.abi),
-                                compressABI(contracts.rocketMinipoolBondReducer.abi),
-                                compressABI(rocketMinipoolAbi),
-                            ],
-                        ]
-                        await upgrader.set(...args)
                         break;
 
                     // All other contracts - pass storage address
@@ -278,6 +257,13 @@ export async function deployRocketPool() {
                         break;
 
                 }
+                console.log("deploy contract: " + contract);
+                await new Promise(async (r) => {
+                    writeInterface.write(JSON.stringify({ name: contract, address: (await contracts[contract].deployed()).address }) + '\n', () => {
+                        r();
+                    });
+                })
+
             }
         }
     };
@@ -285,7 +271,7 @@ export async function deployRocketPool() {
     await deployContracts();
 
     // Register all other contracts with storage and store their abi
-    const addContracts = async function() {
+    const addContracts = async function () {
         // Log RocketStorage
         console.log('\x1b[31m%s\x1b[0m:', '   Set Storage Address');
         console.log('     ' + (await rocketStorage.deployed()).address);
@@ -293,25 +279,13 @@ export async function deployRocketPool() {
         contracts.rocketStorage = artifacts.require('RocketStorage.sol');
         // Now process the rest
         for (let contract in contracts) {
-            if(contracts.hasOwnProperty(contract)) {
+            if (contracts.hasOwnProperty(contract)) {
+                if (deployed_contracts.hasOwnProperty(contract) && deployed_contracts[contract].hasAdd === true) {
+                    continue;
+                }
                 switch (contract) {
                     // Ignore contracts that will be upgraded later
-                    case 'rocketNodeDepositNew':
-                    case 'rocketMinipoolDelegateNew':
-                    case 'rocketDAOProtocolSettingsMinipoolNew':
-                    case 'rocketMinipoolQueueNew':
-                    case 'rocketDepositPoolNew':
-                    case 'rocketDAOProtocolSettingsDepositNew':
-                    case 'rocketMinipoolManagerNew':
-                    case 'rocketNodeDistributorDelegateNew':
-                    case 'rocketMinipoolFactoryNew':
-                    case 'rocketNetworkFeesNew':
-                    case 'rocketDAONodeTrustedSettingsMinipoolNew':
-                    case 'rocketNodeManagerNew':
-                    case 'rocketDAOProtocolSettingsNodeNew':
-                    case 'rocketNetworkBalancesNew':
                     case 'rocketMinipoolBase':
-                    case 'rocketMinipoolBondReducer':
                         break;
 
                     default:
@@ -344,17 +318,23 @@ export async function deployRocketPool() {
                         );
                         break;
                 }
+                await new Promise(async (r) => {
+                    writeInterface.write(JSON.stringify({ name: contract, hasAdd: true }) + '\n', () => {
+                        r();
+                    });
+                })
+
             }
         }
     };
 
     // Register ABI-only contracts
-    const addABIs = async function() {
+    const addABIs = async function () {
         for (let contract in abis) {
-            if(abis.hasOwnProperty(contract)) {
+            if (abis.hasOwnProperty(contract)) {
                 console.log('\x1b[31m%s\x1b[0m:', '   Set Storage ABI');
-                console.log('     '+contract);
-                if(Array.isArray(abis[contract])) {
+                console.log('     ' + contract);
+                if (Array.isArray(abis[contract])) {
                     // Merge ABIs from multiple artifacts
                     let combinedAbi = [];
                     for (const artifact of abis[contract]) {
@@ -376,6 +356,54 @@ export async function deployRocketPool() {
         }
     };
 
+    const capitalizeFirstLetter = function (string) {
+        return string.charAt(0).toUpperCase() + string.slice(1);
+    }
+    // Verify all contracts in etherscan
+    const verifyContracts = async function () {
+        for (let contract in contracts) {
+            if (contracts.hasOwnProperty(contract)) {
+                if (deployed_contracts.hasOwnProperty(contract) && deployed_contracts[contract].hasVerify === true) {
+                    continue;
+                }
+                const address = contract === 'casperDeposit' ? contracts[contract].address : (await contracts[contract].deployed()).address;
+                switch (contract) {
+                    // Ignore contracts that will be upgraded later
+                    case 'casperDeposit':
+                        break;
+                    case 'rocketMinipoolBase':
+                    case 'rocketMinipoolDelegate':
+                    case 'rocketNodeDistributorDelegate':
+                        await hre.run("verify:verify", {
+                            address: address,
+                            constructorArguments: [],
+                        })
+                        break;
+
+                    default:
+                        console.log('\x1b[31m%s\x1b[0m:', '   Verify ' + contract + ' Contract');
+                        console.log('     ' + address);
+                        // Verify the contract
+                        console.log((await artifacts.readArtifactSync(capitalizeFirstLetter(contract))).sourceName)
+                        await hre.run("verify:verify", {
+                            address: address,
+                            contract:(await artifacts.readArtifactSync(capitalizeFirstLetter(contract))).sourceName + ":" + capitalizeFirstLetter(contract),
+                            constructorArguments: contract === 'rocketStorage' ? [] : [rocketStorageInstance.address],
+                        })
+
+                        break;
+                }
+                await new Promise(async (r) => {
+                    writeInterface.write(JSON.stringify({ name: contract, hasVerify: true }) + '\n', () => {
+                        r();
+                    });
+                })
+            }
+        }
+    };
+
+    await verifyContracts();
+
     // Run it
     console.log('\x1b[34m%s\x1b[0m', '  Deploy Contracts');
     console.log('\x1b[34m%s\x1b[0m', '  ******************************************');
@@ -395,27 +423,12 @@ export async function deployRocketPool() {
 
     // Disable direct access to storage now
     await rocketStorageInstance.setDeployedStatus();
-    if(await rocketStorageInstance.getDeployedStatus() !== true) throw 'Storage Access Not Locked Down!!';
+    if (await rocketStorageInstance.getDeployedStatus() !== true) throw 'Storage Access Not Locked Down!!';
 
     // Log it
     console.log('\n');
     console.log('\x1b[32m%s\x1b[0m', '  Storage Direct Access For Owner Removed... Lets begin! :)');
     console.log('\n');
-
-    // Deploy development help contracts
-    if (network.name !== 'live' && network.name !== 'goerli') {
-        let instance = await revertOnTransfer.new();
-        revertOnTransfer.setAsDeployed(instance);
-
-        instance = await rocketNodeDepositLEB4.new(rocketStorageInstance.address);
-        rocketNodeDepositLEB4.setAsDeployed(instance);
-    }
-
-    // Perform upgrade if we are not running in test environment
-    if (network.name !== 'hardhat') {
-        console.log('Executing upgrade to v1.2')
-        const RocketUpgradeOneDotTwo = artifacts.require('RocketUpgradeOneDotTwo')
-        const rocketUpgradeOneDotTwo = await RocketUpgradeOneDotTwo.deployed();
-        await rocketUpgradeOneDotTwo.execute({ from: accounts[0] });
-    }
+    writeInterface.end();
+    writeInterface.close();
 };

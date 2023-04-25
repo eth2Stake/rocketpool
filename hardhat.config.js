@@ -1,5 +1,6 @@
 // Support truffle-style test setup
 require('@nomiclabs/hardhat-truffle5');
+require("@nomiclabs/hardhat-etherscan");
 require('dotenv').config();
 
 // Importing babel to be able to use ES6 imports
@@ -50,6 +51,32 @@ module.exports = {
             },
             network_id: '*',
         },
+        goerli:{
+            url: "https://eth-goerli.g.alchemy.com/v2/tpMx33MkgUgntSAxBk8ZZ9vomPJigcW3",
+            accounts:{
+                mnemonic: "sense current betray perfect scheme lion album festival welcome civil crash year",
+                initialIndex: 0,
+                count: 1,
+                passphrase: "",
+              },
+            network_id: '5',
+            timeout: 60000000,
+        }
+    },
+    etherscan:{
+        apiKey: {
+            goerli:"K8DAB5S76Q4CQWVDHZ2XWNSP8QVKZASUJW"
+        },
+        customChains: [
+            {
+              network: "goerli",
+              chainId: 5,
+              urls: {
+                apiURL: "http://api-goerli.etherscan.io/api",
+                browserURL: "http://goerli.etherscan.io"
+              }
+            }
+          ]
     },
     paths: {
         sources: './contracts',
